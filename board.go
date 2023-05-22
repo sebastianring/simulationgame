@@ -18,7 +18,7 @@ type Board struct {
 }
 
 func InitNewBoard(rows int, cols int) *Board {
-	if rows < 1 || cols < 1 {
+	if rows < 2 || cols < 2 {
 		fmt.Printf("Too few rows or cols: %v, rows: %v \n", rows, cols)
 		os.Exit(1)
 	}
@@ -36,6 +36,7 @@ func InitNewBoard(rows int, cols int) *Board {
 	initialFoods = 50
 
 	newBoard.spawnCreature1OnBoard(initialCreature1)
+	newBoard.spawnFoodOnBoard(initialFoods)
 
 	addMessageToCurrentGamelog("Board added")
 	addMessageToCurrentGamelog("Welcome to the simulation game where you can simulate creatures and how they evolve!")
@@ -120,6 +121,29 @@ func (b *Board) spawnCreature1OnBoard(qty int) {
 	}
 }
 
+func (b *Board) spawnFoodOnBoard(qty int) {
+	spawns := make([][]int, 0)
+
+	for len(spawns) < qty {
+		newPos := b.randomPosWithinMap()
+		if !checkIfValExistsInSlice(newPos, spawns) && b.isSpotEmpty(newPos[0], newPos[1]) {
+			spawns = append(spawns, newPos)
+		}
+	}
+
+	for _, val := range spawns {
+		b.objectBoard[val[1]][val[0]] = newFoodObject()
+	}
+}
+
+func (b *Board) isSpotEmpty(x int, y int) bool {
+	if b.objectBoard[y][x].getType() == "empty" {
+		return true
+	}
+
+	return false
+}
+
 func (b *Board) randomPosAtEdgeOfMap() []int {
 	// top = 0, right = 1, left = 2, bottom = 3
 	edge := rand.Intn(4)
@@ -139,6 +163,14 @@ func (b *Board) randomPosAtEdgeOfMap() []int {
 		x = rand.Intn(b.cols - 1)
 		y = b.rows - 1
 	}
+
+	return []int{x, y}
+}
+
+func (b *Board) randomPosWithinMap() []int {
+	minDistanceFromBorder := 3
+	x := rand.Intn(b.cols-minDistanceFromBorder*2) + minDistanceFromBorder
+	y := rand.Intn(b.rows-minDistanceFromBorder*2) + minDistanceFromBorder
 
 	return []int{x, y}
 }

@@ -15,7 +15,7 @@ var totalWidth int
 var totalHeight int
 
 func InitDrawing(b *Board) {
-	totalWidth = b.cols + b.gamelog.cols + 2 + 1 + 1
+	totalWidth = b.cols + b.gamelog.cols + 2 + 1 + 2
 	totalHeight = b.rows + 2
 }
 
@@ -48,7 +48,8 @@ func printDataLine(boardData []BoardObject, gl *Gamelog, messageRow int) {
 		line = append(line, val)
 	}
 
-	line = append(line, edgeSymbol) // adding a # symbol at the end
+	line = append(line, spaceSymbol) // adding a " " symbol at the end
+	line = append(line, edgeSymbol)  // adding a # symbol at the end
 
 	fmt.Println(string(line))
 }

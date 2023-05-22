@@ -2,6 +2,7 @@ package main
 
 type BoardObject interface {
 	getSymbol() byte
+	getType() string
 }
 
 func getObjectSymbol(objectname string) byte {
