@@ -4,7 +4,7 @@ package main
 
 const cols int = 40
 
-var currentGamelog Gamelog
+var currentGamelog *Gamelog
 
 var emptyMessage []byte
 
@@ -25,17 +25,37 @@ func InitTextInfo(rows int) *Gamelog {
 		emptyMessage = append(emptyMessage, spaceSymbol)
 	}
 
-	currentGamelog = gl
+	currentGamelog = &gl
 
 	return &gl
 }
 
-func (gl *Gamelog) addMessage(msg string) {
-	gl.messages = append(gl.messages, msg)
-}
+// func (gl *Gamelog) addMessage(msg string) {
+// 	gl.messages = append(gl.messages, msg)
+// }
 
 func addMessageToCurrentGamelog(msg string) {
-	currentGamelog.messages = append(currentGamelog.messages, msg)
+	endSlice := 0
+	msgLen := len(msg)
+
+	for i := 0; i <= msgLen; i = endSlice {
+		endSlice = min(currentGamelog.rows+i, msgLen)
+		// do we need to split the message?
+		if endSlice < msgLen {
+			for j := endSlice; j > i; j-- {
+				// find the first space and break there!
+				if msg[j] == byte(32) {
+					endSlice = j
+					break
+				}
+			}
+		}
+
+		// log := fmt.Sprintf("%v %v %v", i, endSlice, msgLen)
+		currentGamelog.messages = append(currentGamelog.messages, msg[i:endSlice])
+		// currentGamelog.messages = append(currentGamelog.messages, log)
+		endSlice++
+	}
 }
 
 func (gl *Gamelog) getMessageByRow(row int) []byte {
@@ -51,4 +71,12 @@ func (gl *Gamelog) getMessageByRow(row int) []byte {
 		}
 		return []byte(gl.messages[messageOffset] + spaceString)
 	}
+}
+
+func min(a int, b int) int {
+	if a > b {
+		return b
+	}
+
+	return a
 }
