@@ -9,6 +9,9 @@ import (
 var initialCreature1 int
 var initialFoods int
 
+var allFoodsObjects []*Food
+var allCreatureObjects []*CreatureObject
+
 type Board struct {
 	rows         int
 	cols         int

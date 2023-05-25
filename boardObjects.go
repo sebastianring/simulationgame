@@ -5,6 +5,10 @@ type BoardObject interface {
 	getType() string
 }
 
+type CreatureObject interface {
+	getHP() int
+}
+
 func getObjectSymbol(objectname string) byte {
 	drawingSymbols := map[string]byte{
 		"EmptyObject": 46,  // .....
@@ -93,4 +97,8 @@ func (f Food) getType() string {
 
 func (c Creature1) getType() string {
 	return c.typeDesc
+}
+
+func (c Creature1) getHP() int {
+	return c.hp
 }
