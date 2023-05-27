@@ -4,21 +4,25 @@ package main
 
 const cols int = 40
 
+const prioThreshold int = 1
+
 var currentGamelog *Gamelog
 
 var emptyMessage []byte
 
 type Gamelog struct {
-	cols     int
-	rows     int
-	messages []string
+	cols           int
+	rows           int
+	messages       []string
+	lowPrioMessage []string
 }
 
 func InitTextInfo(rows int) *Gamelog {
 	gl := Gamelog{
-		cols:     cols,
-		rows:     rows,
-		messages: []string{"Logging started"},
+		cols:           cols,
+		rows:           rows,
+		messages:       []string{"Logging started"},
+		lowPrioMessage: []string{},
 	}
 
 	for i := 0; i < cols; i++ {
@@ -29,10 +33,6 @@ func InitTextInfo(rows int) *Gamelog {
 
 	return &gl
 }
-
-// func (gl *Gamelog) addMessage(msg string) {
-// 	gl.messages = append(gl.messages, msg)
-// }
 
 func addMessageToCurrentGamelog(msg string) {
 	endSlice := 0

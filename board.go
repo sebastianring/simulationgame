@@ -10,14 +10,19 @@ var initialCreature1 int
 var initialFoods int
 
 var allFoodsObjects []*Food
-var allCreatureObjects []*CreatureObject
+var allCreatureObjects []Pos
 
 type Board struct {
-	rows         int
-	cols         int
-	displayBoard [][]int // 0 = empty, 1 = food, 10-20 = creatures
-	gamelog      *Gamelog
-	objectBoard  [][]BoardObject
+	rows int
+	cols int
+	// displayBoard [][]int // 0 = empty, 1 = food, 10-20 = creatures
+	gamelog     *Gamelog
+	objectBoard [][]BoardObject
+}
+
+type Pos struct {
+	x int
+	y int
 }
 
 func InitNewBoard(rows int, cols int) *Board {
@@ -29,10 +34,9 @@ func InitNewBoard(rows int, cols int) *Board {
 	newBoard := Board{
 		rows,
 		cols,
-		createBoardArray(rows, cols),
+		// createBoardArray(rows, cols),
 		InitTextInfo(rows),
 		*createEmptyObjectsArray(rows, cols),
-		// createObjectArray(rows, cols),
 	}
 
 	initialCreature1 = 20
@@ -47,6 +51,7 @@ func InitNewBoard(rows int, cols int) *Board {
 	return &newBoard
 }
 
+// No longer in use
 func createBoardArray(rows int, cols int) [][]int {
 	arr := make([][]int, rows)
 
@@ -117,10 +122,9 @@ func (b *Board) spawnCreature1OnBoard(qty int) {
 		}
 	}
 
-	fmt.Println(spawns)
-
 	for _, val := range spawns {
 		b.objectBoard[val[1]][val[0]] = newCreature1Object()
+		allCreatureObjects = append(allCreatureObjects, Pos{x: val[0], y: val[1]})
 	}
 }
 
@@ -190,4 +194,77 @@ func checkIfValExistsInSlice(val []int, slice [][]int) bool {
 	}
 
 	return false
+}
+
+func (b *Board) tickFrame() {
+
+	for i, pos := range allCreatureObjects {
+		action := b.objectBoard[pos.y][pos.x].updateTick()
+		if action == "move" {
+			// addMessageToCurrentGamelog("OLD POS: " + strconv.Itoa(pos.x) + " " + strconv.Itoa(pos.y))
+			newPos := b.getRandomPosNearby(pos)
+			tempObject := b.objectBoard[newPos.y][newPos.x]
+			b.objectBoard[newPos.y][newPos.x] = b.objectBoard[pos.y][pos.x]
+			b.objectBoard[pos.y][pos.x] = tempObject
+			// addMessageToCurrentGamelog("Object moved to " + strconv.Itoa(newPos.x) + " " + strconv.Itoa(newPos.y))
+			allCreatureObjects[i] = newPos
+			// addMessageToCurrentGamelog("New POS: " + strconv.Itoa(pos.x) + " " + strconv.Itoa(pos.y))
+		}
+	}
+
+	DrawFrame(b)
+}
+
+func (b *Board) getRandomPosNearby(currentPos Pos) Pos {
+	newPos := Pos{-1, -1}
+
+	// HOW TO MAKE THE CREATURES MOVE INWARDS TO LOOK FOR FOOD?
+	// The closer they are to one edge, the more probable they are to move towards the other edge?
+	// Example: x = 99, y = 40
+	// Width-x = the probability to move the left
+	// Height-y = the probability to move upwards?
+
+	for newPos.x == -1 || newPos.y == -1 {
+		direction := rand.Intn(2) // 0 = x movement, 1 = y-movement
+		var x int
+		var y int
+		if direction == 0 {
+			xdirection := rand.Intn(b.cols)
+			xprobability := b.cols - 1 - currentPos.x
+			if xdirection < xprobability {
+				x = currentPos.x + 1
+			} else {
+				x = currentPos.x - 1
+			}
+			y = currentPos.y
+		} else {
+			ydirection := rand.Intn(b.rows)
+			yprobability := b.rows - 1 - currentPos.y
+			if ydirection < yprobability {
+				y = currentPos.y + 1
+			} else {
+				y = currentPos.y - 1
+			}
+			x = currentPos.x
+		}
+
+		if b.checkIfNewPosIsValid(x, y) {
+			newPos.x = x
+			newPos.y = y
+		}
+	}
+
+	return newPos
+}
+
+func (b *Board) checkIfNewPosIsValid(x int, y int) bool {
+	if x < 0 || x >= b.cols || y < 0 || y >= b.rows {
+		return false
+	}
+	objectType := b.objectBoard[y][x].getType()
+	if objectType != "empty" {
+		return false
+	}
+
+	return true
 }

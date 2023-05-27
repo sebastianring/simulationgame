@@ -3,7 +3,6 @@ package main
 import (
 	"fmt"
 	"os"
-	// "os"
 	"os/exec"
 	// "runtime"
 )
@@ -66,13 +65,6 @@ func printSymbolLine(length int) {
 }
 
 func getBoardSymbolByRow(row []BoardObject) []byte {
-	// drawingSymbols := map[int]byte{
-	// 	0: 46,  // .....
-	// 	1: 64,  // @@@@@
-	// 	2: 32,  // <SPACE>
-	// 	3: 126, // ~~~~~
-	// }
-	//
 	line := make([]byte, len(row))
 
 	for _, object := range row {
