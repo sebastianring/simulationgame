@@ -9,7 +9,7 @@ import (
 var initialCreature1 int
 var initialFoods int
 
-var allFoodsObjects []*Food
+var allFoodsObjects []Pos
 var allCreatureObjects []Pos
 
 type Board struct {
@@ -18,6 +18,7 @@ type Board struct {
 	// displayBoard [][]int // 0 = empty, 1 = food, 10-20 = creatures
 	gamelog     *Gamelog
 	objectBoard [][]BoardObject
+	time        int
 }
 
 type Pos struct {
@@ -37,6 +38,7 @@ func InitNewBoard(rows int, cols int) *Board {
 		// createBoardArray(rows, cols),
 		InitTextInfo(rows),
 		*createEmptyObjectsArray(rows, cols),
+		0,
 	}
 
 	initialCreature1 = 20
@@ -128,6 +130,7 @@ func (b *Board) spawnCreature1OnBoard(qty int) {
 	}
 }
 
+// Refactor with Pos struct
 func (b *Board) spawnFoodOnBoard(qty int) {
 	spawns := make([][]int, 0)
 
@@ -140,6 +143,7 @@ func (b *Board) spawnFoodOnBoard(qty int) {
 
 	for _, val := range spawns {
 		b.objectBoard[val[1]][val[0]] = newFoodObject()
+		allFoodsObjects = append(allFoodsObjects, Pos{x: val[0], y: val[1]})
 	}
 }
 
@@ -151,6 +155,7 @@ func (b *Board) isSpotEmpty(x int, y int) bool {
 	return false
 }
 
+// Refactor with Pos struct
 func (b *Board) randomPosAtEdgeOfMap() []int {
 	// top = 0, right = 1, left = 2, bottom = 3
 	edge := rand.Intn(4)
@@ -197,17 +202,26 @@ func checkIfValExistsInSlice(val []int, slice [][]int) bool {
 }
 
 func (b *Board) tickFrame() {
-
+	b.time++
+	// Update all the creatures on board
 	for i, pos := range allCreatureObjects {
 		action := b.objectBoard[pos.y][pos.x].updateTick()
 		if action == "move" {
 			// addMessageToCurrentGamelog("OLD POS: " + strconv.Itoa(pos.x) + " " + strconv.Itoa(pos.y))
-			newPos := b.getRandomPosNearby(pos)
+			newPos, moveType := b.newPosAndMove(pos)
 			tempObject := b.objectBoard[newPos.y][newPos.x]
+
 			b.objectBoard[newPos.y][newPos.x] = b.objectBoard[pos.y][pos.x]
-			b.objectBoard[pos.y][pos.x] = tempObject
+			if moveType == "food" {
+				b.objectBoard[newPos.y][newPos.x].updateVal("heal")
+				b.objectBoard[pos.y][pos.x] = newEmptyObject()
+				deleteFood(newPos)
+			} else {
+				b.objectBoard[pos.y][pos.x] = tempObject
+			}
 			// addMessageToCurrentGamelog("Object moved to " + strconv.Itoa(newPos.x) + " " + strconv.Itoa(newPos.y))
 			allCreatureObjects[i] = newPos
+
 			// addMessageToCurrentGamelog("New POS: " + strconv.Itoa(pos.x) + " " + strconv.Itoa(pos.y))
 		}
 	}
@@ -215,7 +229,7 @@ func (b *Board) tickFrame() {
 	DrawFrame(b)
 }
 
-func (b *Board) getRandomPosNearby(currentPos Pos) Pos {
+func (b *Board) newPosAndMove(currentPos Pos) (Pos, string) {
 	newPos := Pos{-1, -1}
 
 	// HOW TO MAKE THE CREATURES MOVE INWARDS TO LOOK FOR FOOD?
@@ -248,23 +262,43 @@ func (b *Board) getRandomPosNearby(currentPos Pos) Pos {
 			x = currentPos.x
 		}
 
-		if b.checkIfNewPosIsValid(x, y) {
+		valid, moveType := b.checkIfNewPosIsValid(x, y)
+
+		if valid {
 			newPos.x = x
 			newPos.y = y
 		}
+		return newPos, moveType
 	}
 
-	return newPos
+	return newPos, "empty"
 }
 
-func (b *Board) checkIfNewPosIsValid(x int, y int) bool {
+func (b *Board) checkIfNewPosIsValid(x int, y int) (bool, string) {
 	if x < 0 || x >= b.cols || y < 0 || y >= b.rows {
-		return false
+		return false, ""
 	}
 	objectType := b.objectBoard[y][x].getType()
-	if objectType != "empty" {
-		return false
+	if objectType == "food" {
+		return true, "food"
 	}
 
-	return true
+	return true, "empty"
+}
+
+func deleteFood(pos Pos) {
+	var element int
+	for i, val := range allFoodsObjects {
+		if val.x == pos.x && val.y == pos.y {
+			element = i
+			break
+		}
+	}
+
+	allFoodsObjects = deleteIndexInPosSlice(allFoodsObjects, element)
+}
+
+func deleteIndexInPosSlice(posSlice []Pos, index int) []Pos {
+	posSlice[index] = posSlice[len(posSlice)-1]
+	return posSlice[:len(posSlice)-1]
 }

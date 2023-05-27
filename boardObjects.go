@@ -6,6 +6,7 @@ type BoardObject interface {
 	getSymbol() byte
 	getType() string
 	updateTick() string
+	updateVal(string)
 }
 
 type CreatureObject interface {
@@ -65,6 +66,7 @@ type Creature1 struct {
 	speed    int
 	oriSpeed int
 	typeDesc string
+	moving   bool
 }
 
 func newCreature1Object() *Creature1 {
@@ -76,6 +78,7 @@ func newCreature1Object() *Creature1 {
 		speed:    15,
 		oriSpeed: 15,
 		typeDesc: "creature",
+		moving:   true,
 	}
 
 	addMessageToCurrentGamelog("New creature1 object added")
@@ -97,16 +100,16 @@ func (eo *EmptyObject) getData() map[string]int {
 	return returnMap
 }
 
-func (f *Food) getSymbol() byte {
-	return f.symbol
-}
+func (eo *EmptyObject) updateVal(val string) {
 
-func (c *Creature1) getSymbol() byte {
-	return c.symbol
 }
 
 func (eo *EmptyObject) getType() string {
 	return eo.typeDesc
+}
+
+func (f *Food) getSymbol() byte {
+	return f.symbol
 }
 
 func (f *Food) getType() string {
@@ -115,6 +118,10 @@ func (f *Food) getType() string {
 
 func (f *Food) updateTick() string {
 	return ""
+}
+
+func (f *Food) updateVal(val string) {
+
 }
 
 func (c *Creature1) getType() string {
@@ -130,13 +137,27 @@ func (c *Creature1) getSpeed() int {
 }
 
 func (c *Creature1) updateTick() string {
-	c.speed -= 1
-	// addMessageToCurrentGamelog(strconv.Itoa(c.speed))
-	if c.speed == 0 {
-		// addMessageToCurrentGamelog("Should move now ...")
-		c.speed = c.oriSpeed
-		return "move"
+	if c.moving && c.hp > 0 {
+		c.speed -= 1
+		// addMessageToCurrentGamelog(strconv.Itoa(c.speed))
+		if c.speed == 0 {
+			// addMessageToCurrentGamelog("Should move now ...")
+			c.speed = c.oriSpeed
+			return "move"
+		}
 	}
 
 	return ""
+}
+
+func (c *Creature1) getSymbol() byte {
+	return c.symbol
+}
+
+func (c *Creature1) updateVal(val string) {
+	if val == "heal" {
+		addMessageToCurrentGamelog("FOOD EATEN")
+		c.hp += c.oriHP
+		c.moving = false
+	}
 }

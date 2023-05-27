@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"strconv"
 	// "runtime"
 )
 
@@ -15,19 +16,31 @@ var totalHeight int
 
 func InitDrawing(b *Board) {
 	totalWidth = b.cols + b.gamelog.cols + 2 + 1 + 2
-	totalHeight = b.rows + 2
+	totalHeight = b.rows + 2 + 2 // rows + (edges + status bar) + (status bar line)
 }
 
 func DrawFrame(b *Board) {
 	clearScreen()
 
 	for i := 0; i < totalHeight; i++ {
-		if i == 0 || i == totalHeight-1 {
+		if i == 1 {
+			b.printStatusLine(totalWidth)
+		} else if i == 0 || i == 2 || i == totalHeight-1 {
 			printSymbolLine(totalWidth)
 		} else {
-			printDataLine(b.objectBoard[i-1], b.gamelog, i-1)
+			printDataLine(b.objectBoard[i-3], b.gamelog, i-3)
 		}
 	}
+}
+
+func (b *Board) printStatusLine(totalWidth int) {
+	// statusBar := []string{"line" }
+
+	// for i := 0; i < totalWidth; i++ {
+	// 	line = append(line, edgeSymbol)
+	// }
+
+	fmt.Println("TIME: " + strconv.Itoa(b.time) + "   CREATURES ALIVE: " + strconv.Itoa(len(allCreatureObjects)) + "     FOOD LEFT: " + strconv.Itoa(len(allFoodsObjects)))
 }
 
 func printDataLine(boardData []BoardObject, gl *Gamelog, messageRow int) {
