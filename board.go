@@ -223,6 +223,9 @@ func (b *Board) tickFrame() {
 			allCreatureObjects[i] = newPos
 
 			// addMessageToCurrentGamelog("New POS: " + strconv.Itoa(pos.x) + " " + strconv.Itoa(pos.y))
+		} else if action == "dead" {
+			b.objectBoard[pos.y][pos.x] = newEmptyObject()
+			deleteCreature(pos)
 		}
 	}
 
@@ -296,6 +299,18 @@ func deleteFood(pos Pos) {
 	}
 
 	allFoodsObjects = deleteIndexInPosSlice(allFoodsObjects, element)
+}
+
+func deleteCreature(pos Pos) {
+	var element int
+	for i, val := range allCreatureObjects {
+		if val.x == pos.x && val.y == pos.y {
+			element = i
+			break
+		}
+	}
+
+	allCreatureObjects = deleteIndexInPosSlice(allCreatureObjects, element)
 }
 
 func deleteIndexInPosSlice(posSlice []Pos, index int) []Pos {

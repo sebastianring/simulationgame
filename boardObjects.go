@@ -143,8 +143,11 @@ func (c *Creature1) updateTick() string {
 		if c.speed == 0 {
 			// addMessageToCurrentGamelog("Should move now ...")
 			c.speed = c.oriSpeed
+			c.hp -= 10
 			return "move"
 		}
+	} else if c.hp <= 0 {
+		return "dead"
 	}
 
 	return ""
