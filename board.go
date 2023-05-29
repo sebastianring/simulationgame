@@ -147,6 +147,7 @@ func (b *Board) spawnFoodOnBoard(qty int) {
 	}
 }
 
+// Refactor with Pos struct
 func (b *Board) isSpotEmpty(x int, y int) bool {
 	if b.objectBoard[y][x].getType() == "empty" {
 		return true
@@ -179,6 +180,7 @@ func (b *Board) randomPosAtEdgeOfMap() []int {
 	return []int{x, y}
 }
 
+// Refactor with Pos struct
 func (b *Board) randomPosWithinMap() []int {
 	minDistanceFromBorder := 3
 	x := rand.Intn(b.cols-minDistanceFromBorder*2) + minDistanceFromBorder
@@ -229,7 +231,24 @@ func (b *Board) tickFrame() {
 		}
 	}
 
+	if b.checkIfCreaturesAreDead() {
+		gameOn = false
+	}
+
 	DrawFrame(b)
+}
+
+func (b *Board) checkIfCreaturesAreDead() bool {
+	for _, pos := range allCreatureObjects {
+		dead := b.objectBoard[pos.y][pos.x].isDead()
+		moving := b.objectBoard[pos.y][pos.x].isMoving()
+
+		if !dead || !moving {
+			return false
+		}
+	}
+
+	return true
 }
 
 func (b *Board) newPosAndMove(currentPos Pos) (Pos, string) {

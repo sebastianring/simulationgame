@@ -7,6 +7,9 @@ type BoardObject interface {
 	getType() string
 	updateTick() string
 	updateVal(string)
+	getIntData(string) int
+	isDead() bool
+	isMoving() bool
 }
 
 type CreatureObject interface {
@@ -108,6 +111,18 @@ func (eo *EmptyObject) getType() string {
 	return eo.typeDesc
 }
 
+func (eo *EmptyObject) getIntData(data string) int {
+	return 0
+}
+
+func (eo *EmptyObject) isDead() bool {
+	return false
+}
+
+func (eo *EmptyObject) isMoving() bool {
+	return false
+}
+
 func (f *Food) getSymbol() byte {
 	return f.symbol
 }
@@ -124,12 +139,24 @@ func (f *Food) updateVal(val string) {
 
 }
 
+func (f *Food) getIntData(data string) int {
+	return 0
+}
+
+func (f *Food) isDead() bool {
+	return false
+}
+
+func (f *Food) isMoving() bool {
+	return false
+}
+
 func (c *Creature1) getType() string {
 	return c.typeDesc
 }
 
-func (c *Creature1) getHP() int {
-	return c.hp
+func (c *Creature1) getHP() (int, bool) {
+	return c.hp, c.moving
 }
 
 func (c *Creature1) getSpeed() int {
@@ -139,9 +166,7 @@ func (c *Creature1) getSpeed() int {
 func (c *Creature1) updateTick() string {
 	if c.moving && c.hp > 0 {
 		c.speed -= 1
-		// addMessageToCurrentGamelog(strconv.Itoa(c.speed))
 		if c.speed == 0 {
-			// addMessageToCurrentGamelog("Should move now ...")
 			c.speed = c.oriSpeed
 			c.hp -= 10
 			return "move"
@@ -163,4 +188,24 @@ func (c *Creature1) updateVal(val string) {
 		c.hp += c.oriHP
 		c.moving = false
 	}
+}
+
+func (c *Creature1) getIntData(data string) int {
+	if data == "hp" {
+		return c.hp
+	}
+
+	return 0
+}
+
+func (c *Creature1) isDead() bool {
+	if c.hp <= 0 {
+		return true
+	}
+
+	return false
+}
+
+func (c *Creature1) isMoving() bool {
+	return c.moving
 }
