@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
+	"strconv"
 )
 
 var initialCreature1 int
@@ -233,6 +234,7 @@ func (b *Board) tickFrame() {
 
 	if b.checkIfCreaturesAreDead() {
 		gameOn = false
+		addMessageToCurrentGamelog("GAME SHOULD END NOW WTF")
 	}
 
 	DrawFrame(b)
@@ -243,7 +245,9 @@ func (b *Board) checkIfCreaturesAreDead() bool {
 		dead := b.objectBoard[pos.y][pos.x].isDead()
 		moving := b.objectBoard[pos.y][pos.x].isMoving()
 
-		if !dead || !moving {
+		addMessageToCurrentGamelog("DEAD:" + strconv.FormatBool(dead) + " MOVING: " + strconv.FormatBool(moving))
+
+		if !dead || moving {
 			return false
 		}
 	}
