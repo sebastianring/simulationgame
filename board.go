@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
-	"strconv"
+	// "strconv"
 )
 
 var initialCreature1 int
@@ -72,6 +72,7 @@ func createBoardArray(rows int, cols int) [][]int {
 	return arr
 }
 
+// creates the initial array for all objects inside the board
 func createObjectArray(rows int, cols int) *[][]BoardObject {
 	arr := make([][]BoardObject, rows)
 	edgeSpawnPoints := (rows*2 + cols*2 - 4)
@@ -232,7 +233,7 @@ func (b *Board) tickFrame() {
 		}
 	}
 
-	if b.checkIfCreaturesAreDead() {
+	if b.checkIfCreaturesAreInactive() == true {
 		gameOn = false
 		addMessageToCurrentGamelog("GAME SHOULD END NOW WTF")
 	}
@@ -243,11 +244,26 @@ func (b *Board) tickFrame() {
 func (b *Board) checkIfCreaturesAreDead() bool {
 	for _, pos := range allCreatureObjects {
 		dead := b.objectBoard[pos.y][pos.x].isDead()
+		// moving := b.objectBoard[pos.y][pos.x].isMoving()
+		// addMessageToCurrentGamelog("DEAD:" + strconv.FormatBool(dead) + " MOVING: " + strconv.FormatBool(moving))
+
+		if !dead {
+			return false
+		}
+	}
+
+	return true
+}
+
+func (b *Board) checkIfCreaturesAreInactive() bool {
+	for _, pos := range allCreatureObjects {
+		dead := b.objectBoard[pos.y][pos.x].isDead()
 		moving := b.objectBoard[pos.y][pos.x].isMoving()
 
-		addMessageToCurrentGamelog("DEAD:" + strconv.FormatBool(dead) + " MOVING: " + strconv.FormatBool(moving))
+		// addMessageToCurrentGamelog("Current counter: " + strconv.Itoa(i) + "total length: " + strconv.Itoa(len(allCreatureObjects)))
+		// addMessageToCurrentGamelog("DEAD:" + strconv.FormatBool(dead) + " MOVING: " + strconv.FormatBool(moving))
 
-		if !dead || moving {
+		if !dead && moving || dead {
 			return false
 		}
 	}
