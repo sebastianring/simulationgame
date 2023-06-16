@@ -118,40 +118,41 @@ func createEmptyObjectsArray(rows int, cols int) *[][]BoardObject {
 }
 
 func (b *Board) spawnCreature1OnBoard(qty int) {
-	spawns := make([][]int, 0)
+	spawns := make([]Pos, 0)
 	for len(spawns) < qty {
 		newPos := b.randomPosAtEdgeOfMap()
-		if !checkIfValExistsInSlice(newPos, spawns) {
+		if !checkIfPosExistsInSlice(newPos, spawns) {
 			spawns = append(spawns, newPos)
 		}
 	}
 
-	for _, val := range spawns {
-		b.objectBoard[val[1]][val[0]] = newCreature1Object()
-		allCreatureObjects = append(allCreatureObjects, Pos{x: val[0], y: val[1]})
+	for _, pos := range spawns {
+		b.objectBoard[pos.y][pos.x] = newCreature1Object()
+		allCreatureObjects = append(allCreatureObjects, pos)
 	}
 }
 
 // Refactor with Pos struct
 func (b *Board) spawnFoodOnBoard(qty int) {
-	spawns := make([][]int, 0)
+	// spawns := make([][]int, 0)
+	spawns := make([]Pos, 0)
 
 	for len(spawns) < qty {
 		newPos := b.randomPosWithinMap()
-		if !checkIfValExistsInSlice(newPos, spawns) && b.isSpotEmpty(newPos[0], newPos[1]) {
+		if !checkIfPosExistsInSlice(newPos, spawns) && b.isSpotEmpty(newPos) {
 			spawns = append(spawns, newPos)
 		}
 	}
 
-	for _, val := range spawns {
-		b.objectBoard[val[1]][val[0]] = newFoodObject()
-		allFoodsObjects = append(allFoodsObjects, Pos{x: val[0], y: val[1]})
+	for _, pos := range spawns {
+		b.objectBoard[pos.y][pos.x] = newFoodObject()
+		allFoodsObjects = append(allFoodsObjects, pos)
 	}
 }
 
 // Refactor with Pos struct
-func (b *Board) isSpotEmpty(x int, y int) bool {
-	if b.objectBoard[y][x].getType() == "empty" {
+func (b *Board) isSpotEmpty(pos Pos) bool {
+	if b.objectBoard[pos.y][pos.x].getType() == "empty" {
 		return true
 	}
 
@@ -159,7 +160,7 @@ func (b *Board) isSpotEmpty(x int, y int) bool {
 }
 
 // Refactor with Pos struct
-func (b *Board) randomPosAtEdgeOfMap() []int {
+func (b *Board) randomPosAtEdgeOfMap() Pos {
 	// top = 0, right = 1, left = 2, bottom = 3
 	edge := rand.Intn(4)
 	var x int
@@ -179,31 +180,42 @@ func (b *Board) randomPosAtEdgeOfMap() []int {
 		y = b.rows - 1
 	}
 
-	return []int{x, y}
+	return Pos{x, y}
 }
 
 // Refactor with Pos struct
-func (b *Board) randomPosWithinMap() []int {
+func (b *Board) randomPosWithinMap() Pos {
 	minDistanceFromBorder := 3
 	x := rand.Intn(b.cols-minDistanceFromBorder*2) + minDistanceFromBorder
 	y := rand.Intn(b.rows-minDistanceFromBorder*2) + minDistanceFromBorder
 
-	return []int{x, y}
+	return Pos{x, y}
 }
 
-func checkIfValExistsInSlice(val []int, slice [][]int) bool {
-	for _, val2 := range slice {
-		if len(val) == len(val2) {
-			for i := 0; i < len(val); i++ {
-				if val[i] == val2[i] {
-					return false
-				}
-			}
+func checkIfPosExistsInSlice(pos Pos, slice []Pos) bool {
+	for _, slicePos := range slice {
+		if pos.x == slicePos.x && pos.y == slicePos.y {
+			return true
 		}
 	}
 
 	return false
 }
+
+//
+// func checkIfValExistsInSlice(val []int, slice [][]int) bool {
+// 	for _, val2 := range slice {
+// 		if len(val) == len(val2) {
+// 			for i := 0; i < len(val); i++ {
+// 				if val[i] == val2[i] {
+// 					return false
+// 				}
+// 			}
+// 		}
+// 	}
+//
+// 	return false
+// }
 
 func (b *Board) tickFrame() {
 	b.time++
