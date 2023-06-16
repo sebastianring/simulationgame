@@ -11,18 +11,25 @@ var currentGamelog *Gamelog
 var emptyMessage []byte
 
 type Gamelog struct {
-	cols           int
-	rows           int
-	messages       []string
-	lowPrioMessage []string
+	cols              int
+	rows              int
+	messages          []message
+	idCtr             int
+	displayedMessages []string
+}
+
+type message struct {
+	id    int
+	prio  int
+	texts []string
 }
 
 func InitTextInfo(rows int) *Gamelog {
 	gl := Gamelog{
-		cols:           cols,
-		rows:           rows,
-		messages:       []string{"Logging started"},
-		lowPrioMessage: []string{},
+		cols:     cols,
+		rows:     rows,
+		messages: []message{},
+		idCtr:    1,
 	}
 
 	for i := 0; i < cols; i++ {
@@ -34,16 +41,18 @@ func InitTextInfo(rows int) *Gamelog {
 	return &gl
 }
 
-func addMessageToCurrentGamelog(msg string) {
+func addMessageToCurrentGamelog(msg string, prio int) {
 	endSlice := 0
 	msgLen := len(msg)
+
+	var texts []string
 
 	for i := 0; i <= msgLen; i = endSlice {
 		endSlice = min(currentGamelog.rows+i, msgLen)
 		// do we need to split the message?
 		if endSlice < msgLen {
 			for j := endSlice; j > i; j-- {
-				// find the first space and break there!
+				// find the first space, backwards, and break there!
 				if msg[j] == byte(32) {
 					endSlice = j
 					break
@@ -52,24 +61,56 @@ func addMessageToCurrentGamelog(msg string) {
 		}
 
 		// log := fmt.Sprintf("%v %v %v", i, endSlice, msgLen)
-		currentGamelog.messages = append(currentGamelog.messages, msg[i:endSlice])
+		texts = append(texts, msg[i:endSlice])
 		// currentGamelog.messages = append(currentGamelog.messages, log)
 		endSlice++
 	}
+
+	newMessage := newMessage(currentGamelog.idCtr, prio, texts)
+	currentGamelog.messages = append(currentGamelog.messages, *newMessage)
+
+	if prio <= prioThreshold {
+		for _, val := range texts {
+			currentGamelog.displayedMessages = append(currentGamelog.displayedMessages, val)
+		}
+	}
+
+	currentGamelog.idCtr++
+}
+
+func newMessage(id int, prio int, texts []string) *message {
+	m := message{
+		id:    id,
+		prio:  prio,
+		texts: texts,
+	}
+
+	return &m
+}
+
+func (gl *Gamelog) getNumberOfMessageRows() int {
+	rows := 0
+	for _, msg := range gl.messages {
+		rows += len(msg.texts)
+	}
+
+	return rows
 }
 
 func (gl *Gamelog) getMessageByRow(row int) []byte {
-	messageOffset := len(gl.messages) - (gl.rows - row)
+	numberOfMessageRows := len(gl.displayedMessages)
 
-	if messageOffset > len(gl.messages)-1 || messageOffset < 0 {
+	messageOffset := numberOfMessageRows - (gl.rows - row)
+
+	if messageOffset > numberOfMessageRows-1 || messageOffset < 0 {
 		return emptyMessage
 	} else {
-		spaces := cols - len(gl.messages[messageOffset])
+		spaces := cols - len(gl.displayedMessages[messageOffset])
 		var spaceString string
 		for i := 0; i < spaces; i++ {
 			spaceString += " "
 		}
-		return []byte(gl.messages[messageOffset] + spaceString)
+		return []byte(gl.displayedMessages[messageOffset] + spaceString)
 	}
 }
 

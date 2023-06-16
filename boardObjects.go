@@ -39,7 +39,7 @@ func newEmptyObject() *EmptyObject {
 		typeDesc: "empty",
 	}
 
-	addMessageToCurrentGamelog("New empty object added")
+	addMessageToCurrentGamelog("New empty object added", 2)
 
 	return &eo
 }
@@ -56,7 +56,7 @@ func newFoodObject() *Food {
 		typeDesc: "food",
 	}
 
-	addMessageToCurrentGamelog("New food object added")
+	addMessageToCurrentGamelog("New food object added", 2)
 
 	return &f
 }
@@ -84,7 +84,7 @@ func newCreature1Object() *Creature1 {
 		moving:   true,
 	}
 
-	addMessageToCurrentGamelog("New creature1 object added")
+	addMessageToCurrentGamelog("New creature1 object added", 2)
 
 	return &c1
 }
@@ -184,7 +184,7 @@ func (c *Creature1) getSymbol() byte {
 
 func (c *Creature1) updateVal(val string) {
 	if val == "heal" {
-		addMessageToCurrentGamelog("FOOD EATEN")
+		addMessageToCurrentGamelog("FOOD EATEN", 2)
 		c.hp += c.oriHP
 		c.moving = false
 	}

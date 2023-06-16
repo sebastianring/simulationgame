@@ -48,8 +48,8 @@ func InitNewBoard(rows int, cols int) *Board {
 	newBoard.spawnCreature1OnBoard(initialCreature1)
 	newBoard.spawnFoodOnBoard(initialFoods)
 
-	addMessageToCurrentGamelog("Board added")
-	addMessageToCurrentGamelog("Welcome to the simulation game where you can simulate creatures and how they evolve!")
+	addMessageToCurrentGamelog("Board added", 2)
+	addMessageToCurrentGamelog("Welcome to the simulation game where you can simulate creatures and how they evolve!", 1)
 
 	return &newBoard
 }
@@ -235,7 +235,7 @@ func (b *Board) tickFrame() {
 
 	if b.checkIfCreaturesAreInactive() == true {
 		gameOn = false
-		addMessageToCurrentGamelog("GAME SHOULD END NOW WTF")
+		addMessageToCurrentGamelog("Game should end now", 2)
 	}
 
 	DrawFrame(b)

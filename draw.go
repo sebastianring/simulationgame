@@ -53,7 +53,7 @@ func printDataLine(boardData []BoardObject, gl *Gamelog, messageRow int) {
 	}
 
 	line = append(line, edgeSymbol)  // adding a # symbol at the start
-	line = append(line, spaceSymbol) // adding a # symbol at the start
+	line = append(line, spaceSymbol) // adding a " " symbol at the start
 
 	gamelogDataLine := gl.getMessageByRow(messageRow)
 	for _, val := range gamelogDataLine {
