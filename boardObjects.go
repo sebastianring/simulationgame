@@ -18,6 +18,7 @@ type BoardObject interface {
 	getIntData(string) int
 	isDead() bool
 	isMoving() bool
+	resetValues()
 }
 
 type CreatureObject interface {
@@ -60,7 +61,6 @@ func newEmptyObject() *EmptyObject {
 
 type Food struct {
 	symbol   byte
-	active   bool
 	typeDesc string
 }
 
@@ -80,7 +80,6 @@ var Creature1IdCtr int
 type Creature1 struct {
 	id       int
 	symbol   byte
-	active   bool
 	hp       int
 	oriHP    int
 	speed    int
@@ -97,17 +96,17 @@ func newCreature1Object() *Creature1 {
 	c1 := Creature1{
 		id:       Creature1IdCtr,
 		symbol:   getObjectSymbol("Creature1"),
-		active:   true,
 		oriHP:    100,
 		hp:       100,
-		speed:    15,
-		oriSpeed: 15,
+		speed:    5,
+		oriSpeed: 5,
 		typeDesc: "creature",
 		moving:   true,
 	}
 
 	Creature1IdCtr++
-	addMessageToCurrentGamelog("Creature1 object with ID: "+strconv.Itoa(c1.id)+" added to the board", 2)
+	addMessageToCurrentGamelog("Creature1 object with ID: "+
+		strconv.Itoa(c1.id)+" added to the board", 2)
 
 	return &c1
 }
@@ -161,6 +160,12 @@ func (c *Creature1) isDead() bool {
 	return false
 }
 
+func (c *Creature1) resetValues() {
+	c.hp = c.oriHP
+	c.speed = c.oriSpeed
+	c.moving = true
+}
+
 // -------------------------------------------------- //
 // -------------------------------------------------- //
 // ALL THE NECESSARY INTERFACE FUNCTIONS ------------ //
@@ -201,6 +206,10 @@ func (eo *EmptyObject) isMoving() bool {
 	return false
 }
 
+func (eo *EmptyObject) resetValues() {
+
+}
+
 func (f *Food) getSymbol() byte {
 	return f.symbol
 }
@@ -227,6 +236,10 @@ func (f *Food) isDead() bool {
 
 func (f *Food) isMoving() bool {
 	return false
+}
+
+func (f *Food) resetValues() {
+
 }
 
 func (c *Creature1) getType() string {

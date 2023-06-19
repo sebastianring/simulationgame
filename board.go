@@ -7,6 +7,12 @@ import (
 	"strconv"
 )
 
+// -------------------------------------------------- //
+// -------------------------------------------------- //
+// INITS AND STRUCTS -------------------------------- //
+// -------------------------------------------------- //
+// -------------------------------------------------- //
+
 var initialCreature1 int
 var initialFoods int
 
@@ -98,6 +104,12 @@ func createEmptyObjectsArray(rows int, cols int) *[][]BoardObject {
 	return &arr
 }
 
+// -------------------------------------------------- //
+// -------------------------------------------------- //
+// BOARD FUNCTIONS ---------------------------------- //
+// -------------------------------------------------- //
+// -------------------------------------------------- //
+
 func (b *Board) spawnCreature1OnBoard(qty int) {
 	spawns := make([]Pos, 0)
 	for len(spawns) < qty {
@@ -129,7 +141,6 @@ func (b *Board) spawnFoodOnBoard(qty int) {
 	}
 }
 
-// Refactor with Pos struct
 func (b *Board) isSpotEmpty(pos Pos) bool {
 	if b.objectBoard[pos.y][pos.x].getType() == "empty" {
 		return true
@@ -138,7 +149,6 @@ func (b *Board) isSpotEmpty(pos Pos) bool {
 	return false
 }
 
-// Refactor with Pos struct
 func (b *Board) randomPosAtEdgeOfMap() Pos {
 	// top = 0, right = 1, left = 2, bottom = 3
 	edge := rand.Intn(4)
@@ -162,7 +172,6 @@ func (b *Board) randomPosAtEdgeOfMap() Pos {
 	return Pos{x, y}
 }
 
-// Refactor with Pos struct
 func (b *Board) randomPosWithinMap() Pos {
 	minDistanceFromBorder := 3
 	x := rand.Intn(b.cols-minDistanceFromBorder*2) + minDistanceFromBorder
@@ -181,7 +190,6 @@ func checkIfPosExistsInSlice(pos Pos, slice []Pos) bool {
 	return false
 }
 
-//
 // func checkIfValExistsInSlice(val []int, slice [][]int) bool {
 // 	for _, val2 := range slice {
 // 		if len(val) == len(val2) {
@@ -235,8 +243,42 @@ func (b *Board) creatureUpdatesPerTick() {
 	}
 
 	if b.checkIfCreaturesAreInactive() == true {
-		gameOn = false
-		addMessageToCurrentGamelog("Game should end now", 1)
+		if b.checkIfCreaturesAreDead() {
+			gameOn = false
+			addMessageToCurrentGamelog("All creatures are dead, end the game", 1)
+		}
+		// NEXT ROUND
+		b.newRound()
+	}
+}
+
+func (b *Board) newRound() {
+	addMessageToCurrentGamelog("All creatures inactive, starting new round", 1)
+
+	for i, creaturePos := range allCreatureObjects {
+		tempObject := b.objectBoard[creaturePos.y][creaturePos.x]
+		b.objectBoard[creaturePos.y][creaturePos.x] = newEmptyObject()
+		tempObject.resetValues()
+
+		findNewPos := false
+		for !findNewPos {
+			newPos := b.randomPosAtEdgeOfMap()
+			if b.isSpotEmpty(newPos) {
+				b.objectBoard[newPos.y][newPos.x] = tempObject
+
+				addMessageToCurrentGamelog("old creature pos: x: "+
+					strconv.Itoa(creaturePos.x)+
+					" y: "+strconv.Itoa(creaturePos.y), 1)
+
+				allCreatureObjects[i] = newPos
+
+				addMessageToCurrentGamelog("new creature pos: x: "+
+					strconv.Itoa(creaturePos.x)+
+					" y: "+strconv.Itoa(creaturePos.y), 1)
+
+				break
+			}
+		}
 	}
 }
 
