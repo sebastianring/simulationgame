@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"math/rand"
 	"os"
-	// "strconv"
+	"strconv"
 )
 
 var initialCreature1 int
@@ -36,7 +36,6 @@ func InitNewBoard(rows int, cols int) *Board {
 	newBoard := Board{
 		rows,
 		cols,
-		// createBoardArray(rows, cols),
 		InitTextInfo(rows),
 		*createEmptyObjectsArray(rows, cols),
 		0,
@@ -52,24 +51,6 @@ func InitNewBoard(rows int, cols int) *Board {
 	addMessageToCurrentGamelog("Welcome to the simulation game where you can simulate creatures and how they evolve!", 1)
 
 	return &newBoard
-}
-
-// No longer in use
-func createBoardArray(rows int, cols int) [][]int {
-	arr := make([][]int, rows)
-
-	for i := 0; i < rows; i++ {
-		arr[i] = make([]int, cols)
-		for j := 0; j < cols; j++ {
-			if rand.Intn(20) == 0 {
-				arr[i][j] = 1
-			} else {
-				arr[i][j] = 0
-			}
-		}
-	}
-
-	return arr
 }
 
 // creates the initial array for all objects inside the board
@@ -132,9 +113,7 @@ func (b *Board) spawnCreature1OnBoard(qty int) {
 	}
 }
 
-// Refactor with Pos struct
 func (b *Board) spawnFoodOnBoard(qty int) {
-	// spawns := make([][]int, 0)
 	spawns := make([]Pos, 0)
 
 	for len(spawns) < qty {
@@ -219,11 +198,16 @@ func checkIfPosExistsInSlice(pos Pos, slice []Pos) bool {
 
 func (b *Board) tickFrame() {
 	b.time++
-	// Update all the creatures on board
+	b.creatureUpdatesPerTick()
+
+	DrawFrame(b)
+}
+
+func (b *Board) creatureUpdatesPerTick() {
 	for i, pos := range allCreatureObjects {
 		action := b.objectBoard[pos.y][pos.x].updateTick()
 		if action == "move" {
-			// addMessageToCurrentGamelog("OLD POS: " + strconv.Itoa(pos.x) + " " + strconv.Itoa(pos.y))
+			oldPos := pos
 			newPos, moveType := b.newPosAndMove(pos)
 			tempObject := b.objectBoard[newPos.y][newPos.x]
 
@@ -235,7 +219,12 @@ func (b *Board) tickFrame() {
 			} else {
 				b.objectBoard[pos.y][pos.x] = tempObject
 			}
-			// addMessageToCurrentGamelog("Object moved to " + strconv.Itoa(newPos.x) + " " + strconv.Itoa(newPos.y))
+
+			addMessageToCurrentGamelog("Object moved from: "+strconv.Itoa(oldPos.x)+
+				" "+strconv.Itoa(oldPos.y)+
+				" to "+strconv.Itoa(newPos.x)+
+				" "+strconv.Itoa(newPos.y), 2)
+
 			allCreatureObjects[i] = newPos
 
 			// addMessageToCurrentGamelog("New POS: " + strconv.Itoa(pos.x) + " " + strconv.Itoa(pos.y))
@@ -247,10 +236,8 @@ func (b *Board) tickFrame() {
 
 	if b.checkIfCreaturesAreInactive() == true {
 		gameOn = false
-		addMessageToCurrentGamelog("Game should end now", 2)
+		addMessageToCurrentGamelog("Game should end now", 1)
 	}
-
-	DrawFrame(b)
 }
 
 func (b *Board) checkIfCreaturesAreDead() bool {

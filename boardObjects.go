@@ -1,6 +1,14 @@
 package main
 
+import "strconv"
+
 // import "strconv"
+
+// -------------------------------------------------- //
+// -------------------------------------------------- //
+// ALL INTERFACES AND GENERAL FUNCTIONS ------------- //
+// -------------------------------------------------- //
+// -------------------------------------------------- //
 
 type BoardObject interface {
 	getSymbol() byte
@@ -27,6 +35,12 @@ func getObjectSymbol(objectname string) byte {
 
 	return drawingSymbols[objectname]
 }
+
+// -------------------------------------------------- //
+// -------------------------------------------------- //
+// ALL STRUCTS HERE AND THEIR CREATE FUNCTIONS ------ //
+// -------------------------------------------------- //
+// -------------------------------------------------- //
 
 type EmptyObject struct {
 	symbol   byte
@@ -61,7 +75,10 @@ func newFoodObject() *Food {
 	return &f
 }
 
+var Creature1IdCtr int
+
 type Creature1 struct {
+	id       int
 	symbol   byte
 	active   bool
 	hp       int
@@ -73,7 +90,12 @@ type Creature1 struct {
 }
 
 func newCreature1Object() *Creature1 {
+	if Creature1IdCtr < 1 {
+		Creature1IdCtr = 1
+	}
+
 	c1 := Creature1{
+		id:       Creature1IdCtr,
 		symbol:   getObjectSymbol("Creature1"),
 		active:   true,
 		oriHP:    100,
@@ -84,10 +106,66 @@ func newCreature1Object() *Creature1 {
 		moving:   true,
 	}
 
-	addMessageToCurrentGamelog("New creature1 object added", 2)
+	Creature1IdCtr++
+	addMessageToCurrentGamelog("Creature1 object with ID: "+strconv.Itoa(c1.id)+" added to the board", 2)
 
 	return &c1
 }
+
+// -------------------------------------------------- //
+// -------------------------------------------------- //
+// ALL THE SPECIFIC CREATURE FUNCTIONS -------------- //
+// -------------------------------------------------- //
+// -------------------------------------------------- //
+
+func (c *Creature1) updateTick() string {
+	if c.moving && c.hp > 0 {
+		c.speed -= 1
+		if c.speed == 0 {
+			c.speed = c.oriSpeed
+			c.hp -= 10
+			return "move"
+		}
+	} else if c.hp <= 0 {
+		return "dead"
+	}
+
+	return ""
+}
+
+func (c *Creature1) getSymbol() byte {
+	return c.symbol
+}
+
+func (c *Creature1) updateVal(val string) {
+	if val == "heal" {
+		addMessageToCurrentGamelog("", 2)
+		c.hp += c.oriHP
+		c.moving = false
+	}
+}
+
+func (c *Creature1) getIntData(data string) int {
+	if data == "hp" {
+		return c.hp
+	}
+
+	return 0
+}
+
+func (c *Creature1) isDead() bool {
+	if c.hp <= 0 {
+		return true
+	}
+
+	return false
+}
+
+// -------------------------------------------------- //
+// -------------------------------------------------- //
+// ALL THE NECESSARY INTERFACE FUNCTIONS ------------ //
+// -------------------------------------------------- //
+// -------------------------------------------------- //
 
 func (eo *EmptyObject) getSymbol() byte {
 	return eo.symbol
@@ -161,49 +239,6 @@ func (c *Creature1) getHP() (int, bool) {
 
 func (c *Creature1) getSpeed() int {
 	return c.speed
-}
-
-func (c *Creature1) updateTick() string {
-	if c.moving && c.hp > 0 {
-		c.speed -= 1
-		if c.speed == 0 {
-			c.speed = c.oriSpeed
-			c.hp -= 10
-			return "move"
-		}
-	} else if c.hp <= 0 {
-		return "dead"
-	}
-
-	return ""
-}
-
-func (c *Creature1) getSymbol() byte {
-	return c.symbol
-}
-
-func (c *Creature1) updateVal(val string) {
-	if val == "heal" {
-		addMessageToCurrentGamelog("FOOD EATEN", 2)
-		c.hp += c.oriHP
-		c.moving = false
-	}
-}
-
-func (c *Creature1) getIntData(data string) int {
-	if data == "hp" {
-		return c.hp
-	}
-
-	return 0
-}
-
-func (c *Creature1) isDead() bool {
-	if c.hp <= 0 {
-		return true
-	}
-
-	return false
 }
 
 func (c *Creature1) isMoving() bool {
