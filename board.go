@@ -5,6 +5,7 @@ import (
 	"math/rand"
 	"os"
 	"strconv"
+	"strings"
 )
 
 // -------------------------------------------------- //
@@ -47,8 +48,8 @@ func InitNewBoard(rows int, cols int) *Board {
 		0,
 	}
 
-	initialCreature1 = 20
-	initialFoods = 50
+	initialCreature1 = 30
+	initialFoods = 250
 
 	newBoard.spawnCreature1OnBoard(initialCreature1)
 	newBoard.spawnFoodOnBoard(initialFoods)
@@ -208,39 +209,62 @@ func (b *Board) tickFrame() {
 	b.time++
 	b.creatureUpdatesPerTick()
 
+	// ----------- debugging ---------- //
+
+	res := make([]string, 1)
+
+	for _, pos := range allCreatureObjects {
+		speed := b.objectBoard[pos.y][pos.x].getIntData("speed")
+		id := b.objectBoard[pos.y][pos.x].getIntData("id")
+		res = append(res, strconv.Itoa(speed)+":"+strconv.Itoa(id))
+	}
+
+	addMessageToCurrentGamelog(strings.Join(res, ", "), 1)
+
+	// ----------- end debugging ------ //
+
 	DrawFrame(b)
 }
 
 func (b *Board) creatureUpdatesPerTick() {
-	for i, pos := range allCreatureObjects {
-		action := b.objectBoard[pos.y][pos.x].updateTick()
-		if action == "move" {
-			oldPos := pos
-			newPos, moveType := b.newPosAndMove(pos)
-			tempObject := b.objectBoard[newPos.y][newPos.x]
+	// var updatedAllCreatureObjects Pos
+	updatedAllCreatureObjects := make([]Pos, 0)
 
+	for i, pos := range allCreatureObjects {
+		addMessageToCurrentGamelog(strconv.Itoa(i)+" "+strconv.Itoa(pos.x)+" "+strconv.Itoa(pos.y), 1)
+		action := b.objectBoard[pos.y][pos.x].updateTick()
+
+		if action == "move" {
+			// oldPos := pos
+			newPos, moveType := b.newPosAndMove(pos)
+			// tempObject := b.objectBoard[newPos.y][newPos.x]
 			b.objectBoard[newPos.y][newPos.x] = b.objectBoard[pos.y][pos.x]
+
 			if moveType == "food" {
 				b.objectBoard[newPos.y][newPos.x].updateVal("heal")
 				b.objectBoard[pos.y][pos.x] = newEmptyObject()
 				deleteFood(newPos)
 			} else {
-				b.objectBoard[pos.y][pos.x] = tempObject
+				b.objectBoard[pos.y][pos.x] = newEmptyObject()
 			}
 
-			addMessageToCurrentGamelog("Object moved from: "+strconv.Itoa(oldPos.x)+
-				" "+strconv.Itoa(oldPos.y)+
-				" to "+strconv.Itoa(newPos.x)+
-				" "+strconv.Itoa(newPos.y), 2)
+			// addMessageToCurrentGamelog("Object moved from: "+strconv.Itoa(oldPos.x)+
+			// 	" "+strconv.Itoa(oldPos.y)+
+			// 	" to "+strconv.Itoa(newPos.x)+
+			// 	" "+strconv.Itoa(newPos.y)+"speed: "+strconv.Itoa(b.objectBoard[newPos.y][newPos.x].getIntData("speed")), 1)
 
-			allCreatureObjects[i] = newPos
+			updatedAllCreatureObjects = append(updatedAllCreatureObjects, newPos)
 
-			// addMessageToCurrentGamelog("New POS: " + strconv.Itoa(pos.x) + " " + strconv.Itoa(pos.y))
+			addMessageToCurrentGamelog("New POS: "+strconv.Itoa(pos.x)+" "+strconv.Itoa(pos.y), 1)
 		} else if action == "dead" {
 			b.objectBoard[pos.y][pos.x] = newEmptyObject()
 			deleteCreature(pos)
+		} else {
+			updatedAllCreatureObjects = append(updatedAllCreatureObjects, pos)
 		}
 	}
+
+	allCreatureObjects = updatedAllCreatureObjects
 
 	if b.checkIfCreaturesAreInactive() == true {
 		if b.checkIfCreaturesAreDead() {
@@ -254,17 +278,18 @@ func (b *Board) creatureUpdatesPerTick() {
 
 func (b *Board) newRound() {
 	addMessageToCurrentGamelog("All creatures inactive, starting new round", 1)
+	// addMessageToCurrentGamelog(strconv.Itoa(len(allCreatureObjects)), 1)
 
 	for i, creaturePos := range allCreatureObjects {
-		tempObject := b.objectBoard[creaturePos.y][creaturePos.x]
-		b.objectBoard[creaturePos.y][creaturePos.x] = newEmptyObject()
-		tempObject.resetValues()
+		addMessageToCurrentGamelog(strconv.Itoa(i), 1)
 
 		findNewPos := false
 		for !findNewPos {
 			newPos := b.randomPosAtEdgeOfMap()
 			if b.isSpotEmpty(newPos) {
-				b.objectBoard[newPos.y][newPos.x] = tempObject
+				b.objectBoard[newPos.y][newPos.x] = b.objectBoard[creaturePos.y][creaturePos.x]
+				b.objectBoard[newPos.y][newPos.x].resetValues()
+				b.objectBoard[creaturePos.y][creaturePos.x] = newEmptyObject()
 
 				addMessageToCurrentGamelog("old creature pos: x: "+
 					strconv.Itoa(creaturePos.x)+
@@ -273,10 +298,10 @@ func (b *Board) newRound() {
 				allCreatureObjects[i] = newPos
 
 				addMessageToCurrentGamelog("new creature pos: x: "+
-					strconv.Itoa(creaturePos.x)+
-					" y: "+strconv.Itoa(creaturePos.y), 1)
+					strconv.Itoa(allCreatureObjects[i].x)+
+					" y: "+strconv.Itoa(allCreatureObjects[i].y), 1)
 
-				break
+				findNewPos = true
 			}
 		}
 	}

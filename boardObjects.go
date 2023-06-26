@@ -129,7 +129,7 @@ func (c *Creature1) updateTick() string {
 		return "dead"
 	}
 
-	return ""
+	return "error"
 }
 
 func (c *Creature1) getSymbol() byte {
@@ -147,6 +147,10 @@ func (c *Creature1) updateVal(val string) {
 func (c *Creature1) getIntData(data string) int {
 	if data == "hp" {
 		return c.hp
+	} else if data == "speed" {
+		return c.speed
+	} else if data == "id" {
+		return c.id
 	}
 
 	return 0
