@@ -254,6 +254,14 @@ func (c *Creature1) getHP() (int, bool) {
 	return c.hp, c.moving
 }
 
+func (c *Creature1) checkIfOffspring() bool {
+	if c.hp > int(float32(c.oriHP)*1.1) {
+		return true
+	}
+
+	return false
+}
+
 func (c *Creature1) getSpeed() int {
 	return c.speed
 }

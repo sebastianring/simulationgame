@@ -1,7 +1,7 @@
 package main
 
 import (
-	"fmt"
+	// "fmt"
 	"math/rand"
 	"time"
 )
@@ -17,15 +17,15 @@ func main() {
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 
-	for true {
-		fmt.Scanln()
-		board.tickFrame()
-	}
-	//
-	// for range ticker.C {
+	// for true {
+	// 	fmt.Scanln()
 	// 	board.tickFrame()
-	// 	if gameOn == false {
-	// 		break
-	// 	}
 	// }
+
+	for range ticker.C {
+		board.tickFrame()
+		if gameOn == false {
+			break
+		}
+	}
 }

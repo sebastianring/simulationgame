@@ -219,7 +219,7 @@ func (b *Board) tickFrame() {
 		res = append(res, strconv.Itoa(speed)+":"+strconv.Itoa(id))
 	}
 
-	addMessageToCurrentGamelog(strings.Join(res, ", "), 1)
+	addMessageToCurrentGamelog(strings.Join(res, ", "), 2)
 
 	// ----------- end debugging ------ //
 
@@ -229,9 +229,10 @@ func (b *Board) tickFrame() {
 func (b *Board) creatureUpdatesPerTick() {
 	// var updatedAllCreatureObjects Pos
 	updatedAllCreatureObjects := make([]Pos, 0)
+	deadCreatures := make([]Pos, 0)
 
 	for i, pos := range allCreatureObjects {
-		addMessageToCurrentGamelog(strconv.Itoa(i)+" "+strconv.Itoa(pos.x)+" "+strconv.Itoa(pos.y), 1)
+		addMessageToCurrentGamelog(strconv.Itoa(b.objectBoard[pos.y][pos.x].getIntData("id"))+" "+strconv.Itoa(i)+" "+strconv.Itoa(pos.x)+" "+strconv.Itoa(pos.y), 2)
 		action := b.objectBoard[pos.y][pos.x].updateTick()
 
 		if action == "move" {
@@ -241,6 +242,7 @@ func (b *Board) creatureUpdatesPerTick() {
 			b.objectBoard[newPos.y][newPos.x] = b.objectBoard[pos.y][pos.x]
 
 			if moveType == "food" {
+				addMessageToCurrentGamelog("Food eaten by "+strconv.Itoa(b.objectBoard[pos.y][pos.x].getIntData("id")), 2)
 				b.objectBoard[newPos.y][newPos.x].updateVal("heal")
 				b.objectBoard[pos.y][pos.x] = newEmptyObject()
 				deleteFood(newPos)
@@ -248,22 +250,23 @@ func (b *Board) creatureUpdatesPerTick() {
 				b.objectBoard[pos.y][pos.x] = newEmptyObject()
 			}
 
-			// addMessageToCurrentGamelog("Object moved from: "+strconv.Itoa(oldPos.x)+
-			// 	" "+strconv.Itoa(oldPos.y)+
-			// 	" to "+strconv.Itoa(newPos.x)+
-			// 	" "+strconv.Itoa(newPos.y)+"speed: "+strconv.Itoa(b.objectBoard[newPos.y][newPos.x].getIntData("speed")), 1)
-
 			updatedAllCreatureObjects = append(updatedAllCreatureObjects, newPos)
 
-			addMessageToCurrentGamelog("New POS: "+strconv.Itoa(pos.x)+" "+strconv.Itoa(pos.y), 1)
+			// addMessageToCurrentGamelog("New POS: "+strconv.Itoa(pos.x)+" "+strconv.Itoa(pos.y), 1)
 		} else if action == "dead" {
-			b.objectBoard[pos.y][pos.x] = newEmptyObject()
-			deleteCreature(pos)
+			deadCreatures = append(deadCreatures, pos)
 		} else {
 			updatedAllCreatureObjects = append(updatedAllCreatureObjects, pos)
 		}
 	}
 
+	// delete dead creatures after tick is complete
+	for _, pos := range deadCreatures {
+		b.objectBoard[pos.y][pos.x] = newEmptyObject()
+		deleteCreature(pos)
+	}
+
+	// update all creatures from last tick
 	allCreatureObjects = updatedAllCreatureObjects
 
 	if b.checkIfCreaturesAreInactive() == true {
@@ -281,7 +284,7 @@ func (b *Board) newRound() {
 	// addMessageToCurrentGamelog(strconv.Itoa(len(allCreatureObjects)), 1)
 
 	for i, creaturePos := range allCreatureObjects {
-		addMessageToCurrentGamelog(strconv.Itoa(i), 1)
+		addMessageToCurrentGamelog(strconv.Itoa(i), 2)
 
 		findNewPos := false
 		for !findNewPos {
@@ -291,19 +294,26 @@ func (b *Board) newRound() {
 				b.objectBoard[newPos.y][newPos.x].resetValues()
 				b.objectBoard[creaturePos.y][creaturePos.x] = newEmptyObject()
 
-				addMessageToCurrentGamelog("old creature pos: x: "+
-					strconv.Itoa(creaturePos.x)+
-					" y: "+strconv.Itoa(creaturePos.y), 1)
-
-				allCreatureObjects[i] = newPos
-
-				addMessageToCurrentGamelog("new creature pos: x: "+
-					strconv.Itoa(allCreatureObjects[i].x)+
-					" y: "+strconv.Itoa(allCreatureObjects[i].y), 1)
+				// addMessageToCurrentGamelog("old creature pos: x: "+
+				// 	strconv.Itoa(creaturePos.x)+
+				// 	" y: "+strconv.Itoa(creaturePos.y), 2)
+				//
+				// allCreatureObjects[i] = newPos
+				//
+				// addMessageToCurrentGamelog("new creature pos: x: "+
+				// 	strconv.Itoa(allCreatureObjects[i].x)+
+				// 	" y: "+strconv.Itoa(allCreatureObjects[i].y), 2)
 
 				findNewPos = true
 			}
 		}
+	}
+}
+
+func (b *Board) checkIfCreatureSpawnsOffspring() {
+	for _, pos := range allCreatureObjects {
+		b.objectBoard[pos.y][pos.x].getIntData("hp")
+
 	}
 }
 
@@ -375,8 +385,8 @@ func (b *Board) newPosAndMove(currentPos Pos) (Pos, string) {
 		if valid {
 			newPos.x = x
 			newPos.y = y
+			return newPos, moveType
 		}
-		return newPos, moveType
 	}
 
 	return newPos, "empty"
@@ -389,9 +399,11 @@ func (b *Board) checkIfNewPosIsValid(x int, y int) (bool, string) {
 	objectType := b.objectBoard[y][x].getType()
 	if objectType == "food" {
 		return true, "food"
+	} else if objectType == "empty" {
+		return true, "empty"
 	}
 
-	return true, "empty"
+	return false, ""
 }
 
 func deleteFood(pos Pos) {
