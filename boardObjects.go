@@ -9,6 +9,7 @@ import "strconv"
 // ALL INTERFACES AND GENERAL FUNCTIONS ------------- //
 // -------------------------------------------------- //
 // -------------------------------------------------- //
+// I really need to change architecture of the board .. this is abuse of interfaces. //
 
 type BoardObject interface {
 	getSymbol() byte
@@ -19,11 +20,13 @@ type BoardObject interface {
 	isDead() bool
 	isMoving() bool
 	resetValues()
+	ifOffspring() bool
 }
 
 type CreatureObject interface {
 	getHP() int
 	updateTick() string
+	ifOffspring() bool
 }
 
 func getObjectSymbol(objectname string) byte {
@@ -96,8 +99,8 @@ func newCreature1Object() *Creature1 {
 	c1 := Creature1{
 		id:       Creature1IdCtr,
 		symbol:   getObjectSymbol("Creature1"),
-		oriHP:    100,
-		hp:       100,
+		oriHP:    250,
+		hp:       250,
 		speed:    5,
 		oriSpeed: 5,
 		typeDesc: "creature",
@@ -214,6 +217,10 @@ func (eo *EmptyObject) resetValues() {
 
 }
 
+func (eo *EmptyObject) ifOffspring() bool {
+	return false
+}
+
 func (f *Food) getSymbol() byte {
 	return f.symbol
 }
@@ -246,6 +253,10 @@ func (f *Food) resetValues() {
 
 }
 
+func (f *Food) ifOffspring() bool {
+	return false
+}
+
 func (c *Creature1) getType() string {
 	return c.typeDesc
 }
@@ -254,7 +265,7 @@ func (c *Creature1) getHP() (int, bool) {
 	return c.hp, c.moving
 }
 
-func (c *Creature1) checkIfOffspring() bool {
+func (c *Creature1) ifOffspring() bool {
 	if c.hp > int(float32(c.oriHP)*1.1) {
 		return true
 	}

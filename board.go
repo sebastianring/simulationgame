@@ -18,12 +18,12 @@ var initialCreature1 int
 var initialFoods int
 
 var allFoodsObjects []Pos
-var allCreatureObjects []Pos
+var allAliveCreatureObjects []Pos
+var deadCreatures []*BoardObject
 
 type Board struct {
-	rows int
-	cols int
-	// displayBoard [][]int // 0 = empty, 1 = food, 10-20 = creatures
+	rows        int
+	cols        int
 	gamelog     *Gamelog
 	objectBoard [][]BoardObject
 	time        int
@@ -122,7 +122,8 @@ func (b *Board) spawnCreature1OnBoard(qty int) {
 
 	for _, pos := range spawns {
 		b.objectBoard[pos.y][pos.x] = newCreature1Object()
-		allCreatureObjects = append(allCreatureObjects, pos)
+		allAliveCreatureObjects = append(allAliveCreatureObjects, pos)
+
 	}
 }
 
@@ -191,29 +192,15 @@ func checkIfPosExistsInSlice(pos Pos, slice []Pos) bool {
 	return false
 }
 
-// func checkIfValExistsInSlice(val []int, slice [][]int) bool {
-// 	for _, val2 := range slice {
-// 		if len(val) == len(val2) {
-// 			for i := 0; i < len(val); i++ {
-// 				if val[i] == val2[i] {
-// 					return false
-// 				}
-// 			}
-// 		}
-// 	}
-//
-// 	return false
-// }
-
 func (b *Board) tickFrame() {
 	b.time++
 	b.creatureUpdatesPerTick()
 
-	// ----------- debugging ---------- //
+	// ----------- debugging creatures - print speed and id ---------- //
 
 	res := make([]string, 1)
 
-	for _, pos := range allCreatureObjects {
+	for _, pos := range allAliveCreatureObjects {
 		speed := b.objectBoard[pos.y][pos.x].getIntData("speed")
 		id := b.objectBoard[pos.y][pos.x].getIntData("id")
 		res = append(res, strconv.Itoa(speed)+":"+strconv.Itoa(id))
@@ -221,7 +208,7 @@ func (b *Board) tickFrame() {
 
 	addMessageToCurrentGamelog(strings.Join(res, ", "), 2)
 
-	// ----------- end debugging ------ //
+	// ----------- end debugging ------------------------------------ //
 
 	DrawFrame(b)
 }
@@ -231,14 +218,12 @@ func (b *Board) creatureUpdatesPerTick() {
 	updatedAllCreatureObjects := make([]Pos, 0)
 	deadCreatures := make([]Pos, 0)
 
-	for i, pos := range allCreatureObjects {
+	for i, pos := range allAliveCreatureObjects {
 		addMessageToCurrentGamelog(strconv.Itoa(b.objectBoard[pos.y][pos.x].getIntData("id"))+" "+strconv.Itoa(i)+" "+strconv.Itoa(pos.x)+" "+strconv.Itoa(pos.y), 2)
 		action := b.objectBoard[pos.y][pos.x].updateTick()
 
 		if action == "move" {
-			// oldPos := pos
 			newPos, moveType := b.newPosAndMove(pos)
-			// tempObject := b.objectBoard[newPos.y][newPos.x]
 			b.objectBoard[newPos.y][newPos.x] = b.objectBoard[pos.y][pos.x]
 
 			if moveType == "food" {
@@ -252,9 +237,9 @@ func (b *Board) creatureUpdatesPerTick() {
 
 			updatedAllCreatureObjects = append(updatedAllCreatureObjects, newPos)
 
-			// addMessageToCurrentGamelog("New POS: "+strconv.Itoa(pos.x)+" "+strconv.Itoa(pos.y), 1)
 		} else if action == "dead" {
 			deadCreatures = append(deadCreatures, pos)
+
 		} else {
 			updatedAllCreatureObjects = append(updatedAllCreatureObjects, pos)
 		}
@@ -262,12 +247,12 @@ func (b *Board) creatureUpdatesPerTick() {
 
 	// delete dead creatures after tick is complete
 	for _, pos := range deadCreatures {
+		deleteCreature(pos, &b.objectBoard[pos.y][pos.x])
 		b.objectBoard[pos.y][pos.x] = newEmptyObject()
-		deleteCreature(pos)
 	}
 
 	// update all creatures from last tick
-	allCreatureObjects = updatedAllCreatureObjects
+	allAliveCreatureObjects = updatedAllCreatureObjects
 
 	if b.checkIfCreaturesAreInactive() == true {
 		if b.checkIfCreaturesAreDead() {
@@ -281,9 +266,13 @@ func (b *Board) creatureUpdatesPerTick() {
 
 func (b *Board) newRound() {
 	addMessageToCurrentGamelog("All creatures inactive, starting new round", 1)
-	// addMessageToCurrentGamelog(strconv.Itoa(len(allCreatureObjects)), 1)
 
-	for i, creaturePos := range allCreatureObjects {
+	b.spawnOffsprings()
+	b.findPosForAllCreatures()
+}
+
+func (b *Board) findPosForAllCreatures() {
+	for i, creaturePos := range allAliveCreatureObjects {
 		addMessageToCurrentGamelog(strconv.Itoa(i), 2)
 
 		findNewPos := false
@@ -298,11 +287,11 @@ func (b *Board) newRound() {
 				// 	strconv.Itoa(creaturePos.x)+
 				// 	" y: "+strconv.Itoa(creaturePos.y), 2)
 				//
-				// allCreatureObjects[i] = newPos
+				allAliveCreatureObjects[i] = newPos
 				//
 				// addMessageToCurrentGamelog("new creature pos: x: "+
-				// 	strconv.Itoa(allCreatureObjects[i].x)+
-				// 	" y: "+strconv.Itoa(allCreatureObjects[i].y), 2)
+				// 	strconv.Itoa(allAliveCreatureObjects[i].x)+
+				// 	" y: "+strconv.Itoa(allAliveCreatureObjects[i].y), 2)
 
 				findNewPos = true
 			}
@@ -310,15 +299,21 @@ func (b *Board) newRound() {
 	}
 }
 
-func (b *Board) checkIfCreatureSpawnsOffspring() {
-	for _, pos := range allCreatureObjects {
-		b.objectBoard[pos.y][pos.x].getIntData("hp")
-
+func (b *Board) spawnOffsprings() {
+	qty := 0
+	for _, pos := range allAliveCreatureObjects {
+		if b.objectBoard[pos.y][pos.x].ifOffspring() {
+			qty++
+		}
 	}
+
+	addMessageToCurrentGamelog(strconv.Itoa(qty)+"new creatures spawned", 1)
+
+	b.spawnCreature1OnBoard(qty)
 }
 
 func (b *Board) checkIfCreaturesAreDead() bool {
-	for _, pos := range allCreatureObjects {
+	for _, pos := range allAliveCreatureObjects {
 		dead := b.objectBoard[pos.y][pos.x].isDead()
 		// moving := b.objectBoard[pos.y][pos.x].isMoving()
 		// addMessageToCurrentGamelog("DEAD:" + strconv.FormatBool(dead) + " MOVING: " + strconv.FormatBool(moving))
@@ -332,11 +327,11 @@ func (b *Board) checkIfCreaturesAreDead() bool {
 }
 
 func (b *Board) checkIfCreaturesAreInactive() bool {
-	for _, pos := range allCreatureObjects {
+	for _, pos := range allAliveCreatureObjects {
 		dead := b.objectBoard[pos.y][pos.x].isDead()
 		moving := b.objectBoard[pos.y][pos.x].isMoving()
 
-		// addMessageToCurrentGamelog("Current counter: " + strconv.Itoa(i) + "total length: " + strconv.Itoa(len(allCreatureObjects)))
+		// addMessageToCurrentGamelog("Current counter: " + strconv.Itoa(i) + "total length: " + strconv.Itoa(len(allAliveCreatureObjects)))
 		// addMessageToCurrentGamelog("DEAD:" + strconv.FormatBool(dead) + " MOVING: " + strconv.FormatBool(moving))
 
 		if !dead && moving || dead {
@@ -418,16 +413,17 @@ func deleteFood(pos Pos) {
 	allFoodsObjects = deleteIndexInPosSlice(allFoodsObjects, element)
 }
 
-func deleteCreature(pos Pos) {
+func deleteCreature(pos Pos, creature *BoardObject) {
+	deadCreatures = append(deadCreatures, creature)
 	var element int
-	for i, val := range allCreatureObjects {
+	for i, val := range allAliveCreatureObjects {
 		if val.x == pos.x && val.y == pos.y {
 			element = i
 			break
 		}
 	}
 
-	allCreatureObjects = deleteIndexInPosSlice(allCreatureObjects, element)
+	allAliveCreatureObjects = deleteIndexInPosSlice(allAliveCreatureObjects, element)
 }
 
 func deleteIndexInPosSlice(posSlice []Pos, index int) []Pos {
