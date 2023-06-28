@@ -17,16 +17,18 @@ import (
 var initialCreature1 int
 var initialFoods int
 
-var allFoodsObjects []Pos
+var allFoodObjects []Pos
 var allAliveCreatureObjects []Pos
-var deadCreatures []*BoardObject
+var allDeadCreatures []*BoardObject
 
 type Board struct {
-	rows        int
-	cols        int
-	gamelog     *Gamelog
-	objectBoard [][]BoardObject
-	time        int
+	rows                 int
+	cols                 int
+	gamelog              *Gamelog
+	objectBoard          [][]BoardObject
+	time                 int
+	round                int
+	deadCreaturesInRound int
 }
 
 type Pos struct {
@@ -45,6 +47,8 @@ func InitNewBoard(rows int, cols int) *Board {
 		cols,
 		InitTextInfo(rows),
 		*createEmptyObjectsArray(rows, cols),
+		0,
+		1,
 		0,
 	}
 
@@ -139,7 +143,7 @@ func (b *Board) spawnFoodOnBoard(qty int) {
 
 	for _, pos := range spawns {
 		b.objectBoard[pos.y][pos.x] = newFoodObject()
-		allFoodsObjects = append(allFoodsObjects, pos)
+		allFoodObjects = append(allFoodObjects, pos)
 	}
 }
 
@@ -254,21 +258,34 @@ func (b *Board) creatureUpdatesPerTick() {
 	// update all creatures from last tick
 	allAliveCreatureObjects = updatedAllCreatureObjects
 
-	if b.checkIfCreaturesAreInactive() == true {
+	if b.checkIfCreaturesAreInactive() {
 		if b.checkIfCreaturesAreDead() {
 			gameOn = false
 			addMessageToCurrentGamelog("All creatures are dead, end the game", 1)
 		}
-		// NEXT ROUND
+
 		b.newRound()
 	}
 }
 
 func (b *Board) newRound() {
 	addMessageToCurrentGamelog("All creatures inactive, starting new round", 1)
-
 	b.spawnOffsprings()
 	b.findPosForAllCreatures()
+	b.deleteAndSpawnFood()
+
+	b.round++
+	b.time = 0
+	b.deadCreaturesInRound = 0
+}
+
+func (b *Board) deleteAndSpawnFood() {
+	for _, pos := range allFoodObjects {
+		b.objectBoard[pos.y][pos.x] = newEmptyObject()
+	}
+
+	allFoodObjects = make([]Pos, 0)
+	b.spawnFoodOnBoard(initialFoods)
 }
 
 func (b *Board) findPosForAllCreatures() {
@@ -403,18 +420,18 @@ func (b *Board) checkIfNewPosIsValid(x int, y int) (bool, string) {
 
 func deleteFood(pos Pos) {
 	var element int
-	for i, val := range allFoodsObjects {
+	for i, val := range allFoodObjects {
 		if val.x == pos.x && val.y == pos.y {
 			element = i
 			break
 		}
 	}
 
-	allFoodsObjects = deleteIndexInPosSlice(allFoodsObjects, element)
+	allFoodObjects = deleteIndexInPosSlice(allFoodObjects, element)
 }
 
 func deleteCreature(pos Pos, creature *BoardObject) {
-	deadCreatures = append(deadCreatures, creature)
+	allDeadCreatures = append(allDeadCreatures, creature)
 	var element int
 	for i, val := range allAliveCreatureObjects {
 		if val.x == pos.x && val.y == pos.y {

@@ -40,7 +40,7 @@ func (b *Board) printStatusLine(totalWidth int) {
 	// 	line = append(line, edgeSymbol)
 	// }
 
-	fmt.Println("TIME: " + strconv.Itoa(b.time) + "   CREATURES ALIVE: " + strconv.Itoa(len(allAliveCreatureObjects)) + "     FOOD LEFT: " + strconv.Itoa(len(allFoodsObjects)))
+	fmt.Println("ROUND: " + strconv.Itoa(b.round) + "      TIME: " + strconv.Itoa(b.time) + "   CREATURES ALIVE: " + strconv.Itoa(len(allAliveCreatureObjects)) + "     FOOD LEFT: " + strconv.Itoa(len(allFoodObjects)))
 }
 
 func printDataLine(boardData []BoardObject, gl *Gamelog, messageRow int) {
