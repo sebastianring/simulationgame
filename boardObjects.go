@@ -101,7 +101,7 @@ type Creature1 struct {
 	moving   bool
 }
 
-func newCreature1Object() *Creature1 {
+func newCreature1Object(mutate bool, parent ...*Creature1) *Creature1 {
 	c1 := Creature1{
 		id:       Creature1IdCtr,
 		symbol:   getObjectSymbol("Creature1"),
