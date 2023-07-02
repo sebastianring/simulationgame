@@ -42,6 +42,8 @@ func InitNewBoard(rows int, cols int) *Board {
 		os.Exit(1)
 	}
 
+	initBoardObjects()
+
 	newBoard := Board{
 		rows,
 		cols,
