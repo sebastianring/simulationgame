@@ -1,6 +1,9 @@
 package main
 
-import "strconv"
+import (
+	"errors"
+	"strconv"
+)
 
 // import "strconv"
 
@@ -91,7 +94,19 @@ type Creature1 struct {
 	moving   bool
 }
 
-func newCreature1Object() *Creature1 {
+func newCreature1Object(parent ...*Creature1) (*Creature1, error) {
+	var speed int
+
+	if len(parent) == 0 {
+		speed = 5
+	} else if len(parent) == 1 {
+		for _, creature := range parent {
+			speed = creature.speed
+		}
+	} else {
+		return nil, errors.New("Too many parents")
+	}
+
 	if Creature1IdCtr < 1 {
 		Creature1IdCtr = 1
 	}
@@ -101,8 +116,8 @@ func newCreature1Object() *Creature1 {
 		symbol:   getObjectSymbol("Creature1"),
 		oriHP:    250,
 		hp:       250,
-		speed:    5,
-		oriSpeed: 5,
+		speed:    speed,
+		oriSpeed: speed,
 		typeDesc: "creature",
 		moving:   true,
 	}
@@ -111,7 +126,7 @@ func newCreature1Object() *Creature1 {
 	addMessageToCurrentGamelog("Creature1 object with ID: "+
 		strconv.Itoa(c1.id)+" added to the board", 2)
 
-	return &c1
+	return &c1, nil
 }
 
 // -------------------------------------------------- //

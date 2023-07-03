@@ -9,7 +9,7 @@ import (
 )
 
 // -------------------------------------------------- //
-// -------------------------------------------------- //
+// ------------------------------------------------- //
 // INITS AND STRUCTS -------------------------------- //
 // -------------------------------------------------- //
 // -------------------------------------------------- //
@@ -77,7 +77,15 @@ func createObjectArray(rows int, cols int) *[][]BoardObject {
 			if i == 0 || i == rows-1 || j == 0 || j == cols-1 {
 				rng := rand.Intn(edgeSpawnPoints)
 				if rng < createSpawnChance {
-					arr[i][j] = newCreature1Object()
+					creaturePtr, err := newCreature1Object()
+
+					if err != nil {
+						fmt.Println("Issue when creating new creature 1 object: " + err.Error())
+						os.Exit(1)
+					}
+
+					arr[i][j] = creaturePtr
+
 				} else {
 					arr[i][j] = newEmptyObject()
 				}
@@ -125,7 +133,14 @@ func (b *Board) spawnCreature1OnBoard(qty int) {
 	}
 
 	for _, pos := range spawns {
-		b.objectBoard[pos.y][pos.x] = newCreature1Object()
+		creaturePtr, err := newCreature1Object()
+
+		if err != nil {
+			fmt.Println("Error creating a new creatue 1 object: " + err.Error())
+			os.Exit(1)
+		}
+
+		b.objectBoard[pos.y][pos.x] = creaturePtr
 		allAliveCreatureObjects = append(allAliveCreatureObjects, pos)
 
 	}
