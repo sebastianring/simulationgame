@@ -1,7 +1,11 @@
 package main
 
 import (
+<<<<<<< HEAD
 	"errors"
+=======
+	// "math/rand"
+>>>>>>> 862b58c7bc0b8d5d6f9101de810435af3ba4bef1
 	"strconv"
 )
 
@@ -13,6 +17,10 @@ import (
 // -------------------------------------------------- //
 // -------------------------------------------------- //
 // I really need to change architecture of the board .. this is abuse of interfaces. //
+
+var mutationrate map[string]float32
+var Creature1IdCtr int
+var creatureIdCtr map[string]int
 
 type BoardObject interface {
 	getSymbol() byte
@@ -49,6 +57,11 @@ func getObjectSymbol(objectname string) byte {
 // -------------------------------------------------- //
 // -------------------------------------------------- //
 
+func initBoardObjects() {
+	Creature1IdCtr = 1
+	mutationrate["creature1"] = 0.1
+}
+
 type EmptyObject struct {
 	symbol   byte
 	typeDesc string
@@ -81,8 +94,6 @@ func newFoodObject() *Food {
 	return &f
 }
 
-var Creature1IdCtr int
-
 type Creature1 struct {
 	id       int
 	symbol   byte
@@ -94,6 +105,7 @@ type Creature1 struct {
 	moving   bool
 }
 
+<<<<<<< HEAD
 func newCreature1Object(parent ...*Creature1) (*Creature1, error) {
 	var speed int
 
@@ -111,6 +123,9 @@ func newCreature1Object(parent ...*Creature1) (*Creature1, error) {
 		Creature1IdCtr = 1
 	}
 
+=======
+func newCreature1Object(mutate bool, parent ...*Creature1) *Creature1 {
+>>>>>>> 862b58c7bc0b8d5d6f9101de810435af3ba4bef1
 	c1 := Creature1{
 		id:       Creature1IdCtr,
 		symbol:   getObjectSymbol("Creature1"),
@@ -127,6 +142,15 @@ func newCreature1Object(parent ...*Creature1) (*Creature1, error) {
 		strconv.Itoa(c1.id)+" added to the board", 2)
 
 	return &c1, nil
+}
+
+func getMutationChanges(creaturename string, oriqty float32) {
+	mutationinterval := int(mutationrate[creaturename] * oriqty)
+
+	if mutationinterval < 10 {
+
+	}
+
 }
 
 // -------------------------------------------------- //
