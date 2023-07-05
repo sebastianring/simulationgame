@@ -79,7 +79,7 @@ func createObjectArray(rows int, cols int) *[][]BoardObject {
 			if i == 0 || i == rows-1 || j == 0 || j == cols-1 {
 				rng := rand.Intn(edgeSpawnPoints)
 				if rng < createSpawnChance {
-					creaturePtr, err := newCreature1Object()
+					creaturePtr, err := newCreature1Object(false)
 
 					if err != nil {
 						fmt.Println("Issue when creating new creature 1 object: " + err.Error())
@@ -135,7 +135,7 @@ func (b *Board) spawnCreature1OnBoard(qty int) {
 	}
 
 	for _, pos := range spawns {
-		creaturePtr, err := newCreature1Object()
+		creaturePtr, err := newCreature1Object(false)
 
 		if err != nil {
 			fmt.Println("Error creating a new creatue 1 object: " + err.Error())
@@ -165,7 +165,7 @@ func (b *Board) spawnFoodOnBoard(qty int) {
 }
 
 func (b *Board) isSpotEmpty(pos Pos) bool {
-	if b.objectBoard[pos.y][pos.x].getType() == "empty" {
+	if _, ok := b.objectBoard[pos.y][pos.x].(*EmptyObject); ok {
 		return true
 	}
 
@@ -222,9 +222,10 @@ func (b *Board) tickFrame() {
 	res := make([]string, 1)
 
 	for _, pos := range allAliveCreatureObjects {
-		speed := b.objectBoard[pos.y][pos.x].getIntData("speed")
-		id := b.objectBoard[pos.y][pos.x].getIntData("id")
-		res = append(res, strconv.Itoa(speed)+":"+strconv.Itoa(id))
+		if obj, ok := b.objectBoard[pos.y][pos.x].(*Creature1); ok {
+			res = append(res, strconv.Itoa(obj.speed)+":"+strconv.Itoa(obj.id))
+		}
+
 	}
 
 	addMessageToCurrentGamelog(strings.Join(res, ", "), 2)
@@ -240,30 +241,56 @@ func (b *Board) creatureUpdatesPerTick() {
 	deadCreatures := make([]Pos, 0)
 
 	for i, pos := range allAliveCreatureObjects {
-		addMessageToCurrentGamelog(strconv.Itoa(b.objectBoard[pos.y][pos.x].getIntData("id"))+" "+strconv.Itoa(i)+" "+strconv.Itoa(pos.x)+" "+strconv.Itoa(pos.y), 2)
-		action := b.objectBoard[pos.y][pos.x].updateTick()
+		if obj, ok := b.objectBoard[pos.y][pos.x].(*Creature1); ok {
+			addMessageToCurrentGamelog(strconv.Itoa(obj.id)+" "+strconv.Itoa(i)+" "+strconv.Itoa(pos.x)+" "+strconv.Itoa(pos.y), 2)
+			action := obj.updateTick()
 
-		if action == "move" {
-			newPos, moveType := b.newPosAndMove(pos)
-			b.objectBoard[newPos.y][newPos.x] = b.objectBoard[pos.y][pos.x]
+			if action == "move" {
+				newPos, moveType := b.newPosAndMove(pos)
+				b.objectBoard[newPos.y][newPos.x] = obj
 
-			if moveType == "food" {
-				addMessageToCurrentGamelog("Food eaten by "+strconv.Itoa(b.objectBoard[pos.y][pos.x].getIntData("id")), 2)
-				b.objectBoard[newPos.y][newPos.x].updateVal("heal")
-				b.objectBoard[pos.y][pos.x] = newEmptyObject()
-				deleteFood(newPos)
+				if moveType == "food" {
+					addMessageToCurrentGamelog("Food eaten by "+strconv.Itoa(obj.id), 2)
+					obj.updateVal("heal")
+					b.objectBoard[pos.y][pos.x] = newEmptyObject()
+					deleteFood(newPos)
+				} else {
+					b.objectBoard[pos.y][pos.x] = newEmptyObject()
+				}
+
+				updatedAllCreatureObjects = append(updatedAllCreatureObjects, newPos)
+
+			} else if action == "dead" {
+				deadCreatures = append(deadCreatures, pos)
+
 			} else {
-				b.objectBoard[pos.y][pos.x] = newEmptyObject()
+				updatedAllCreatureObjects = append(updatedAllCreatureObjects, pos)
 			}
-
-			updatedAllCreatureObjects = append(updatedAllCreatureObjects, newPos)
-
-		} else if action == "dead" {
-			deadCreatures = append(deadCreatures, pos)
-
-		} else {
-			updatedAllCreatureObjects = append(updatedAllCreatureObjects, pos)
 		}
+		// addMessageToCurrentGamelog(strconv.Itoa(b.objectBoard[pos.y][pos.x].getIntData("id"))+" "+strconv.Itoa(i)+" "+strconv.Itoa(pos.x)+" "+strconv.Itoa(pos.y), 2)
+		// 			action := b.objectBoard[pos.y][pos.x].updateTick()
+		//
+		// 			if action == "move" {
+		// 				newPos, moveType := b.newPosAndMove(pos)
+		// 				b.objectBoard[newPos.y][newPos.x] = b.objectBoard[pos.y][pos.x]
+		//
+		// 				if moveType == "food" {
+		// 					addMessageToCurrentGamelog("Food eaten by "+strconv.Itoa(b.objectBoard[pos.y][pos.x].getIntData("id")), 2)
+		// 					b.objectBoard[newPos.y][newPos.x].updateVal("heal")
+		// 					b.objectBoard[pos.y][pos.x] = newEmptyObject()
+		// 					deleteFood(newPos)
+		// 				} else {
+		// 					b.objectBoard[pos.y][pos.x] = newEmptyObject()
+		// 				}
+		//
+		// 				updatedAllCreatureObjects = append(updatedAllCreatureObjects, newPos)
+		//
+		// 			} else if action == "dead" {
+		// 				deadCreatures = append(deadCreatures, pos)
+		//
+		// 			} else {
+		// 				updatedAllCreatureObjects = append(updatedAllCreatureObjects, pos)
+		// 			}
 	}
 
 	// delete dead creatures after tick is complete
@@ -307,28 +334,19 @@ func (b *Board) deleteAndSpawnFood() {
 
 func (b *Board) findPosForAllCreatures() {
 	for i, creaturePos := range allAliveCreatureObjects {
-		addMessageToCurrentGamelog(strconv.Itoa(i), 2)
-
-		findNewPos := false
-		for !findNewPos {
-			newPos := b.randomPosAtEdgeOfMap()
-			if b.isSpotEmpty(newPos) {
-				b.objectBoard[newPos.y][newPos.x] = b.objectBoard[creaturePos.y][creaturePos.x]
-				b.objectBoard[newPos.y][newPos.x].resetValues()
-				b.objectBoard[creaturePos.y][creaturePos.x] = newEmptyObject()
-
-				// addMessageToCurrentGamelog("old creature pos: x: "+
-				// 	strconv.Itoa(creaturePos.x)+
-				// 	" y: "+strconv.Itoa(creaturePos.y), 2)
-				//
-				allAliveCreatureObjects[i] = newPos
-				//
-				// addMessageToCurrentGamelog("new creature pos: x: "+
-				// 	strconv.Itoa(allAliveCreatureObjects[i].x)+
-				// 	" y: "+strconv.Itoa(allAliveCreatureObjects[i].y), 2)
-
-				findNewPos = true
+		if obj, ok := b.objectBoard[creaturePos.y][creaturePos.x].(*Creature1); ok {
+			findNewPos := false
+			for !findNewPos {
+				newPos := b.randomPosAtEdgeOfMap()
+				if b.isSpotEmpty(newPos) {
+					b.objectBoard[newPos.y][newPos.x] = obj
+					obj.resetValues()
+					b.objectBoard[creaturePos.y][creaturePos.x] = newEmptyObject()
+					allAliveCreatureObjects[i] = newPos
+					findNewPos = true
+				}
 			}
+
 		}
 	}
 }
@@ -336,24 +354,26 @@ func (b *Board) findPosForAllCreatures() {
 func (b *Board) spawnOffsprings() {
 	qty := 0
 	for _, pos := range allAliveCreatureObjects {
-		if b.objectBoard[pos.y][pos.x].ifOffspring() {
-			qty++
+		if boardObject, ok := b.objectBoard[pos.y][pos.x].(*Creature1); ok {
+			if boardObject.ifOffspring() {
+				qty++
+			}
 		}
 	}
 
-	addMessageToCurrentGamelog(strconv.Itoa(qty)+"new creatures spawned", 1)
+	addMessageToCurrentGamelog(strconv.Itoa(qty)+" new creatures spawned", 1)
 
 	b.spawnCreature1OnBoard(qty)
 }
 
 func (b *Board) checkIfCreaturesAreDead() bool {
 	for _, pos := range allAliveCreatureObjects {
-		dead := b.objectBoard[pos.y][pos.x].isDead()
-		// moving := b.objectBoard[pos.y][pos.x].isMoving()
-		// addMessageToCurrentGamelog("DEAD:" + strconv.FormatBool(dead) + " MOVING: " + strconv.FormatBool(moving))
+		if obj, ok := b.objectBoard[pos.y][pos.x].(*Creature1); ok {
+			dead := obj.isDead()
 
-		if !dead {
-			return false
+			if !dead {
+				return false
+			}
 		}
 	}
 
@@ -362,15 +382,18 @@ func (b *Board) checkIfCreaturesAreDead() bool {
 
 func (b *Board) checkIfCreaturesAreInactive() bool {
 	for _, pos := range allAliveCreatureObjects {
-		dead := b.objectBoard[pos.y][pos.x].isDead()
-		moving := b.objectBoard[pos.y][pos.x].isMoving()
+		if obj, ok := b.objectBoard[pos.y][pos.x].(*Creature1); ok {
+			dead := obj.isDead()
+			moving := obj.isMoving()
 
-		// addMessageToCurrentGamelog("Current counter: " + strconv.Itoa(i) + "total length: " + strconv.Itoa(len(allAliveCreatureObjects)))
-		// addMessageToCurrentGamelog("DEAD:" + strconv.FormatBool(dead) + " MOVING: " + strconv.FormatBool(moving))
+			// addMessageToCurrentGamelog("Current counter: " + strconv.Itoa(i) + "total length: " + strconv.Itoa(len(allAliveCreatureObjects)))
+			// addMessageToCurrentGamelog("DEAD:" + strconv.FormatBool(dead) + " MOVING: " + strconv.FormatBool(moving))
 
-		if !dead && moving || dead {
-			return false
+			if !dead && moving || dead {
+				return false
+			}
 		}
+
 	}
 
 	return true
@@ -425,11 +448,18 @@ func (b *Board) checkIfNewPosIsValid(x int, y int) (bool, string) {
 	if x < 0 || x >= b.cols || y < 0 || y >= b.rows {
 		return false, ""
 	}
-	objectType := b.objectBoard[y][x].getType()
-	if objectType == "food" {
-		return true, "food"
-	} else if objectType == "empty" {
+
+	// objectType := b.objectBoard[y][x].getType()
+	// if objectType == "food" {
+	// 	return true, "food"
+	// } else if objectType == "empty" {
+	// 	return true, "empty"
+	// }
+
+	if _, ok := b.objectBoard[y][x].(*EmptyObject); ok {
 		return true, "empty"
+	} else if _, ok := b.objectBoard[y][x].(*Food); ok {
+		return true, "food"
 	}
 
 	return false, ""

@@ -1,11 +1,8 @@
 package main
 
 import (
-<<<<<<< HEAD
 	"errors"
-=======
-	// "math/rand"
->>>>>>> 862b58c7bc0b8d5d6f9101de810435af3ba4bef1
+	"math/rand"
 	"strconv"
 )
 
@@ -24,14 +21,6 @@ var creatureIdCtr map[string]int
 
 type BoardObject interface {
 	getSymbol() byte
-	getType() string
-	updateTick() string
-	updateVal(string)
-	getIntData(string) int
-	isDead() bool
-	isMoving() bool
-	resetValues()
-	ifOffspring() bool
 }
 
 type CreatureObject interface {
@@ -59,6 +48,7 @@ func getObjectSymbol(objectname string) byte {
 
 func initBoardObjects() {
 	Creature1IdCtr = 1
+	mutationrate = make(map[string]float32)
 	mutationrate["creature1"] = 0.1
 }
 
@@ -105,8 +95,7 @@ type Creature1 struct {
 	moving   bool
 }
 
-<<<<<<< HEAD
-func newCreature1Object(parent ...*Creature1) (*Creature1, error) {
+func newCreature1Object(mutate bool, parent ...*Creature1) (*Creature1, error) {
 	var speed int
 
 	if len(parent) == 0 {
@@ -119,13 +108,20 @@ func newCreature1Object(parent ...*Creature1) (*Creature1, error) {
 		return nil, errors.New("Too many parents")
 	}
 
+	if mutate {
+		chance := rand.Intn(100)
+
+		if chance < 33 {
+			speed++
+		} else if chance < 67 {
+			speed--
+		}
+	}
+
 	if Creature1IdCtr < 1 {
 		Creature1IdCtr = 1
 	}
 
-=======
-func newCreature1Object(mutate bool, parent ...*Creature1) *Creature1 {
->>>>>>> 862b58c7bc0b8d5d6f9101de810435af3ba4bef1
 	c1 := Creature1{
 		id:       Creature1IdCtr,
 		symbol:   getObjectSymbol("Creature1"),
@@ -222,78 +218,8 @@ func (eo *EmptyObject) getSymbol() byte {
 	return eo.symbol
 }
 
-func (eo *EmptyObject) updateTick() string {
-	return ""
-}
-
-func (eo *EmptyObject) getData() map[string]int {
-	returnMap := make(map[string]int, 0)
-
-	return returnMap
-}
-
-func (eo *EmptyObject) updateVal(val string) {
-
-}
-
-func (eo *EmptyObject) getType() string {
-	return eo.typeDesc
-}
-
-func (eo *EmptyObject) getIntData(data string) int {
-	return 0
-}
-
-func (eo *EmptyObject) isDead() bool {
-	return false
-}
-
-func (eo *EmptyObject) isMoving() bool {
-	return false
-}
-
-func (eo *EmptyObject) resetValues() {
-
-}
-
-func (eo *EmptyObject) ifOffspring() bool {
-	return false
-}
-
 func (f *Food) getSymbol() byte {
 	return f.symbol
-}
-
-func (f *Food) getType() string {
-	return f.typeDesc
-}
-
-func (f *Food) updateTick() string {
-	return ""
-}
-
-func (f *Food) updateVal(val string) {
-
-}
-
-func (f *Food) getIntData(data string) int {
-	return 0
-}
-
-func (f *Food) isDead() bool {
-	return false
-}
-
-func (f *Food) isMoving() bool {
-	return false
-}
-
-func (f *Food) resetValues() {
-
-}
-
-func (f *Food) ifOffspring() bool {
-	return false
 }
 
 func (c *Creature1) getType() string {
