@@ -6,8 +6,6 @@ import (
 	"strconv"
 )
 
-// import "strconv"
-
 // -------------------------------------------------- //
 // -------------------------------------------------- //
 // ALL INTERFACES AND GENERAL FUNCTIONS ------------- //
@@ -170,10 +168,6 @@ func (c *Creature1) updateTick() string {
 	return "error"
 }
 
-func (c *Creature1) getSymbol() byte {
-	return c.symbol
-}
-
 func (c *Creature1) updateVal(val string) {
 	if val == "heal" {
 		addMessageToCurrentGamelog("", 2)
@@ -208,6 +202,14 @@ func (c *Creature1) resetValues() {
 	c.moving = true
 }
 
+func (c *Creature1) ifOffspring() bool {
+	if c.hp > int(float32(c.oriHP)*1.1) {
+		return true
+	}
+
+	return false
+}
+
 // -------------------------------------------------- //
 // -------------------------------------------------- //
 // ALL THE NECESSARY INTERFACE FUNCTIONS ------------ //
@@ -222,20 +224,8 @@ func (f *Food) getSymbol() byte {
 	return f.symbol
 }
 
-func (c *Creature1) getType() string {
-	return c.typeDesc
-}
-
-func (c *Creature1) getHP() (int, bool) {
-	return c.hp, c.moving
-}
-
-func (c *Creature1) ifOffspring() bool {
-	if c.hp > int(float32(c.oriHP)*1.1) {
-		return true
-	}
-
-	return false
+func (c *Creature1) getSymbol() byte {
+	return c.symbol
 }
 
 func (c *Creature1) getSpeed() int {
