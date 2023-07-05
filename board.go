@@ -144,7 +144,6 @@ func (b *Board) spawnCreature1OnBoard(qty int) {
 
 		b.objectBoard[pos.y][pos.x] = creaturePtr
 		allAliveCreatureObjects = append(allAliveCreatureObjects, pos)
-
 	}
 }
 
@@ -236,7 +235,6 @@ func (b *Board) tickFrame() {
 }
 
 func (b *Board) creatureUpdatesPerTick() {
-	// var updatedAllCreatureObjects Pos
 	updatedAllCreatureObjects := make([]Pos, 0)
 	deadCreatures := make([]Pos, 0)
 
@@ -267,30 +265,6 @@ func (b *Board) creatureUpdatesPerTick() {
 				updatedAllCreatureObjects = append(updatedAllCreatureObjects, pos)
 			}
 		}
-		// addMessageToCurrentGamelog(strconv.Itoa(b.objectBoard[pos.y][pos.x].getIntData("id"))+" "+strconv.Itoa(i)+" "+strconv.Itoa(pos.x)+" "+strconv.Itoa(pos.y), 2)
-		// 			action := b.objectBoard[pos.y][pos.x].updateTick()
-		//
-		// 			if action == "move" {
-		// 				newPos, moveType := b.newPosAndMove(pos)
-		// 				b.objectBoard[newPos.y][newPos.x] = b.objectBoard[pos.y][pos.x]
-		//
-		// 				if moveType == "food" {
-		// 					addMessageToCurrentGamelog("Food eaten by "+strconv.Itoa(b.objectBoard[pos.y][pos.x].getIntData("id")), 2)
-		// 					b.objectBoard[newPos.y][newPos.x].updateVal("heal")
-		// 					b.objectBoard[pos.y][pos.x] = newEmptyObject()
-		// 					deleteFood(newPos)
-		// 				} else {
-		// 					b.objectBoard[pos.y][pos.x] = newEmptyObject()
-		// 				}
-		//
-		// 				updatedAllCreatureObjects = append(updatedAllCreatureObjects, newPos)
-		//
-		// 			} else if action == "dead" {
-		// 				deadCreatures = append(deadCreatures, pos)
-		//
-		// 			} else {
-		// 				updatedAllCreatureObjects = append(updatedAllCreatureObjects, pos)
-		// 			}
 	}
 
 	// delete dead creatures after tick is complete
@@ -354,8 +328,22 @@ func (b *Board) findPosForAllCreatures() {
 func (b *Board) spawnOffsprings() {
 	qty := 0
 	for _, pos := range allAliveCreatureObjects {
-		if boardObject, ok := b.objectBoard[pos.y][pos.x].(*Creature1); ok {
-			if boardObject.ifOffspring() {
+		if obj, ok := b.objectBoard[pos.y][pos.x].(*Creature1); ok {
+			if obj.ifOffspring() {
+				offspring, err := newCreature1Object(true, obj)
+
+				if err != nil {
+					fmt.Println("Error creating offspring: " + err.Error())
+				}
+
+				newPos := b.randomPosAtEdgeOfMap()
+				for !b.isSpotEmpty(newPos) {
+					newPos = b.randomPosAtEdgeOfMap()
+				}
+
+				b.objectBoard[newPos.y][newPos.x] = offspring
+				allAliveCreatureObjects = append(allAliveCreatureObjects, newPos)
+
 				qty++
 			}
 		}
@@ -448,13 +436,6 @@ func (b *Board) checkIfNewPosIsValid(x int, y int) (bool, string) {
 	if x < 0 || x >= b.cols || y < 0 || y >= b.rows {
 		return false, ""
 	}
-
-	// objectType := b.objectBoard[y][x].getType()
-	// if objectType == "food" {
-	// 	return true, "food"
-	// } else if objectType == "empty" {
-	// 	return true, "empty"
-	// }
 
 	if _, ok := b.objectBoard[y][x].(*EmptyObject); ok {
 		return true, "empty"
