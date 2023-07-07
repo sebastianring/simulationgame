@@ -22,9 +22,13 @@ type BoardObject interface {
 }
 
 type CreatureObject interface {
-	getHP() int
+	BoardObject
 	updateTick() string
 	ifOffspring() bool
+	getHP() int
+	getId() int
+	resetValues()
+	updateVal()
 }
 
 func getObjectSymbol(objectname string) byte {
@@ -123,8 +127,8 @@ func newCreature1Object(mutate bool, parent ...*Creature1) (*Creature1, error) {
 	c1 := Creature1{
 		id:       Creature1IdCtr,
 		symbol:   getObjectSymbol("Creature1"),
-		oriHP:    250,
-		hp:       250,
+		oriHP:    175,
+		hp:       175,
 		speed:    speed,
 		oriSpeed: speed,
 		typeDesc: "creature",
@@ -158,7 +162,7 @@ func (c *Creature1) updateTick() string {
 		c.speed -= 1
 		if c.speed == 0 {
 			c.speed = c.oriSpeed
-			c.hp -= 10
+			c.hp -= 5 + (10 / c.speed)
 			return "move"
 		}
 	} else if c.hp <= 0 {
@@ -170,22 +174,12 @@ func (c *Creature1) updateTick() string {
 
 func (c *Creature1) updateVal(val string) {
 	if val == "heal" {
-		addMessageToCurrentGamelog("", 2)
+		addMessageToCurrentGamelog("Creature 1 with id "+
+			strconv.Itoa(c.id)+" healed for: "+
+			strconv.Itoa(c.oriHP), 2)
 		c.hp += c.oriHP
 		c.moving = false
 	}
-}
-
-func (c *Creature1) getIntData(data string) int {
-	if data == "hp" {
-		return c.hp
-	} else if data == "speed" {
-		return c.speed
-	} else if data == "id" {
-		return c.id
-	}
-
-	return 0
 }
 
 func (c *Creature1) isDead() bool {
@@ -208,6 +202,10 @@ func (c *Creature1) ifOffspring() bool {
 	}
 
 	return false
+}
+
+func (c *Creature1) getHP() int {
+	return c.hp
 }
 
 // -------------------------------------------------- //

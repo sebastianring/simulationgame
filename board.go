@@ -55,7 +55,7 @@ func InitNewBoard(rows int, cols int) *Board {
 	}
 
 	initialCreature1 = 30
-	initialFoods = 250
+	initialFoods = 100
 
 	newBoard.spawnCreature1OnBoard(initialCreature1)
 	newBoard.spawnFoodOnBoard(initialFoods)
@@ -208,6 +208,12 @@ func checkIfPosExistsInSlice(pos Pos, slice []Pos) bool {
 			return true
 		}
 	}
+
+	return false
+}
+
+// this function should check if the board object is a creature object
+func checkIfCreatureObject(*BoardObject) bool {
 
 	return false
 }
