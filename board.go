@@ -301,6 +301,8 @@ func (b *Board) newRound() {
 	b.round++
 	b.time = 0
 	b.deadCreaturesInRound = 0
+
+	b.gamelog.writeGamelogToFile()
 }
 
 func (b *Board) deleteAndSpawnFood() {

@@ -1,6 +1,11 @@
 package main
 
-// import "fmt"
+import (
+	// "io/ioutil"
+	"os"
+	"strconv"
+	"time"
+)
 
 const cols int = 40
 
@@ -16,20 +21,25 @@ type Gamelog struct {
 	messages          []message
 	idCtr             int
 	displayedMessages []string
+	createdAt         time.Time
+	fileString        string
 }
 
 type message struct {
-	id    int
-	prio  int
-	texts []string
+	id        int
+	prio      int
+	createdAt time.Time
+	texts     string
 }
 
 func InitTextInfo(rows int) *Gamelog {
 	gl := Gamelog{
-		cols:     cols,
-		rows:     rows,
-		messages: []message{},
-		idCtr:    1,
+		cols:       cols,
+		rows:       rows,
+		messages:   []message{},
+		idCtr:      1,
+		createdAt:  time.Now(),
+		fileString: getFileString(),
 	}
 
 	for i := 0; i < cols; i++ {
@@ -39,6 +49,17 @@ func InitTextInfo(rows int) *Gamelog {
 	currentGamelog = &gl
 
 	return &gl
+}
+
+func getFileString() string {
+	logsFolder := "logs/"
+	logNamePrefix := "simulation_gamelog_"
+	currentTime := time.Now()
+	logNameSuffix := currentTime.Format("20060102150405") + ".txt"
+
+	fullLogName := logsFolder + logNamePrefix + logNameSuffix
+
+	return fullLogName
 }
 
 func addMessageToCurrentGamelog(msg string, prio int) {
@@ -66,7 +87,7 @@ func addMessageToCurrentGamelog(msg string, prio int) {
 		endSlice++
 	}
 
-	newMessage := newMessage(currentGamelog.idCtr, prio, texts)
+	newMessage := newMessage(currentGamelog.idCtr, prio, msg)
 	currentGamelog.messages = append(currentGamelog.messages, *newMessage)
 
 	if prio <= prioThreshold {
@@ -78,11 +99,12 @@ func addMessageToCurrentGamelog(msg string, prio int) {
 	currentGamelog.idCtr++
 }
 
-func newMessage(id int, prio int, texts []string) *message {
+func newMessage(id int, prio int, msg string) *message {
 	m := message{
-		id:    id,
-		prio:  prio,
-		texts: texts,
+		id:        id,
+		prio:      prio,
+		createdAt: time.Now(),
+		texts:     msg,
 	}
 
 	return &m
@@ -111,6 +133,34 @@ func (gl *Gamelog) getMessageByRow(row int) []byte {
 			spaceString += " "
 		}
 		return []byte(gl.displayedMessages[messageOffset] + spaceString)
+	}
+}
+
+func (gl *Gamelog) writeGamelogToFile() {
+	file, err := os.OpenFile(gl.fileString, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+
+	if err != nil {
+		panic(err)
+	}
+
+	defer file.Close()
+
+	// testcontent := []byte("Testing" + gl.createdAt.Format("20060102150405") + "\n")
+	// _, err = file.Write(testcontent)
+
+	for _, message := range gl.messages {
+		id := ("MESSAGE ID: " + strconv.Itoa(message.id) + "\n")
+		prio := ("PRIORITY: " + strconv.Itoa(message.prio) + "\n")
+		createdAt := ("CREATED AT: " + message.createdAt.Format("20060102150405") + "\n")
+		text := ("MESSAGE: " + message.texts)
+
+		log := []byte(id + prio + createdAt + text + "\n" + "\n")
+
+		_, err = file.Write(log)
+	}
+
+	if err != nil {
+		panic(err)
 	}
 }
 

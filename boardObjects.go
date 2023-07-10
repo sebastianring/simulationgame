@@ -65,7 +65,7 @@ func newEmptyObject() *EmptyObject {
 		typeDesc: "empty",
 	}
 
-	addMessageToCurrentGamelog("New empty object added", 2)
+	// addMessageToCurrentGamelog("New empty object added", 2)
 
 	return &eo
 }
