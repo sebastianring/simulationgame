@@ -52,7 +52,23 @@ func InitTextInfo(rows int) *Gamelog {
 }
 
 func getFileString() string {
-	logsFolder := "logs/"
+	logsFolder := "logs"
+
+	dir, err := os.Open(logsFolder)
+	defer dir.Close()
+
+	if err != nil {
+		if os.IsNotExist(err) {
+			err = os.Mkdir(logsFolder, 0755)
+
+			if err != nil {
+				panic(err)
+			}
+			addMessageToCurrentGamelog("New folder created", 2)
+		}
+	}
+	logsFolder = logsFolder + "/"
+
 	logNamePrefix := "simulation_gamelog_"
 	currentTime := time.Now()
 	logNameSuffix := currentTime.Format("20060102150405") + ".txt"
@@ -144,9 +160,6 @@ func (gl *Gamelog) writeGamelogToFile() {
 	}
 
 	defer file.Close()
-
-	// testcontent := []byte("Testing" + gl.createdAt.Format("20060102150405") + "\n")
-	// _, err = file.Write(testcontent)
 
 	for _, message := range gl.messages {
 		id := ("MESSAGE ID: " + strconv.Itoa(message.id) + "\n")
