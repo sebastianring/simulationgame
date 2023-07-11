@@ -34,13 +34,10 @@ func DrawFrame(b *Board) {
 }
 
 func (b *Board) printStatusLine(totalWidth int) {
-	// statusBar := []string{"line" }
-
-	// for i := 0; i < totalWidth; i++ {
-	// 	line = append(line, edgeSymbol)
-	// }
-
-	fmt.Println("ROUND: " + strconv.Itoa(b.round) + "      TIME: " + strconv.Itoa(b.time) + "   CREATURES ALIVE: " + strconv.Itoa(len(allAliveCreatureObjects)) + "     FOOD LEFT: " + strconv.Itoa(len(allFoodObjects)))
+	fmt.Println("ROUND: " + strconv.Itoa(b.currentRound.id) +
+		"      TIME: " + strconv.Itoa(b.currentRound.time) +
+		"   CREATURES ALIVE: " + strconv.Itoa(len(allAliveCreatureObjects)) +
+		"     FOOD LEFT: " + strconv.Itoa(len(allFoodObjects)))
 }
 
 func printDataLine(boardData []BoardObject, gl *Gamelog, messageRow int) {

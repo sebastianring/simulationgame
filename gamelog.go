@@ -1,9 +1,9 @@
 package main
 
 import (
-	// "io/ioutil"
+	"encoding/json"
 	"os"
-	"strconv"
+	// "strconv"
 	"time"
 )
 
@@ -26,10 +26,10 @@ type Gamelog struct {
 }
 
 type message struct {
-	id        int
-	prio      int
-	createdAt time.Time
-	texts     string
+	Id        int       `json:"id"`
+	Prio      int       `json:"priority"`
+	CreatedAt time.Time `json:"created_at"`
+	Texts     string    `json:"text"`
 }
 
 func InitTextInfo(rows int) *Gamelog {
@@ -117,10 +117,10 @@ func addMessageToCurrentGamelog(msg string, prio int) {
 
 func newMessage(id int, prio int, msg string) *message {
 	m := message{
-		id:        id,
-		prio:      prio,
-		createdAt: time.Now(),
-		texts:     msg,
+		Id:        id,
+		Prio:      prio,
+		CreatedAt: time.Now(),
+		Texts:     msg,
 	}
 
 	return &m
@@ -129,7 +129,7 @@ func newMessage(id int, prio int, msg string) *message {
 func (gl *Gamelog) getNumberOfMessageRows() int {
 	rows := 0
 	for _, msg := range gl.messages {
-		rows += len(msg.texts)
+		rows += len(msg.Texts)
 	}
 
 	return rows
@@ -162,14 +162,14 @@ func (gl *Gamelog) writeGamelogToFile() {
 	defer file.Close()
 
 	for _, message := range gl.messages {
-		id := ("MESSAGE ID: " + strconv.Itoa(message.id) + "\n")
-		prio := ("PRIORITY: " + strconv.Itoa(message.prio) + "\n")
-		createdAt := ("CREATED AT: " + message.createdAt.Format("20060102150405") + "\n")
-		text := ("MESSAGE: " + message.texts)
+		jsonData, err := json.Marshal(message)
 
-		log := []byte(id + prio + createdAt + text + "\n" + "\n")
+		if err != nil {
+			panic(err)
+		}
 
-		_, err = file.Write(log)
+		_, err = file.Write([]byte(jsonData))
+		_, err = file.Write([]byte("\n"))
 	}
 
 	if err != nil {

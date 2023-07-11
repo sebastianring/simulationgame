@@ -17,11 +17,6 @@ func main() {
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 
-	// for true {
-	// 	fmt.Scanln()
-	// 	board.tickFrame()
-	// }
-
 	for range ticker.C {
 		board.tickFrame()
 		if gameOn == false {

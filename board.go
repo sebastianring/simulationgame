@@ -5,7 +5,7 @@ import (
 	"math/rand"
 	"os"
 	"strconv"
-	"strings"
+	// "strings"
 )
 
 // -------------------------------------------------- //
@@ -22,13 +22,21 @@ var allAliveCreatureObjects []Pos
 var allDeadCreatures []*BoardObject
 
 type Board struct {
-	rows                 int
-	cols                 int
-	gamelog              *Gamelog
-	objectBoard          [][]BoardObject
-	time                 int
-	round                int
-	deadCreaturesInRound int
+	rows         int
+	cols         int
+	gamelog      *Gamelog
+	objectBoard  [][]BoardObject
+	time         int
+	roundInt     int
+	rounds       []*Round
+	currentRound *Round
+}
+
+type Round struct {
+	id               int
+	time             int
+	creaturedSpawned []CreatureObject
+	creaturedKilled  []CreatureObject
 }
 
 type Pos struct {
@@ -44,14 +52,22 @@ func InitNewBoard(rows int, cols int) *Board {
 
 	initBoardObjects()
 
+	newRound := Round{
+		id:               1,
+		time:             0,
+		creaturedSpawned: make([]CreatureObject, 0),
+		creaturedKilled:  make([]CreatureObject, 0),
+	}
+
 	newBoard := Board{
-		rows,
-		cols,
-		InitTextInfo(rows),
-		*createEmptyObjectsArray(rows, cols),
-		0,
-		1,
-		0,
+		rows:         rows,
+		cols:         cols,
+		gamelog:      InitTextInfo(rows),
+		objectBoard:  *createEmptyObjectsArray(rows, cols),
+		time:         0,
+		roundInt:     1,
+		rounds:       []*Round{&newRound},
+		currentRound: &newRound,
 	}
 
 	initialCreature1 = 30
@@ -212,14 +228,8 @@ func checkIfPosExistsInSlice(pos Pos, slice []Pos) bool {
 	return false
 }
 
-// this function should check if the board object is a creature object
-func checkIfCreatureObject(*BoardObject) bool {
-
-	return false
-}
-
 func (b *Board) tickFrame() {
-	b.time++
+	b.currentRound.time++
 	b.creatureUpdatesPerTick()
 
 	// ----------- debugging creatures - print speed and id ---------- //
@@ -233,7 +243,7 @@ func (b *Board) tickFrame() {
 
 	}
 
-	addMessageToCurrentGamelog(strings.Join(res, ", "), 2)
+	// addMessageToCurrentGamelog(strings.Join(res, ", "), 2)
 
 	// ----------- end debugging ------------------------------------ //
 
@@ -244,9 +254,9 @@ func (b *Board) creatureUpdatesPerTick() {
 	updatedAllCreatureObjects := make([]Pos, 0)
 	deadCreatures := make([]Pos, 0)
 
-	for i, pos := range allAliveCreatureObjects {
+	for _, pos := range allAliveCreatureObjects {
 		if obj, ok := b.objectBoard[pos.y][pos.x].(*Creature1); ok {
-			addMessageToCurrentGamelog(strconv.Itoa(obj.id)+" "+strconv.Itoa(i)+" "+strconv.Itoa(pos.x)+" "+strconv.Itoa(pos.y), 2)
+			// addMessageToCurrentGamelog(strconv.Itoa(obj.id)+" "+strconv.Itoa(i)+" "+strconv.Itoa(pos.x)+" "+strconv.Itoa(pos.y), 2)
 			action := obj.updateTick()
 
 			if action == "move" {
@@ -254,7 +264,7 @@ func (b *Board) creatureUpdatesPerTick() {
 				b.objectBoard[newPos.y][newPos.x] = obj
 
 				if moveType == "food" {
-					addMessageToCurrentGamelog("Food eaten by "+strconv.Itoa(obj.id), 2)
+					addMessageToCurrentGamelog("Food eaten by creature id: "+strconv.Itoa(obj.id), 2)
 					obj.updateVal("heal")
 					b.objectBoard[pos.y][pos.x] = newEmptyObject()
 					deleteFood(newPos)
@@ -298,9 +308,15 @@ func (b *Board) newRound() {
 	b.findPosForAllCreatures()
 	b.deleteAndSpawnFood()
 
-	b.round++
-	b.time = 0
-	b.deadCreaturesInRound = 0
+	newRound := Round{
+		id:               b.currentRound.id + 1,
+		time:             0,
+		creaturedSpawned: make([]CreatureObject, 0),
+		creaturedKilled:  make([]CreatureObject, 0),
+	}
+
+	b.currentRound = &newRound
+	b.rounds = append(b.rounds, &newRound)
 
 	b.gamelog.writeGamelogToFile()
 }
@@ -339,6 +355,8 @@ func (b *Board) spawnOffsprings() {
 		if obj, ok := b.objectBoard[pos.y][pos.x].(*Creature1); ok {
 			if obj.ifOffspring() {
 				offspring, err := newCreature1Object(true, obj)
+
+				b.currentRound.creaturedSpawned = append(b.currentRound.creaturedSpawned, offspring)
 
 				if err != nil {
 					fmt.Println("Error creating offspring: " + err.Error())

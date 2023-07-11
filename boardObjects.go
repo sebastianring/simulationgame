@@ -22,13 +22,12 @@ type BoardObject interface {
 }
 
 type CreatureObject interface {
-	BoardObject
 	updateTick() string
 	ifOffspring() bool
 	getHP() int
 	getId() int
 	resetValues()
-	updateVal()
+	updateVal(string)
 }
 
 func getObjectSymbol(objectname string) byte {
@@ -87,6 +86,7 @@ func newFoodObject() *Food {
 }
 
 type Creature1 struct {
+	// CreatureObject
 	id       int
 	symbol   byte
 	hp       int
@@ -206,6 +206,10 @@ func (c *Creature1) ifOffspring() bool {
 
 func (c *Creature1) getHP() int {
 	return c.hp
+}
+
+func (c *Creature1) getId() int {
+	return c.id
 }
 
 // -------------------------------------------------- //
