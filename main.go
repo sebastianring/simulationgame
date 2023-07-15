@@ -17,6 +17,8 @@ func main() {
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 
+	openDb()
+
 	for range ticker.C {
 		board.tickFrame()
 		if gameOn == false {
