@@ -17,7 +17,11 @@ func main() {
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 
-	openDb()
+	_, err := openDbConnection()
+
+	if err != nil {
+		addMessageToCurrentGamelog(err.Error(), 1)
+	}
 
 	for range ticker.C {
 		board.tickFrame()
