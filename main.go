@@ -17,11 +17,22 @@ func main() {
 	ticker := time.NewTicker(100 * time.Millisecond)
 	defer ticker.Stop()
 
-	_, err := openDbConnection()
-
-	if err != nil {
-		addMessageToCurrentGamelog(err.Error(), 1)
-	}
+	// db, err := openDbConnection()
+	//
+	// if err != nil {
+	// 	addMessageToCurrentGamelog(err.Error(), 1)
+	// }
+	//
+	// defer db.Close()
+	//
+	// testMsg := message{
+	// 	Id:    1000,
+	// 	Prio:  1,
+	// 	Texts: "hello",
+	// }
+	//
+	// writeMessageToDb(db, &testMsg)
+	//
 
 	for range ticker.C {
 		board.tickFrame()

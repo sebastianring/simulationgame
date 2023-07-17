@@ -13,14 +13,15 @@ func openDbConnection() (*sql.DB, error) {
 	prefix := "postgres://"
 	user := "sim_game"
 	password := os.Getenv("SIM_GAME_DB_PW")
-	adress := "192.168.0.130"
+	// adress := "192.168.0.130"
+	adress := "localhost"
 	port := "5432"
 
 	database_url := prefix + user + ":" +
 		password + "@" + adress + ":" +
 		port + "/postgres"
 
-	addMessageToCurrentGamelog(database_url, 1)
+	// addMessageToCurrentGamelog(database_url, 1)
 
 	db, err := sql.Open("postgres", database_url)
 
@@ -28,8 +29,6 @@ func openDbConnection() (*sql.DB, error) {
 		addMessageToCurrentGamelog(err.Error(), 1)
 		return nil, err
 	}
-
-	defer db.Close()
 
 	err = db.Ping()
 
@@ -41,7 +40,15 @@ func openDbConnection() (*sql.DB, error) {
 	return db, nil
 }
 
-func writeMessageToDb(db *sql.DB, msg *message) error {
+func writeMessageToDb(db *sql.DB, msg *message) {
+	go func() {
+		const SCHEMA = "simulation_game."
+		query := "INSERT INTO simulation_game.message (id, prio, text) VALUES ($1, $2, $3) RETURNiNG id"
+		err := db.QueryRow(query, msg.Id, msg.Prio, msg.Texts).Scan(&msg.Id)
 
-	return nil
+		if err != nil {
+			addMessageToCurrentGamelog(err.Error(), 1)
+		}
+
+	}()
 }
