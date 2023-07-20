@@ -22,14 +22,16 @@ var allAliveCreatureObjects []Pos
 var allDeadCreatures []*BoardObject
 
 type Board struct {
-	rows         int
-	cols         int
-	gamelog      *Gamelog
-	objectBoard  [][]BoardObject
-	time         int
-	roundInt     int
-	rounds       []*Round
-	currentRound *Round
+	rows          int
+	cols          int
+	gamelog       *Gamelog
+	objectBoard   [][]BoardObject
+	time          int
+	roundInt      int
+	rounds        []*Round
+	currentRound  *Round
+	creatureIdCtr map[string]int
+	mutationrate  map[string]float32
 }
 
 type Round struct {
@@ -50,8 +52,6 @@ func InitNewBoard(rows int, cols int) *Board {
 		os.Exit(1)
 	}
 
-	initBoardObjects()
-
 	newRound := Round{
 		id:               1,
 		time:             0,
@@ -60,20 +60,26 @@ func InitNewBoard(rows int, cols int) *Board {
 	}
 
 	newBoard := Board{
-		rows:         rows,
-		cols:         cols,
-		gamelog:      InitTextInfo(rows),
-		objectBoard:  *createEmptyObjectsArray(rows, cols),
-		time:         0,
-		roundInt:     1,
-		rounds:       []*Round{&newRound},
-		currentRound: &newRound,
+		rows:          rows,
+		cols:          cols,
+		gamelog:       InitTextInfo(rows),
+		objectBoard:   *createEmptyObjectsArray(rows, cols),
+		time:          0,
+		roundInt:      1,
+		rounds:        []*Round{&newRound},
+		currentRound:  &newRound,
+		creatureIdCtr: make(map[string]int, 0),
+		mutationrate:  make(map[string]float32, 0),
 	}
 
+	newBoard.initBoardObjects()
+
 	initialCreature1 = 30
+	initialCreature2 := 10
 	initialFoods = 100
 
 	newBoard.spawnCreature1OnBoard(initialCreature1)
+	newBoard.spawnCreature2OnBoard(initialCreature2)
 	newBoard.spawnFoodOnBoard(initialFoods)
 
 	addMessageToCurrentGamelog("Board added", 2)
@@ -83,44 +89,44 @@ func InitNewBoard(rows int, cols int) *Board {
 }
 
 // creates the initial array for all objects inside the board
-func createObjectArray(rows int, cols int) *[][]BoardObject {
-	arr := make([][]BoardObject, rows)
-	edgeSpawnPoints := (rows*2 + cols*2 - 4)
-	createSpawnChance := edgeSpawnPoints / 10 // 10% chance that a creature spawns at the edge
-
-	for i := 0; i < rows; i++ {
-		arr[i] = make([]BoardObject, cols)
-		for j := 0; j < cols; j++ {
-			// check if we are at the edge of the board, then roll the dice if a creature should be spawned
-			if i == 0 || i == rows-1 || j == 0 || j == cols-1 {
-				rng := rand.Intn(edgeSpawnPoints)
-				if rng < createSpawnChance {
-					creaturePtr, err := newCreature1Object(false)
-
-					if err != nil {
-						fmt.Println("Issue when creating new creature 1 object: " + err.Error())
-						os.Exit(1)
-					}
-
-					arr[i][j] = creaturePtr
-
-				} else {
-					arr[i][j] = newEmptyObject()
-				}
-				// else, lets see if we can spawn some food, 2.5% chance to spawn
-			} else {
-				rng := rand.Intn(1000)
-				if rng < 25 {
-					arr[i][j] = newFoodObject()
-				} else {
-					arr[i][j] = newEmptyObject()
-				}
-			}
-		}
-	}
-
-	return &arr
-}
+// func createObjectArray(rows int, cols int) *[][]BoardObject {
+// 	arr := make([][]BoardObject, rows)
+// 	edgeSpawnPoints := (rows*2 + cols*2 - 4)
+// 	createSpawnChance := edgeSpawnPoints / 10 // 10% chance that a creature spawns at the edge
+//
+// 	for i := 0; i < rows; i++ {
+// 		arr[i] = make([]BoardObject, cols)
+// 		for j := 0; j < cols; j++ {
+// 			// check if we are at the edge of the board, then roll the dice if a creature should be spawned
+// 			if i == 0 || i == rows-1 || j == 0 || j == cols-1 {
+// 				rng := rand.Intn(edgeSpawnPoints)
+// 				if rng < createSpawnChance {
+// 					creaturePtr, err := newCreature1Object(false)
+//
+// 					if err != nil {
+// 						fmt.Println("Issue when creating new creature 1 object: " + err.Error())
+// 						os.Exit(1)
+// 					}
+//
+// 					arr[i][j] = creaturePtr
+//
+// 				} else {
+// 					arr[i][j] = newEmptyObject()
+// 				}
+// 				// else, lets see if we can spawn some food, 2.5% chance to spawn
+// 			} else {
+// 				rng := rand.Intn(1000)
+// 				if rng < 25 {
+// 					arr[i][j] = newFoodObject()
+// 				} else {
+// 					arr[i][j] = newEmptyObject()
+// 				}
+// 			}
+// 		}
+// 	}
+//
+// 	return &arr
+// }
 
 func createEmptyObjectsArray(rows int, cols int) *[][]BoardObject {
 	arr := make([][]BoardObject, rows)
@@ -151,10 +157,32 @@ func (b *Board) spawnCreature1OnBoard(qty int) {
 	}
 
 	for _, pos := range spawns {
-		creaturePtr, err := newCreature1Object(false)
+		creaturePtr, err := b.newCreature1Object(false)
 
 		if err != nil {
-			fmt.Println("Error creating a new creatue 1 object: " + err.Error())
+			fmt.Println("Error creating a new creature 1 object: " + err.Error())
+			os.Exit(1)
+		}
+
+		b.objectBoard[pos.y][pos.x] = creaturePtr
+		allAliveCreatureObjects = append(allAliveCreatureObjects, pos)
+	}
+}
+
+func (b *Board) spawnCreature2OnBoard(qty int) {
+	spawns := make([]Pos, 0)
+	for len(spawns) < qty {
+		newPos := b.randomPosAtEdgeOfMap()
+		if !checkIfPosExistsInSlice(newPos, spawns) {
+			spawns = append(spawns, newPos)
+		}
+	}
+
+	for _, pos := range spawns {
+		creaturePtr, err := b.newCreature2Object(false)
+
+		if err != nil {
+			fmt.Println("Error creating a new creature 2 object: " + err.Error())
 			os.Exit(1)
 		}
 
@@ -208,6 +236,17 @@ func (b *Board) randomPosAtEdgeOfMap() Pos {
 	}
 
 	return Pos{x, y}
+}
+
+func (b *Board) initBoardObjects() {
+	fmt.Println("does this work?")
+	b.creatureIdCtr["creature1"] = 1
+	b.creatureIdCtr["creature2"] = 1
+
+	fmt.Println("how about this?")
+	b.mutationrate = make(map[string]float32)
+	b.mutationrate["creature1"] = 0.1
+	b.mutationrate["creature2"] = 0.1
 }
 
 func (b *Board) randomPosWithinMap() Pos {
@@ -354,7 +393,7 @@ func (b *Board) spawnOffsprings() {
 	for _, pos := range allAliveCreatureObjects {
 		if obj, ok := b.objectBoard[pos.y][pos.x].(*Creature1); ok {
 			if obj.ifOffspring() {
-				offspring, err := newCreature1Object(true, obj)
+				offspring, err := b.newCreature1Object(true, obj)
 
 				b.currentRound.creaturedSpawned = append(b.currentRound.creaturedSpawned, offspring)
 
