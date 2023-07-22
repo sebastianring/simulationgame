@@ -12,12 +12,15 @@ type BoardObject interface {
 }
 
 type CreatureObject interface {
+	getSymbol() byte
 	updateTick() string
 	ifOffspring() bool
 	getHP() int
 	getId() int
 	resetValues()
 	updateVal(string)
+	isMoving() bool
+	isDead() bool
 }
 
 func getObjectSymbol(objectname string) byte {

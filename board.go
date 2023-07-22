@@ -14,9 +14,6 @@ import (
 // -------------------------------------------------- //
 // -------------------------------------------------- //
 
-var initialCreature1 int
-var initialFoods int
-
 var allFoodObjects []Pos
 var allAliveCreatureObjects []Pos
 var allDeadCreatures []*BoardObject
@@ -32,6 +29,7 @@ type Board struct {
 	currentRound  *Round
 	creatureIdCtr map[string]int
 	mutationrate  map[string]float32
+	initialFoods  int
 }
 
 type Round struct {
@@ -70,17 +68,17 @@ func InitNewBoard(rows int, cols int) *Board {
 		currentRound:  &newRound,
 		creatureIdCtr: make(map[string]int, 0),
 		mutationrate:  make(map[string]float32, 0),
+		initialFoods:  100,
 	}
 
 	newBoard.initBoardObjects()
 
-	initialCreature1 = 30
+	initialCreature1 := 10
 	initialCreature2 := 10
-	initialFoods = 100
 
 	newBoard.spawnCreature1OnBoard(initialCreature1)
 	newBoard.spawnCreature2OnBoard(initialCreature2)
-	newBoard.spawnFoodOnBoard(initialFoods)
+	newBoard.spawnFoodOnBoard()
 
 	addMessageToCurrentGamelog("Board added", 2)
 	addMessageToCurrentGamelog("Welcome to the simulation game where you can simulate creatures and how they evolve!", 1)
@@ -173,7 +171,7 @@ func (b *Board) spawnCreature2OnBoard(qty int) {
 	spawns := make([]Pos, 0)
 	for len(spawns) < qty {
 		newPos := b.randomPosAtEdgeOfMap()
-		if !checkIfPosExistsInSlice(newPos, spawns) {
+		if !checkIfPosExistsInSlice(newPos, spawns) && b.isSpotEmpty(newPos) {
 			spawns = append(spawns, newPos)
 		}
 	}
@@ -191,7 +189,9 @@ func (b *Board) spawnCreature2OnBoard(qty int) {
 	}
 }
 
-func (b *Board) spawnFoodOnBoard(qty int) {
+func (b *Board) spawnFoodOnBoard() {
+	qty := b.initialFoods
+
 	spawns := make([]Pos, 0)
 
 	for len(spawns) < qty {
@@ -276,10 +276,9 @@ func (b *Board) tickFrame() {
 	res := make([]string, 1)
 
 	for _, pos := range allAliveCreatureObjects {
-		if obj, ok := b.objectBoard[pos.y][pos.x].(*Creature1); ok {
-			res = append(res, strconv.Itoa(obj.speed)+":"+strconv.Itoa(obj.id))
+		if obj, ok := b.objectBoard[pos.y][pos.x].(CreatureObject); ok {
+			res = append(res, strconv.Itoa(obj.getId())+":"+strconv.Itoa(obj.getId()))
 		}
-
 	}
 
 	// addMessageToCurrentGamelog(strings.Join(res, ", "), 2)
@@ -289,21 +288,33 @@ func (b *Board) tickFrame() {
 	DrawFrame(b)
 }
 
+func checkCreatureType(bo BoardObject) (bool, *BoardObject) {
+	switch bo.(type) {
+	case *Creature1:
+		return true, &bo
+	case *Creature2:
+		return true, &bo
+	default:
+		return false, nil
+	}
+}
+
 func (b *Board) creatureUpdatesPerTick() {
 	updatedAllCreatureObjects := make([]Pos, 0)
 	deadCreatures := make([]Pos, 0)
 
 	for _, pos := range allAliveCreatureObjects {
-		if obj, ok := b.objectBoard[pos.y][pos.x].(*Creature1); ok {
+		if obj, ok := b.objectBoard[pos.y][pos.x].(CreatureObject); ok {
+			// ifCreature, obj := checkCreatureType(b.objectBoard[pos.y][pos.x])
 			// addMessageToCurrentGamelog(strconv.Itoa(obj.id)+" "+strconv.Itoa(i)+" "+strconv.Itoa(pos.x)+" "+strconv.Itoa(pos.y), 2)
 			action := obj.updateTick()
 
 			if action == "move" {
 				newPos, moveType := b.newPosAndMove(pos)
-				b.objectBoard[newPos.y][newPos.x] = obj
+				b.objectBoard[newPos.y][newPos.x] = BoardObject(obj)
 
 				if moveType == "food" {
-					addMessageToCurrentGamelog("Food eaten by creature id: "+strconv.Itoa(obj.id), 2)
+					addMessageToCurrentGamelog("Food eaten by creature id: "+strconv.Itoa(obj.getId()), 2)
 					obj.updateVal("heal")
 					b.objectBoard[pos.y][pos.x] = newEmptyObject()
 					deleteFood(newPos)
@@ -366,12 +377,12 @@ func (b *Board) deleteAndSpawnFood() {
 	}
 
 	allFoodObjects = make([]Pos, 0)
-	b.spawnFoodOnBoard(initialFoods)
+	b.spawnFoodOnBoard()
 }
 
 func (b *Board) findPosForAllCreatures() {
 	for i, creaturePos := range allAliveCreatureObjects {
-		if obj, ok := b.objectBoard[creaturePos.y][creaturePos.x].(*Creature1); ok {
+		if obj, ok := b.objectBoard[creaturePos.y][creaturePos.x].(CreatureObject); ok {
 			findNewPos := false
 			for !findNewPos {
 				newPos := b.randomPosAtEdgeOfMap()
@@ -389,17 +400,36 @@ func (b *Board) findPosForAllCreatures() {
 }
 
 func (b *Board) spawnOffsprings() {
-	qty := 0
+	creatureQty := map[string]int{
+		"creature1": 0,
+		"creature2": 0,
+	}
+
 	for _, pos := range allAliveCreatureObjects {
-		if obj, ok := b.objectBoard[pos.y][pos.x].(*Creature1); ok {
+		if obj, ok := b.objectBoard[pos.y][pos.x].(CreatureObject); ok {
 			if obj.ifOffspring() {
-				offspring, err := b.newCreature1Object(true, obj)
+				var offspring CreatureObject
+				var err error
+
+				if obj2, ok := obj.(*Creature1); ok {
+					offspring, err = b.newCreature1Object(true, obj2)
+
+					if err != nil {
+						fmt.Println("Error creating offspring: " + err.Error())
+					}
+
+					creatureQty["creature1"]++
+
+				} else if obj2, ok := obj.(*Creature2); ok {
+					offspring, err = b.newCreature2Object(true, obj2)
+					if err != nil {
+						fmt.Println("Error creating offspring: " + err.Error())
+					}
+
+					creatureQty["creature2"]++
+				}
 
 				b.currentRound.creaturedSpawned = append(b.currentRound.creaturedSpawned, offspring)
-
-				if err != nil {
-					fmt.Println("Error creating offspring: " + err.Error())
-				}
 
 				newPos := b.randomPosAtEdgeOfMap()
 				for !b.isSpotEmpty(newPos) {
@@ -409,19 +439,25 @@ func (b *Board) spawnOffsprings() {
 				b.objectBoard[newPos.y][newPos.x] = offspring
 				allAliveCreatureObjects = append(allAliveCreatureObjects, newPos)
 
-				qty++
+				// qty++
 			}
 		}
 	}
 
-	addMessageToCurrentGamelog(strconv.Itoa(qty)+" new creatures spawned", 1)
+	sum := 0
+	for _, val := range creatureQty {
+		sum = +val
+	}
 
-	b.spawnCreature1OnBoard(qty)
+	addMessageToCurrentGamelog(strconv.Itoa(sum)+" new creatures spawned", 1)
+
+	b.spawnCreature1OnBoard(creatureQty["creature1"])
+	b.spawnCreature2OnBoard(creatureQty["creature2"])
 }
 
 func (b *Board) checkIfCreaturesAreDead() bool {
 	for _, pos := range allAliveCreatureObjects {
-		if obj, ok := b.objectBoard[pos.y][pos.x].(*Creature1); ok {
+		if obj, ok := b.objectBoard[pos.y][pos.x].(CreatureObject); ok {
 			dead := obj.isDead()
 
 			if !dead {
@@ -435,7 +471,7 @@ func (b *Board) checkIfCreaturesAreDead() bool {
 
 func (b *Board) checkIfCreaturesAreInactive() bool {
 	for _, pos := range allAliveCreatureObjects {
-		if obj, ok := b.objectBoard[pos.y][pos.x].(*Creature1); ok {
+		if obj, ok := b.objectBoard[pos.y][pos.x].(CreatureObject); ok {
 			dead := obj.isDead()
 			moving := obj.isMoving()
 
