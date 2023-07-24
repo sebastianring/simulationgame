@@ -25,10 +25,10 @@ type CreatureObject interface {
 
 func getObjectSymbol(objectname string) byte {
 	drawingSymbols := map[string]byte{
-		"EmptyObject": 46,  // .....
-		"Food":        64,  // @@@@@
-		"Creature1":   65,  // AAAAA
-		"Creature2":   126, // ~~~~~
+		"EmptyObject": 46, // .....
+		"Food":        64, // @@@@@
+		"Creature1":   79, // OOOOO
+		"Creature2":   87, // WWWWW
 	}
 
 	return drawingSymbols[objectname]
@@ -84,4 +84,8 @@ func (eo *EmptyObject) getSymbol() byte {
 
 func (f *Food) getSymbol() byte {
 	return f.symbol
+}
+
+func conflict(bo1 BoardObject, bo2 BoardObject) {
+
 }
