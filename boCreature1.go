@@ -7,7 +7,6 @@ import (
 )
 
 type Creature1 struct {
-	// CreatureObject
 	id       int
 	symbol   byte
 	hp       int
@@ -48,7 +47,7 @@ func (b *Board) newCreature1Object(mutate bool, parent ...*Creature1) (*Creature
 		hp:       175,
 		speed:    speed,
 		oriSpeed: speed,
-		typeDesc: "creature",
+		typeDesc: "creature1",
 		moving:   true,
 	}
 
@@ -91,14 +90,12 @@ func (c *Creature1) updateTick() string {
 	return "error"
 }
 
-func (c *Creature1) updateVal(val string) {
-	if val == "heal" {
-		addMessageToCurrentGamelog("Creature 1 with id "+
-			strconv.Itoa(c.id)+" healed for: "+
-			strconv.Itoa(c.oriHP), 2)
-		c.hp += c.oriHP
-		c.moving = false
-	}
+func (c *Creature1) heal() {
+	addMessageToCurrentGamelog("Creature 1 with id "+
+		strconv.Itoa(c.id)+" healed for: "+
+		strconv.Itoa(c.oriHP), 2)
+	c.hp += c.oriHP
+	c.moving = false
 }
 
 func (c *Creature1) isDead() bool {
@@ -141,4 +138,12 @@ func (c *Creature1) getSpeed() int {
 
 func (c *Creature1) isMoving() bool {
 	return c.moving
+}
+
+func (c *Creature1) getType() string {
+	return c.typeDesc
+}
+
+func (c *Creature1) kill() {
+	c.hp = 0
 }

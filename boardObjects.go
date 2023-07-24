@@ -18,9 +18,11 @@ type CreatureObject interface {
 	getHP() int
 	getId() int
 	resetValues()
-	updateVal(string)
+	heal()
 	isMoving() bool
 	isDead() bool
+	getType() string
+	kill()
 }
 
 func getObjectSymbol(objectname string) byte {
@@ -84,8 +86,4 @@ func (eo *EmptyObject) getSymbol() byte {
 
 func (f *Food) getSymbol() byte {
 	return f.symbol
-}
-
-func conflict(bo1 BoardObject, bo2 BoardObject) {
-
 }

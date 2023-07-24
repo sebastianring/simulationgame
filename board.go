@@ -19,17 +19,18 @@ var allAliveCreatureObjects []Pos
 var allDeadCreatures []*BoardObject
 
 type Board struct {
-	rows          int
-	cols          int
-	gamelog       *Gamelog
-	objectBoard   [][]BoardObject
-	time          int
-	roundInt      int
-	rounds        []*Round
-	currentRound  *Round
-	creatureIdCtr map[string]int
-	mutationrate  map[string]float32
-	initialFoods  int
+	rows            int
+	cols            int
+	gamelog         *Gamelog
+	objectBoard     [][]BoardObject
+	time            int
+	roundInt        int
+	rounds          []*Round
+	currentRound    *Round
+	creatureIdCtr   map[string]int
+	mutationrate    map[string]float32
+	initialFoods    int
+	conflictManager *conflictManager
 }
 
 type Round struct {
@@ -57,18 +58,25 @@ func InitNewBoard(rows int, cols int) *Board {
 		creaturedKilled:  make([]CreatureObject, 0),
 	}
 
+	cm, err := newConflictManager()
+
+	if err != nil {
+		os.Exit(1)
+	}
+
 	newBoard := Board{
-		rows:          rows,
-		cols:          cols,
-		gamelog:       InitTextInfo(rows),
-		objectBoard:   *createEmptyObjectsArray(rows, cols),
-		time:          0,
-		roundInt:      1,
-		rounds:        []*Round{&newRound},
-		currentRound:  &newRound,
-		creatureIdCtr: make(map[string]int, 0),
-		mutationrate:  make(map[string]float32, 0),
-		initialFoods:  100,
+		rows:            rows,
+		cols:            cols,
+		gamelog:         InitTextInfo(rows),
+		objectBoard:     *createEmptyObjectsArray(rows, cols),
+		time:            0,
+		roundInt:        1,
+		rounds:          []*Round{&newRound},
+		currentRound:    &newRound,
+		creatureIdCtr:   make(map[string]int, 0),
+		mutationrate:    make(map[string]float32, 0),
+		initialFoods:    100,
+		conflictManager: cm,
 	}
 
 	newBoard.initBoardObjects()
@@ -239,11 +247,9 @@ func (b *Board) randomPosAtEdgeOfMap() Pos {
 }
 
 func (b *Board) initBoardObjects() {
-	fmt.Println("does this work?")
 	b.creatureIdCtr["creature1"] = 1
 	b.creatureIdCtr["creature2"] = 1
 
-	fmt.Println("how about this?")
 	b.mutationrate = make(map[string]float32)
 	b.mutationrate["creature1"] = 0.1
 	b.mutationrate["creature2"] = 0.1
@@ -315,7 +321,7 @@ func (b *Board) creatureUpdatesPerTick() {
 
 				if moveType == "food" {
 					addMessageToCurrentGamelog("Food eaten by creature id: "+strconv.Itoa(obj.getId()), 2)
-					obj.updateVal("heal")
+					obj.heal()
 					b.objectBoard[pos.y][pos.x] = newEmptyObject()
 					deleteFood(newPos)
 				} else {

@@ -47,7 +47,7 @@ func (b *Board) newCreature2Object(mutate bool, parent ...*Creature2) (*Creature
 		hp:       175,
 		speed:    speed,
 		oriSpeed: speed,
-		typeDesc: "creature",
+		typeDesc: "creature2",
 		moving:   true,
 	}
 
@@ -90,14 +90,12 @@ func (c *Creature2) updateTick() string {
 	return "error"
 }
 
-func (c *Creature2) updateVal(val string) {
-	if val == "heal" {
-		addMessageToCurrentGamelog("Creature 2 with id "+
-			strconv.Itoa(c.id)+" healed for: "+
-			strconv.Itoa(c.oriHP), 2)
-		c.hp += c.oriHP
-		c.moving = false
-	}
+func (c *Creature2) heal() {
+	addMessageToCurrentGamelog("Creature 2 with id "+
+		strconv.Itoa(c.id)+" healed for: "+
+		strconv.Itoa(c.oriHP), 2)
+	c.hp += c.oriHP
+	c.moving = false
 }
 
 func (c *Creature2) isDead() bool {
@@ -140,4 +138,12 @@ func (c *Creature2) getSpeed() int {
 
 func (c *Creature2) isMoving() bool {
 	return c.moving
+}
+
+func (c *Creature2) getType() string {
+	return c.typeDesc
+}
+
+func (c *Creature2) kill() {
+	c.hp = 0
 }
