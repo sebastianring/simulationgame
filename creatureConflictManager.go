@@ -1,10 +1,21 @@
 package main
 
-import "math/rand"
+// import "os"
+import (
+	"math/rand"
+	// "strconv"
+)
 
 type conflictManager struct {
 	conflictMapping     [][]string
 	creatureTranslation map[string]int
+	actionTranslation   map[string]bool
+}
+
+type conflictInfo struct {
+	attack         string
+	sourceCreature CreatureObject
+	targetCreature CreatureObject
 }
 
 // ------ CURRENT STRATEGY MAPPINGS ---------
@@ -28,44 +39,62 @@ func newConflictManager() (*conflictManager, error) {
 			"creature1": 1,
 			"creature2": 2,
 		},
+
+		actionTranslation: map[string]bool{
+			"share":   true,
+			"avoid":   false,
+			"attack1": true,
+			"attack2": true,
+		},
 	}
 
 	return &cm, nil
 }
 
-func (cm *conflictManager) getConflict(sourceCreature CreatureObject, targetCreature CreatureObject) bool {
+func (cm *conflictManager) getConflict(sourceCreature CreatureObject, targetCreature CreatureObject) (bool, *conflictInfo) {
+	addMessageToCurrentGamelog("Conflict between two creatures checked", 1)
 	row := cm.creatureTranslation[sourceCreature.getType()]
 	col := cm.creatureTranslation[targetCreature.getType()]
 
 	strategy := cm.conflictMapping[row][col]
 
-	switch strategy {
-	case "avoid":
-		return false
+	action, ok := cm.actionTranslation[strategy]
 
-	case "share":
-		sourceCreature.heal(sourceCreature.getOriHP() / 2)
-		targetCreature.heal((targetCreature.getOriHP() / 2) * -1)
-		return true
-
-	case "attack1":
-		sourceCreature.heal(sourceCreature.getOriHP())
-		targetCreature.kill()
-		return true
-
-	case "attack2":
-		rng := rand.Intn(2)
-		if rng == 1 {
-			sourceCreature.heal((sourceCreature.getOriHP() / 2) * -1)
-			targetCreature.kill()
-		} else {
-			sourceCreature.kill()
-			targetCreature.heal((targetCreature.getOriHP() / 2) * -1)
-		}
-
-	default:
-		return false
+	if !ok {
+		addMessageToCurrentGamelog("Strategy between creatures is not mapped correctly.", 1)
 	}
 
-	return false
+	conflictInfo := conflictInfo{
+		attack:         strategy,
+		sourceCreature: sourceCreature,
+		targetCreature: targetCreature,
+	}
+
+	return action, &conflictInfo
+}
+
+func (cm *conflictManager) share(sourceCreature CreatureObject, targetCreature CreatureObject) {
+	sourceCreature.heal(sourceCreature.getOriHP() / 2)
+	targetCreature.heal((targetCreature.getOriHP() / 2) * -1)
+}
+
+func (cm *conflictManager) attack1(sourceCreature CreatureObject, targetCreature CreatureObject) {
+	sourceCreature.heal(sourceCreature.getOriHP())
+	targetCreature.kill()
+}
+
+func (cm *conflictManager) attack2(sourceCreature CreatureObject, targetCreature CreatureObject) bool {
+	// function returns true if target is killed, if source is killed, it returns false
+	rng := rand.Intn(2)
+	if rng == 1 {
+		sourceCreature.heal((sourceCreature.getOriHP() / 2) * -1)
+		targetCreature.kill()
+
+		return true
+	} else {
+		sourceCreature.kill()
+		targetCreature.heal((targetCreature.getOriHP() / 2) * -1)
+
+		return false
+	}
 }

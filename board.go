@@ -1,10 +1,12 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"math/rand"
 	"os"
 	"strconv"
+	"time"
 	// "strings"
 )
 
@@ -43,6 +45,11 @@ type Round struct {
 type Pos struct {
 	x int
 	y int
+}
+
+type MoveType struct {
+	action   string
+	conflict *conflictInfo
 }
 
 func InitNewBoard(rows int, cols int) *Board {
@@ -94,46 +101,6 @@ func InitNewBoard(rows int, cols int) *Board {
 
 	return &newBoard
 }
-
-// creates the initial array for all objects inside the board
-// func createObjectArray(rows int, cols int) *[][]BoardObject {
-// 	arr := make([][]BoardObject, rows)
-// 	edgeSpawnPoints := (rows*2 + cols*2 - 4)
-// 	createSpawnChance := edgeSpawnPoints / 10 // 10% chance that a creature spawns at the edge
-//
-// 	for i := 0; i < rows; i++ {
-// 		arr[i] = make([]BoardObject, cols)
-// 		for j := 0; j < cols; j++ {
-// 			// check if we are at the edge of the board, then roll the dice if a creature should be spawned
-// 			if i == 0 || i == rows-1 || j == 0 || j == cols-1 {
-// 				rng := rand.Intn(edgeSpawnPoints)
-// 				if rng < createSpawnChance {
-// 					creaturePtr, err := newCreature1Object(false)
-//
-// 					if err != nil {
-// 						fmt.Println("Issue when creating new creature 1 object: " + err.Error())
-// 						os.Exit(1)
-// 					}
-//
-// 					arr[i][j] = creaturePtr
-//
-// 				} else {
-// 					arr[i][j] = newEmptyObject()
-// 				}
-// 				// else, lets see if we can spawn some food, 2.5% chance to spawn
-// 			} else {
-// 				rng := rand.Intn(1000)
-// 				if rng < 25 {
-// 					arr[i][j] = newFoodObject()
-// 				} else {
-// 					arr[i][j] = newEmptyObject()
-// 				}
-// 			}
-// 		}
-// 	}
-//
-// 	return &arr
-// }
 
 func createEmptyObjectsArray(rows int, cols int) *[][]BoardObject {
 	arr := make([][]BoardObject, rows)
@@ -280,13 +247,13 @@ func (b *Board) tickFrame() {
 
 	// ----------- debugging creatures - print speed and id ---------- //
 
-	res := make([]string, 1)
-
-	for _, pos := range allAliveCreatureObjects {
-		if obj, ok := b.objectBoard[pos.y][pos.x].(CreatureObject); ok {
-			res = append(res, strconv.Itoa(obj.getId())+":"+strconv.Itoa(obj.getId()))
-		}
-	}
+	// res := make([]string, 1)
+	//
+	// for _, pos := range allAliveCreatureObjects {
+	// 	if obj, ok := b.objectBoard[pos.y][pos.x].(CreatureObject); ok {
+	// 		res = append(res, strconv.Itoa(obj.getId())+":"+strconv.Itoa(obj.getId()))
+	// 	}
+	// }
 
 	// addMessageToCurrentGamelog(strings.Join(res, ", "), 2)
 
@@ -306,37 +273,75 @@ func checkCreatureType(bo BoardObject) (bool, *BoardObject) {
 	}
 }
 
+// debug help
+func getCurrentTimeString() string {
+	currentTime := time.Now()
+	timeString := currentTime.Format("2006-01-02 15:04:05.000")
+
+	return timeString
+}
+
 func (b *Board) creatureUpdatesPerTick() {
 	updatedAllCreatureObjects := make([]Pos, 0)
 	deadCreatures := make([]Pos, 0)
 
 	for _, pos := range allAliveCreatureObjects {
 		if obj, ok := b.objectBoard[pos.y][pos.x].(CreatureObject); ok {
-			// ifCreature, obj := checkCreatureType(b.objectBoard[pos.y][pos.x])
-			// addMessageToCurrentGamelog(strconv.Itoa(obj.id)+" "+strconv.Itoa(i)+" "+strconv.Itoa(pos.x)+" "+strconv.Itoa(pos.y), 2)
 			action := obj.updateTick()
 
 			if action == "move" {
-				newPos, moveType := b.newPosAndMove(pos)
+				newPos := Pos{
+					x: -1,
+					y: -1}
+				moveType := MoveType{}
 
-				b.objectBoard[newPos.y][newPos.x] = BoardObject(obj)
+				for {
+					newPos, moveType = b.newPosAndMove(pos)
 
-				if moveType == "food" {
-					addMessageToCurrentGamelog("Food eaten by creature id: "+strconv.Itoa(obj.getId()), 2)
-					obj.heal(obj.getOriHP())
-					b.objectBoard[pos.y][pos.x] = newEmptyObject()
-					deleteFood(newPos)
-				} else {
-					b.objectBoard[pos.y][pos.x] = newEmptyObject()
+					if moveType.action != "avoid" {
+						break
+					}
 				}
 
-				updatedAllCreatureObjects = append(updatedAllCreatureObjects, newPos)
+				if moveType.action == "conflict" {
+					addMessageToCurrentGamelog("conflict imminent", 1)
+					switch moveType.conflict.attack {
+					case "share":
+						b.conflictManager.share(moveType.conflict.sourceCreature, moveType.conflict.targetCreature)
+					case "attack1":
+						b.conflictManager.attack1(moveType.conflict.sourceCreature, moveType.conflict.targetCreature)
+					case "attack2":
+						killTarget := b.conflictManager.attack2(moveType.conflict.sourceCreature, moveType.conflict.targetCreature)
+
+						if killTarget {
+							deadCreatures = append(deadCreatures, newPos)
+						}
+
+					default:
+						addMessageToCurrentGamelog("Conflict manager not setup properly", 1)
+					}
+
+				} else {
+					b.objectBoard[newPos.y][newPos.x] = BoardObject(obj)
+
+					if moveType.action == "food" {
+						addMessageToCurrentGamelog("Food eaten by creature id: "+strconv.Itoa(obj.getId()), 2)
+						obj.heal(obj.getOriHP())
+						b.objectBoard[pos.y][pos.x] = newEmptyObject()
+						deleteFood(newPos)
+					} else {
+						b.objectBoard[pos.y][pos.x] = newEmptyObject()
+					}
+
+					updatedAllCreatureObjects = append(updatedAllCreatureObjects, newPos)
+				}
 
 			} else if action == "dead" {
 				deadCreatures = append(deadCreatures, pos)
 
 			} else {
 				updatedAllCreatureObjects = append(updatedAllCreatureObjects, pos)
+
 			}
 		}
 	}
@@ -496,8 +501,13 @@ func (b *Board) checkIfCreaturesAreInactive() bool {
 	return true
 }
 
-func (b *Board) newPosAndMove(currentPos Pos) (Pos, string) {
+func (b *Board) newPosAndMove(currentPos Pos) (Pos, MoveType) {
+
 	newPos := Pos{-1, -1}
+	moveType := MoveType{
+		action: "",
+	}
+	validMoveTypes := []string{"empty", "food"}
 
 	// HOW TO MAKE THE CREATURES MOVE INWARDS TO LOOK FOR FOOD?
 	// The closer they are to one edge, the more probable they are to move towards the other edge?
@@ -529,30 +539,41 @@ func (b *Board) newPosAndMove(currentPos Pos) (Pos, string) {
 			x = currentPos.x
 		}
 
-		moveType := ""
 		valid := false
 
 		for {
-			validMoveTypes := []string{"empty", "food"}
-			moveType = b.checkIfNewPosIsValid(x, y)
+			moveType.action = b.checkIfNewPosIsValid(x, y)
 
-			if containsString(validMoveTypes, moveType) {
+			if containsString(validMoveTypes, moveType.action) {
 				valid = true
 				break
 			}
 
-			if moveType == "conflict" {
-				if sourceCreature, ok := b.objectBoard[currentPos.y][currentPos.x].(CreatureObject); ok {
-					if targetCreature, ok := b.objectBoard[currentPos.y][currentPos.x].(CreatureObject); ok {
-						conflict := b.conflictManager.getConflict(sourceCreature, targetCreature)
-						if conflict {
-							valid = true
-							break
-						}
-					}
-				}
-			}
+			if moveType.action == "conflict" {
+				sourceCreature, err := b.getCreatureObjectFromBoard(currentPos)
 
+				if err != nil {
+					addMessageToCurrentGamelog(err.Error(), 1)
+				}
+
+				targetCreature, err := b.getCreatureObjectFromBoard(newPos)
+
+				if err != nil {
+					addMessageToCurrentGamelog(err.Error(), 1)
+				}
+
+				action, conflict := b.conflictManager.getConflict(sourceCreature, targetCreature)
+
+				if action {
+					valid = true
+					moveType.conflict = conflict
+					break
+				} else {
+					break
+				}
+			} else {
+				break
+			}
 		}
 
 		if valid {
@@ -562,7 +583,15 @@ func (b *Board) newPosAndMove(currentPos Pos) (Pos, string) {
 		}
 	}
 
-	return newPos, "empty"
+	return newPos, moveType
+}
+
+func (b *Board) getCreatureObjectFromBoard(pos Pos) (CreatureObject, error) {
+	if creature, ok := b.objectBoard[pos.y][pos.x].(CreatureObject); ok {
+		return creature, nil
+	}
+
+	return nil, errors.New("Was not a creature")
 }
 
 func (b *Board) checkIfNewPosIsValid(x int, y int) string {
@@ -574,7 +603,10 @@ func (b *Board) checkIfNewPosIsValid(x int, y int) string {
 		return "empty"
 	} else if _, ok := b.objectBoard[y][x].(*Food); ok {
 		return "food"
-	} else if _, ok := b.objectBoard[y][x].(CreatureObject); ok {
+	} else if obj, ok := b.objectBoard[y][x].(CreatureObject); ok {
+		if obj.isMoving() {
+			return "conflict but no food"
+		}
 		return "conflict"
 	}
 

@@ -2,6 +2,7 @@ package main
 
 import (
 	// "fmt"
+	"fmt"
 	"math/rand"
 	"time"
 )
@@ -35,8 +36,11 @@ func main() {
 
 	for range ticker.C {
 		board.tickFrame()
+
 		if gameOn == false {
 			break
 		}
 	}
+
+	fmt.Println("ENDED")
 }
