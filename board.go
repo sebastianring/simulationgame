@@ -83,14 +83,14 @@ func InitNewBoard(rows int, cols int) *Board {
 		currentRound:    &newRound,
 		creatureIdCtr:   make(map[string]int, 0),
 		mutationrate:    make(map[string]float32, 0),
-		initialFoods:    100,
+		initialFoods:    75,
 		conflictManager: cm,
 	}
 
 	newBoard.initBoardObjects()
 
-	initialCreature1 := 10
-	initialCreature2 := 10
+	initialCreature1 := 20
+	initialCreature2 := 20
 
 	newBoard.spawnCreature1OnBoard(initialCreature1)
 	newBoard.spawnCreature2OnBoard(initialCreature2)
@@ -303,6 +303,10 @@ func (b *Board) creatureUpdatesPerTick() {
 					}
 				}
 
+				if moveType.action == "wait" {
+					break
+				}
+
 				if moveType.action == "conflict" {
 					addMessageToCurrentGamelog("conflict imminent", 1)
 					switch moveType.conflict.attack {
@@ -314,7 +318,15 @@ func (b *Board) creatureUpdatesPerTick() {
 						killTarget := b.conflictManager.attack2(moveType.conflict.sourceCreature, moveType.conflict.targetCreature)
 
 						if killTarget {
+							addMessageToCurrentGamelog(moveType.conflict.sourceCreature.getType()+
+								" killed "+moveType.conflict.targetCreature.getType(), 1)
+
 							deadCreatures = append(deadCreatures, newPos)
+						} else {
+							addMessageToCurrentGamelog(moveType.conflict.targetCreature.getType()+
+								" killed "+moveType.conflict.sourceCreature.getType(), 1)
+
+							deadCreatures = append(deadCreatures, pos)
 						}
 
 					default:
@@ -366,7 +378,7 @@ func (b *Board) creatureUpdatesPerTick() {
 }
 
 func (b *Board) newRound() {
-	addMessageToCurrentGamelog("All creatures inactive, starting new round", 1)
+	addMessageToCurrentGamelog("All creatures are dead or have eaten, starting new round", 1)
 	b.spawnOffsprings()
 	b.findPosForAllCreatures()
 	b.deleteAndSpawnFood()
@@ -502,12 +514,13 @@ func (b *Board) checkIfCreaturesAreInactive() bool {
 }
 
 func (b *Board) newPosAndMove(currentPos Pos) (Pos, MoveType) {
-
 	newPos := Pos{-1, -1}
 	moveType := MoveType{
 		action: "",
 	}
+
 	validMoveTypes := []string{"empty", "food"}
+	counter := 0
 
 	// HOW TO MAKE THE CREATURES MOVE INWARDS TO LOOK FOR FOOD?
 	// The closer they are to one edge, the more probable they are to move towards the other edge?
@@ -556,7 +569,7 @@ func (b *Board) newPosAndMove(currentPos Pos) (Pos, MoveType) {
 					addMessageToCurrentGamelog(err.Error(), 1)
 				}
 
-				targetCreature, err := b.getCreatureObjectFromBoard(newPos)
+				targetCreature, err := b.getCreatureObjectFromBoard(Pos{x: x, y: y})
 
 				if err != nil {
 					addMessageToCurrentGamelog(err.Error(), 1)
@@ -574,6 +587,11 @@ func (b *Board) newPosAndMove(currentPos Pos) (Pos, MoveType) {
 			} else {
 				break
 			}
+		}
+
+		if counter > 10 {
+			moveType.action = "wait"
+			return newPos, moveType
 		}
 
 		if valid {
@@ -605,7 +623,7 @@ func (b *Board) checkIfNewPosIsValid(x int, y int) string {
 		return "food"
 	} else if obj, ok := b.objectBoard[y][x].(CreatureObject); ok {
 		if obj.isMoving() {
-			return "conflict but no food"
+			return ""
 		}
 		return "conflict"
 	}

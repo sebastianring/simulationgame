@@ -36,8 +36,8 @@ func newConflictManager() (*conflictManager, error) {
 		},
 
 		creatureTranslation: map[string]int{
-			"creature1": 1,
-			"creature2": 2,
+			"creature1": 0,
+			"creature2": 1,
 		},
 
 		actionTranslation: map[string]bool{
@@ -56,6 +56,7 @@ func (cm *conflictManager) getConflict(sourceCreature CreatureObject, targetCrea
 	row := cm.creatureTranslation[sourceCreature.getType()]
 	col := cm.creatureTranslation[targetCreature.getType()]
 
+	// fmt.Println("Trying to find strategy at these pos: " + strconv.Itoa(row) + strconv.Itoa(col))
 	strategy := cm.conflictMapping[row][col]
 
 	action, ok := cm.actionTranslation[strategy]

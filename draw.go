@@ -42,6 +42,7 @@ func (b *Board) printStatusLine(totalWidth int) {
 
 func printDataLine(boardData []BoardObject, gl *Gamelog, messageRow int) {
 	line := make([]byte, totalWidth)
+
 	line = append(line, edgeSymbol) // adding a # symbol at the start
 
 	boardDataLine := getBoardSymbolByRow(boardData)

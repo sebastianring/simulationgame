@@ -43,8 +43,8 @@ func (b *Board) newCreature1Object(mutate bool, parent ...*Creature1) (*Creature
 	c1 := Creature1{
 		id:       b.creatureIdCtr["creature1"],
 		symbol:   getObjectSymbol("Creature1"),
-		oriHP:    175,
-		hp:       175,
+		oriHP:    250,
+		hp:       250,
 		speed:    speed,
 		oriSpeed: speed,
 		typeDesc: "creature1",
@@ -150,4 +150,8 @@ func (c *Creature1) kill() {
 
 func (c *Creature1) getOriHP() int {
 	return c.oriHP
+}
+
+func (c *Creature1) getIdAsString() string {
+	return c.typeDesc + strconv.Itoa(c.id)
 }

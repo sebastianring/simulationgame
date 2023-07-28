@@ -24,6 +24,7 @@ type CreatureObject interface {
 	getType() string
 	kill()
 	getOriHP() int
+	getIdAsString() string
 }
 
 func getObjectSymbol(objectname string) byte {

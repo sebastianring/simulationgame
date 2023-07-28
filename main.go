@@ -12,20 +12,20 @@ var gameOn bool
 func main() {
 	rand.Seed(time.Now().UnixNano())
 	gameOn = true
-	board := InitNewBoard(40, 100)
+	board := InitNewBoard(30, 50)
 	InitDrawing(board)
 
-	ticker := time.NewTicker(100 * time.Millisecond)
+	ticker := time.NewTicker(50 * time.Millisecond)
 	defer ticker.Stop()
 
-	db, err := openDbConnection()
-
-	if err != nil {
-		addMessageToCurrentGamelog(err.Error(), 1)
-	}
-
-	defer db.Close()
-
+	// db, err := openDbConnection()
+	//
+	// if err != nil {
+	// 	addMessageToCurrentGamelog(err.Error(), 1)
+	// }
+	//
+	// defer db.Close()
+	//
 	// testMsg := message{
 	// 	Id:    1000,
 	// 	Prio:  1,
