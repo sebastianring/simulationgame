@@ -21,13 +21,15 @@ func openDbConnection() (*sql.DB, error) {
 		password + "@" + adress + ":" +
 		port + "/postgres"
 
-	addMessageToCurrentGamelog(database_url, 1)
+	// addMessageToCurrentGamelog(database_url, 1)
 
 	db, err := sql.Open("postgres", database_url)
 
 	if err != nil {
 		addMessageToCurrentGamelog(err.Error(), 1)
 		return nil, err
+	} else {
+		addMessageToCurrentGamelog("Database connection secured!", 1)
 	}
 
 	err = db.Ping()
@@ -35,6 +37,8 @@ func openDbConnection() (*sql.DB, error) {
 	if err != nil {
 		addMessageToCurrentGamelog(err.Error(), 1)
 		return nil, err
+	} else {
+		addMessageToCurrentGamelog("Database ping succesful!", 1)
 	}
 
 	return db, nil

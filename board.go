@@ -318,6 +318,7 @@ func (b *Board) creatureUpdatesPerTick() {
 
 			if action == "move" {
 				newPos, moveType := b.newPosAndMove(pos)
+
 				b.objectBoard[newPos.y][newPos.x] = BoardObject(obj)
 
 				if moveType == "food" {
@@ -528,7 +529,31 @@ func (b *Board) newPosAndMove(currentPos Pos) (Pos, string) {
 			x = currentPos.x
 		}
 
-		valid, moveType := b.checkIfNewPosIsValid(x, y)
+		moveType := ""
+		valid := false
+
+		for {
+			validMoveTypes := []string{"empty", "food"}
+			moveType = b.checkIfNewPosIsValid(x, y)
+
+			if containsString(validMoveTypes, moveType) {
+				valid = true
+				break
+			}
+
+			if moveType == "conflict" {
+				if sourceCreature, ok := b.objectBoard[currentPos.y][currentPos.x].(CreatureObject); ok {
+					if targetCreature, ok := b.objectBoard[currentPos.y][currentPos.x].(CreatureObject); ok {
+						conflict := b.conflictManager.getConflict(sourceCreature, targetCreature)
+						if conflict {
+							valid = true
+							break
+						}
+					}
+				}
+			}
+
+		}
 
 		if valid {
 			newPos.x = x
@@ -540,18 +565,20 @@ func (b *Board) newPosAndMove(currentPos Pos) (Pos, string) {
 	return newPos, "empty"
 }
 
-func (b *Board) checkIfNewPosIsValid(x int, y int) (bool, string) {
+func (b *Board) checkIfNewPosIsValid(x int, y int) string {
 	if x < 0 || x >= b.cols || y < 0 || y >= b.rows {
-		return false, ""
+		return ""
 	}
 
 	if _, ok := b.objectBoard[y][x].(*EmptyObject); ok {
-		return true, "empty"
+		return "empty"
 	} else if _, ok := b.objectBoard[y][x].(*Food); ok {
-		return true, "food"
+		return "food"
+	} else if _, ok := b.objectBoard[y][x].(CreatureObject); ok {
+		return "conflict"
 	}
 
-	return false, ""
+	return ""
 }
 
 func deleteFood(pos Pos) {
@@ -582,4 +609,14 @@ func deleteCreature(pos Pos, creature *BoardObject) {
 func deleteIndexInPosSlice(posSlice []Pos, index int) []Pos {
 	posSlice[index] = posSlice[len(posSlice)-1]
 	return posSlice[:len(posSlice)-1]
+}
+
+func containsString(slice []string, target string) bool {
+	for _, element := range slice {
+		if element == target {
+			return true
+		}
+	}
+
+	return false
 }

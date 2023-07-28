@@ -42,14 +42,17 @@ func (cm *conflictManager) getConflict(sourceCreature CreatureObject, targetCrea
 	switch strategy {
 	case "avoid":
 		return false
+
 	case "share":
 		sourceCreature.heal(sourceCreature.getOriHP() / 2)
 		targetCreature.heal((targetCreature.getOriHP() / 2) * -1)
 		return true
+
 	case "attack1":
 		sourceCreature.heal(sourceCreature.getOriHP())
 		targetCreature.kill()
 		return true
+
 	case "attack2":
 		rng := rand.Intn(2)
 		if rng == 1 {
@@ -59,6 +62,7 @@ func (cm *conflictManager) getConflict(sourceCreature CreatureObject, targetCrea
 			sourceCreature.kill()
 			targetCreature.heal((targetCreature.getOriHP() / 2) * -1)
 		}
+
 	default:
 		return false
 	}
