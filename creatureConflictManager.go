@@ -1,5 +1,7 @@
 package main
 
+import "math/rand"
+
 type conflictManager struct {
 	conflictMapping     [][]string
 	creatureTranslation map[string]int
@@ -41,14 +43,25 @@ func (cm *conflictManager) getConflict(sourceCreature CreatureObject, targetCrea
 	case "avoid":
 		return false
 	case "share":
-		sourceCreature.heal()
-		//REMOVE HP FROM TARGET
+		sourceCreature.heal(sourceCreature.getOriHP() / 2)
+		targetCreature.heal((targetCreature.getOriHP() / 2) * -1)
 		return true
 	case "attack1":
-		sourceCreature.heal()
+		sourceCreature.heal(sourceCreature.getOriHP())
 		targetCreature.kill()
 		return true
+	case "attack2":
+		rng := rand.Intn(2)
+		if rng == 1 {
+			sourceCreature.heal((sourceCreature.getOriHP() / 2) * -1)
+			targetCreature.kill()
+		} else {
+			sourceCreature.kill()
+			targetCreature.heal((targetCreature.getOriHP() / 2) * -1)
+		}
 	default:
 		return false
 	}
+
+	return false
 }

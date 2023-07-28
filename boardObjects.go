@@ -18,11 +18,12 @@ type CreatureObject interface {
 	getHP() int
 	getId() int
 	resetValues()
-	heal()
+	heal(int)
 	isMoving() bool
 	isDead() bool
 	getType() string
 	kill()
+	getOriHP() int
 }
 
 func getObjectSymbol(objectname string) byte {

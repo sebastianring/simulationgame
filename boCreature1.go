@@ -90,11 +90,11 @@ func (c *Creature1) updateTick() string {
 	return "error"
 }
 
-func (c *Creature1) heal() {
+func (c *Creature1) heal(val int) {
 	addMessageToCurrentGamelog("Creature 1 with id "+
 		strconv.Itoa(c.id)+" healed for: "+
 		strconv.Itoa(c.oriHP), 2)
-	c.hp += c.oriHP
+	c.hp += val
 	c.moving = false
 }
 
@@ -146,4 +146,8 @@ func (c *Creature1) getType() string {
 
 func (c *Creature1) kill() {
 	c.hp = 0
+}
+
+func (c *Creature1) getOriHP() int {
+	return c.oriHP
 }

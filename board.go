@@ -61,6 +61,7 @@ func InitNewBoard(rows int, cols int) *Board {
 	cm, err := newConflictManager()
 
 	if err != nil {
+		fmt.Println("Error creating conflict manager, please debug.")
 		os.Exit(1)
 	}
 
@@ -321,7 +322,7 @@ func (b *Board) creatureUpdatesPerTick() {
 
 				if moveType == "food" {
 					addMessageToCurrentGamelog("Food eaten by creature id: "+strconv.Itoa(obj.getId()), 2)
-					obj.heal()
+					obj.heal(obj.getOriHP())
 					b.objectBoard[pos.y][pos.x] = newEmptyObject()
 					deleteFood(newPos)
 				} else {
