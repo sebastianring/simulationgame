@@ -12,7 +12,7 @@ var gameOn bool
 func main() {
 	rand.Seed(time.Now().UnixNano())
 	gameOn = true
-	board := InitNewBoard(30, 50)
+	board := InitNewBoard(40, 100)
 	InitDrawing(board)
 
 	ticker := time.NewTicker(50 * time.Millisecond)

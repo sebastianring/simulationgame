@@ -308,7 +308,6 @@ func (b *Board) creatureUpdatesPerTick() {
 				}
 
 				if moveType.action == "conflict" {
-					addMessageToCurrentGamelog("conflict imminent", 1)
 					switch moveType.conflict.attack {
 					case "share":
 						b.conflictManager.share(moveType.conflict.sourceCreature, moveType.conflict.targetCreature)
@@ -318,13 +317,13 @@ func (b *Board) creatureUpdatesPerTick() {
 						killTarget := b.conflictManager.attack2(moveType.conflict.sourceCreature, moveType.conflict.targetCreature)
 
 						if killTarget {
-							addMessageToCurrentGamelog(moveType.conflict.sourceCreature.getType()+
-								" killed "+moveType.conflict.targetCreature.getType(), 1)
+							addMessageToCurrentGamelog(moveType.conflict.sourceCreature.getIdAsString()+
+								" killed "+moveType.conflict.targetCreature.getIdAsString(), 1)
 
 							deadCreatures = append(deadCreatures, newPos)
 						} else {
-							addMessageToCurrentGamelog(moveType.conflict.targetCreature.getType()+
-								" killed "+moveType.conflict.sourceCreature.getType(), 1)
+							addMessageToCurrentGamelog(moveType.conflict.targetCreature.getIdAsString()+
+								" killed "+moveType.conflict.sourceCreature.getIdAsString(), 1)
 
 							deadCreatures = append(deadCreatures, pos)
 						}
@@ -469,12 +468,11 @@ func (b *Board) spawnOffsprings() {
 		}
 	}
 
-	sum := 0
-	for _, val := range creatureQty {
-		sum = +val
+	for key, val := range creatureQty {
+		if val > 0 {
+			addMessageToCurrentGamelog(strconv.Itoa(val)+" Creatures of type "+key+" spawned", 1)
+		}
 	}
-
-	addMessageToCurrentGamelog(strconv.Itoa(sum)+" new creatures spawned", 1)
 
 	b.spawnCreature1OnBoard(creatureQty["creature1"])
 	b.spawnCreature2OnBoard(creatureQty["creature2"])
@@ -499,9 +497,6 @@ func (b *Board) checkIfCreaturesAreInactive() bool {
 		if obj, ok := b.objectBoard[pos.y][pos.x].(CreatureObject); ok {
 			dead := obj.isDead()
 			moving := obj.isMoving()
-
-			// addMessageToCurrentGamelog("Current counter: " + strconv.Itoa(i) + "total length: " + strconv.Itoa(len(allAliveCreatureObjects)))
-			// addMessageToCurrentGamelog("DEAD:" + strconv.FormatBool(dead) + " MOVING: " + strconv.FormatBool(moving))
 
 			if !dead && moving || dead {
 				return false

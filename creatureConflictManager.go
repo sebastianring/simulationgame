@@ -52,11 +52,10 @@ func newConflictManager() (*conflictManager, error) {
 }
 
 func (cm *conflictManager) getConflict(sourceCreature CreatureObject, targetCreature CreatureObject) (bool, *conflictInfo) {
-	addMessageToCurrentGamelog("Conflict between two creatures checked", 1)
+	// addMessageToCurrentGamelog("Conflict between two creatures checked", 1)
 	row := cm.creatureTranslation[sourceCreature.getType()]
 	col := cm.creatureTranslation[targetCreature.getType()]
 
-	// fmt.Println("Trying to find strategy at these pos: " + strconv.Itoa(row) + strconv.Itoa(col))
 	strategy := cm.conflictMapping[row][col]
 
 	action, ok := cm.actionTranslation[strategy]

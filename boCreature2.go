@@ -113,7 +113,7 @@ func (c *Creature2) resetValues() {
 }
 
 func (c *Creature2) ifOffspring() bool {
-	if c.hp > int(float32(c.oriHP)*1.1) {
+	if c.hp > int(float32(c.oriHP)*1.5) {
 		return true
 	}
 
@@ -153,5 +153,5 @@ func (c *Creature2) getOriHP() int {
 }
 
 func (c *Creature2) getIdAsString() string {
-	return c.typeDesc + strconv.Itoa(c.id)
+	return c.typeDesc + " (" + strconv.Itoa(c.id) + ")"
 }

@@ -153,5 +153,5 @@ func (c *Creature1) getOriHP() int {
 }
 
 func (c *Creature1) getIdAsString() string {
-	return c.typeDesc + strconv.Itoa(c.id)
+	return c.typeDesc + " (" + strconv.Itoa(c.id) + ")"
 }

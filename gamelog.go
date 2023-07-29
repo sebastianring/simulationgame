@@ -111,7 +111,7 @@ func addMessageToCurrentGamelog(msg string, prio int) {
 			currentGamelog.displayedMessages = append(currentGamelog.displayedMessages, val)
 		}
 	}
-	//
+
 	// if prio == 1 {
 	// 	db, err := openDbConnection()
 	//
@@ -121,7 +121,7 @@ func addMessageToCurrentGamelog(msg string, prio int) {
 	//
 	// 	writeMessageToDb(db, newMessage)
 	// }
-
+	//
 	currentGamelog.idCtr++
 }
 
