@@ -3,15 +3,15 @@ package main
 import (
 	"errors"
 	"fmt"
+	"github.com/google/uuid"
 	"math/rand"
 	"os"
 	"strconv"
 	"time"
-	// "strings"
 )
 
 // -------------------------------------------------- //
-// ------------------------------------------------- //
+// -------------------------------------------------- //
 // INITS AND STRUCTS -------------------------------- //
 // -------------------------------------------------- //
 // -------------------------------------------------- //
@@ -19,8 +19,10 @@ import (
 var allFoodObjects []Pos
 var allAliveCreatureObjects []Pos
 var allDeadCreatures []*BoardObject
+var currentBoardId string
 
 type Board struct {
+	Id              string
 	rows            int
 	cols            int
 	gamelog         *Gamelog
@@ -40,6 +42,7 @@ type Round struct {
 	time             int
 	creaturedSpawned []CreatureObject
 	creaturedKilled  []CreatureObject
+	boardLink        string
 }
 
 type Pos struct {
@@ -58,11 +61,14 @@ func InitNewBoard(rows int, cols int) *Board {
 		os.Exit(1)
 	}
 
+	currentBoardId := uuid.New().String()
+
 	newRound := Round{
 		id:               1,
 		time:             0,
 		creaturedSpawned: make([]CreatureObject, 0),
 		creaturedKilled:  make([]CreatureObject, 0),
+		boardLink:        currentBoardId,
 	}
 
 	cm, err := newConflictManager()
@@ -73,6 +79,7 @@ func InitNewBoard(rows int, cols int) *Board {
 	}
 
 	newBoard := Board{
+		Id:              currentBoardId,
 		rows:            rows,
 		cols:            cols,
 		gamelog:         InitTextInfo(rows),
@@ -95,6 +102,14 @@ func InitNewBoard(rows int, cols int) *Board {
 	newBoard.spawnCreature1OnBoard(initialCreature1)
 	newBoard.spawnCreature2OnBoard(initialCreature2)
 	newBoard.spawnFoodOnBoard()
+
+	db, err := openDbConnection()
+
+	if err != nil {
+		addMessageToCurrentGamelog(err.Error(), 1)
+	}
+
+	writeBoardToDb(db, &newBoard)
 
 	addMessageToCurrentGamelog("Board added", 2)
 	addMessageToCurrentGamelog("Welcome to the simulation game where you can simulate creatures and how they evolve!", 1)

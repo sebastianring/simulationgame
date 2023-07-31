@@ -2,10 +2,12 @@ package main
 
 import (
 	"database/sql"
+	"fmt"
 	// _ "database/sql/driver"
 	// "fmt"
-	_ "github.com/lib/pq"
 	"os"
+
+	_ "github.com/lib/pq"
 	// _ "github.com/lib/pq"
 )
 
@@ -20,8 +22,6 @@ func openDbConnection() (*sql.DB, error) {
 	database_url := prefix + user + ":" +
 		password + "@" + adress + ":" +
 		port + "/postgres"
-
-	// addMessageToCurrentGamelog(database_url, 1)
 
 	db, err := sql.Open("postgres", database_url)
 
@@ -46,13 +46,29 @@ func openDbConnection() (*sql.DB, error) {
 
 func writeMessageToDb(db *sql.DB, msg *message) {
 	go func() {
-		const SCHEMA = "simulation_game."
-		query := "INSERT INTO simulation_game.message (id, prio, text) VALUES ($1, $2, $3) RETURNiNG id"
-		err := db.QueryRow(query, msg.Id, msg.Prio, msg.Texts).Scan(&msg.Id)
+		query := "INSERT INTO simulation_game.messages (id, prio, text, board_link) VALUES ($1, $2, $3, $4) RETURNiNG id"
+		err := db.QueryRow(query, msg.Id, msg.Prio, msg.Texts, currentBoardId).Scan(&msg.Id)
+
+		if err != nil {
+			fmt.Println(err.Error())
+			// addMessageToCurrentGamelog(err.Error(), 1)
+		}
+
+	}()
+}
+
+func writeBoardToDb(db *sql.DB, board *Board) {
+	go func() {
+		query := "INSERT INTO simulation_game.boards (id, rows, cols) VALUES ($1, $2, $3) RETURNiNG id"
+		err := db.QueryRow(query, board.Id, board.rows, board.cols).Scan(&board.Id)
 
 		if err != nil {
 			addMessageToCurrentGamelog(err.Error(), 1)
 		}
 
 	}()
+}
+
+func writeRoundToDb(db *sql.DB, round *Round) {
+
 }
