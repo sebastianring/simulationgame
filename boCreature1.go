@@ -78,7 +78,7 @@ func (b *Board) newCreature1Object(mutate bool, parent ...*Creature1) (*Creature
 func (c *Creature1) updateTick() string {
 	if c.moving && c.hp > 0 {
 		c.speed -= 1
-		if c.speed == 0 {
+		if c.speed <= 0 {
 			c.speed = c.oriSpeed
 			c.hp -= 5 + (10 / c.speed)
 			return "move"
@@ -91,9 +91,15 @@ func (c *Creature1) updateTick() string {
 }
 
 func (c *Creature1) heal(val int) {
+	prio := 2
+
+	if val < 0 {
+		prio = 1
+	}
+
 	addMessageToCurrentGamelog("Creature 1 with id "+
 		strconv.Itoa(c.id)+" healed for: "+
-		strconv.Itoa(c.oriHP), 2)
+		strconv.Itoa(val), prio)
 	c.hp += val
 	c.moving = false
 }

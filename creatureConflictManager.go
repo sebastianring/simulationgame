@@ -76,11 +76,15 @@ func (cm *conflictManager) getConflict(sourceCreature CreatureObject, targetCrea
 func (cm *conflictManager) share(sourceCreature CreatureObject, targetCreature CreatureObject) {
 	sourceCreature.heal(sourceCreature.getOriHP() / 2)
 	targetCreature.heal((targetCreature.getOriHP() / 2) * -1)
+
+	addMessageToCurrentGamelog(sourceCreature.getIdAsString()+" shared the food of "+targetCreature.getIdAsString(), 1)
 }
 
 func (cm *conflictManager) attack1(sourceCreature CreatureObject, targetCreature CreatureObject) {
 	sourceCreature.heal(sourceCreature.getOriHP())
 	targetCreature.kill()
+
+	addMessageToCurrentGamelog(sourceCreature.getIdAsString()+" killed "+targetCreature.getIdAsString()+" using attack1", 1)
 }
 
 func (cm *conflictManager) attack2(sourceCreature CreatureObject, targetCreature CreatureObject) bool {
@@ -90,10 +94,15 @@ func (cm *conflictManager) attack2(sourceCreature CreatureObject, targetCreature
 		sourceCreature.heal((sourceCreature.getOriHP() / 2) * -1)
 		targetCreature.kill()
 
+		addMessageToCurrentGamelog(sourceCreature.getIdAsString()+" killed "+targetCreature.getIdAsString()+" using attack2", 1)
+
 		return true
+
 	} else {
 		sourceCreature.kill()
 		targetCreature.heal((targetCreature.getOriHP() / 2) * -1)
+
+		addMessageToCurrentGamelog(targetCreature.getIdAsString()+" killed "+sourceCreature.getIdAsString()+" using attack2", 1)
 
 		return false
 	}

@@ -323,11 +323,20 @@ func (b *Board) creatureUpdatesPerTick() {
 				}
 
 				if moveType.action == "conflict" {
+					addMessageToCurrentGamelog("Conflict at: "+strconv.Itoa(newPos.x)+", "+strconv.Itoa(newPos.y)+" ", 1)
+
 					switch moveType.conflict.attack {
 					case "share":
 						b.conflictManager.share(moveType.conflict.sourceCreature, moveType.conflict.targetCreature)
+						updatedAllCreatureObjects = append(updatedAllCreatureObjects, pos)
+
 					case "attack1":
 						b.conflictManager.attack1(moveType.conflict.sourceCreature, moveType.conflict.targetCreature)
+
+						deadCreatures = append(deadCreatures, newPos)
+						b.objectBoard[newPos.y][newPos.x] = BoardObject(obj)
+						b.objectBoard[pos.y][pos.x] = newEmptyObject()
+
 					case "attack2":
 						killTarget := b.conflictManager.attack2(moveType.conflict.sourceCreature, moveType.conflict.targetCreature)
 
@@ -336,11 +345,16 @@ func (b *Board) creatureUpdatesPerTick() {
 								" killed "+moveType.conflict.targetCreature.getIdAsString(), 1)
 
 							deadCreatures = append(deadCreatures, newPos)
+							b.objectBoard[newPos.y][newPos.x] = newEmptyObject()
+							updatedAllCreatureObjects = append(updatedAllCreatureObjects, newPos)
+
 						} else {
 							addMessageToCurrentGamelog(moveType.conflict.targetCreature.getIdAsString()+
 								" killed "+moveType.conflict.sourceCreature.getIdAsString(), 1)
 
 							deadCreatures = append(deadCreatures, pos)
+							b.objectBoard[pos.y][pos.x] = newEmptyObject()
+							updatedAllCreatureObjects = append(updatedAllCreatureObjects, newPos)
 						}
 
 					default:
@@ -632,9 +646,11 @@ func (b *Board) checkIfNewPosIsValid(x int, y int) string {
 	} else if _, ok := b.objectBoard[y][x].(*Food); ok {
 		return "food"
 	} else if obj, ok := b.objectBoard[y][x].(CreatureObject); ok {
+
 		if obj.isMoving() {
-			return ""
+			return "no food"
 		}
+
 		return "conflict"
 	}
 
