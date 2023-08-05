@@ -38,11 +38,19 @@ type Board struct {
 }
 
 type Round struct {
-	id               int
-	time             int
-	creaturedSpawned []CreatureObject
-	creaturedKilled  []CreatureObject
-	boardLink        string
+	id                  int
+	time                int
+	creaturesSpawned    []CreatureObject
+	creaturesKilled     []CreatureObject
+	boardLink           string
+	creaturesSpawnedSum map[string]creatureSummary
+	creaturesKilledSum  map[string]creatureSummary
+}
+
+type creatureSummary struct {
+	totalCreatures int
+	totalSpeed     int
+	averageSpeed   float64
 }
 
 type Pos struct {
@@ -66,8 +74,8 @@ func InitNewBoard(rows int, cols int) *Board {
 	newRound := Round{
 		id:               1,
 		time:             0,
-		creaturedSpawned: make([]CreatureObject, 0),
-		creaturedKilled:  make([]CreatureObject, 0),
+		creaturesSpawned: make([]CreatureObject, 0),
+		creaturesKilled:  make([]CreatureObject, 0),
 		boardLink:        currentBoardId,
 	}
 
@@ -106,6 +114,7 @@ func InitNewBoard(rows int, cols int) *Board {
 	db, err := openDbConnection()
 
 	if err != nil {
+		fmt.Println(err.Error())
 		addMessageToCurrentGamelog(err.Error(), 1)
 	}
 
@@ -323,7 +332,7 @@ func (b *Board) creatureUpdatesPerTick() {
 				}
 
 				if moveType.action == "conflict" {
-					addMessageToCurrentGamelog("Conflict at: "+strconv.Itoa(newPos.x)+", "+strconv.Itoa(newPos.y)+" ", 1)
+					// addMessageToCurrentGamelog("Conflict at: "+strconv.Itoa(newPos.x)+", "+strconv.Itoa(newPos.y)+" ", 1)
 
 					switch moveType.conflict.attack {
 					case "share":
@@ -410,17 +419,19 @@ func (b *Board) newRound() {
 	b.spawnOffsprings()
 	b.findPosForAllCreatures()
 	b.deleteAndSpawnFood()
+	b.writeSummaryOfRound()
 
 	newRound := Round{
 		id:               b.currentRound.id + 1,
 		time:             0,
-		creaturedSpawned: make([]CreatureObject, 0),
-		creaturedKilled:  make([]CreatureObject, 0),
+		creaturesSpawned: make([]CreatureObject, 0),
+		creaturesKilled:  make([]CreatureObject, 0),
 	}
 
 	b.currentRound = &newRound
 	b.rounds = append(b.rounds, &newRound)
 
+	addMessageToCurrentGamelog("---- NEW ROUND ----", 1)
 	b.gamelog.writeGamelogToFile()
 }
 
@@ -431,6 +442,37 @@ func (b *Board) deleteAndSpawnFood() {
 
 	allFoodObjects = make([]Pos, 0)
 	b.spawnFoodOnBoard()
+}
+
+func (b *Board) writeSummaryOfRound() {
+	creaturesSpawned := make(map[string]creatureSummary)
+
+	for _, creature := range b.currentRound.creaturesSpawned {
+		creatureType := creature.getType()
+
+		if obj, ok := creaturesSpawned[creatureType]; ok {
+			mapPtr := &obj
+			mapPtr.totalCreatures += 1
+			mapPtr.totalSpeed += creature.getSpeed()
+
+		} else {
+			newCreatureSummary := creatureSummary{
+				totalCreatures: 1,
+				totalSpeed:     creature.getSpeed(),
+			}
+
+			creaturesSpawned[creatureType] = newCreatureSummary
+		}
+	}
+
+	b.currentRound.creaturesSpawnedSum = creaturesSpawned
+
+	for c, cs := range b.currentRound.creaturesSpawnedSum {
+		cs.averageSpeed = float64(cs.totalSpeed) / float64(cs.totalCreatures)
+
+		addMessageToCurrentGamelog("In last round, "+strconv.Itoa(cs.totalCreatures)+
+			" x "+c+" was spawned with the average speed of: "+strconv.FormatFloat(cs.averageSpeed, 'f', 2, 64), 1)
+	}
 }
 
 func (b *Board) findPosForAllCreatures() {
@@ -482,7 +524,7 @@ func (b *Board) spawnOffsprings() {
 					creatureQty["creature2"]++
 				}
 
-				b.currentRound.creaturedSpawned = append(b.currentRound.creaturedSpawned, offspring)
+				b.currentRound.creaturesSpawned = append(b.currentRound.creaturesSpawned, offspring)
 
 				newPos := b.randomPosAtEdgeOfMap()
 				for !b.isSpotEmpty(newPos) {

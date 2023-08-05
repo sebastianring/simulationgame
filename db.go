@@ -63,6 +63,7 @@ func writeBoardToDb(db *sql.DB, board *Board) {
 		err := db.QueryRow(query, board.Id, board.rows, board.cols).Scan(&board.Id)
 
 		if err != nil {
+			fmt.Println(err.Error())
 			addMessageToCurrentGamelog(err.Error(), 1)
 		}
 
