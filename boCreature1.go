@@ -8,7 +8,7 @@ import (
 
 type Creature1 struct {
 	id       int
-	symbol   byte
+	symbol   []byte
 	hp       int
 	oriHP    int
 	speed    int
@@ -41,8 +41,9 @@ func (b *Board) newCreature1Object(mutate bool, parent ...*Creature1) (*Creature
 	}
 
 	c1 := Creature1{
-		id:       b.creatureIdCtr["creature1"],
-		symbol:   getObjectSymbol("Creature1"),
+		id: b.creatureIdCtr["creature1"],
+		// symbol:   getObjectSymbol("Creature1"),
+		symbol:   getObjectSymbolWColor("Creature1"),
 		oriHP:    250,
 		hp:       250,
 		speed:    speed,
@@ -134,7 +135,7 @@ func (c *Creature1) getId() int {
 	return c.id
 }
 
-func (c *Creature1) getSymbol() byte {
+func (c *Creature1) getSymbol() []byte {
 	return c.symbol
 }
 

@@ -79,7 +79,11 @@ func getBoardSymbolByRow(row []BoardObject) []byte {
 	line := make([]byte, len(row))
 
 	for _, object := range row {
-		line = append(line, object.getSymbol())
+		symbol := object.getSymbol()
+		for _, symbval := range symbol {
+			line = append(line, symbval)
+		}
+		// line = append(line, object.getSymbol())
 	}
 
 	return line

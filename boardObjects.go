@@ -8,11 +8,11 @@ package main
 // I really need to change architecture of the board .. this is abuse of interfaces. //
 
 type BoardObject interface {
-	getSymbol() byte
+	getSymbol() []byte
 }
 
 type CreatureObject interface {
-	getSymbol() byte
+	getSymbol() []byte
 	updateTick() string
 	ifOffspring() bool
 	getHP() int
@@ -39,6 +39,41 @@ func getObjectSymbol(objectname string) byte {
 	return drawingSymbols[objectname]
 }
 
+func getObjectSymbolWColor(objectname string) []byte {
+	resetColor := []byte("\033[0m")
+
+	colors := map[string][]byte{
+		"green":   []byte("\033[32m"),
+		"red":     []byte("\033[31m"),
+		"blue":    []byte("\033[34m"),
+		"yellow":  []byte("\033[33m"),
+		"magenta": []byte("\033[35m"),
+		"cyan":    []byte("\033[36m"),
+		"white":   []byte("\033[37m"),
+	}
+
+	drawingSymbols := map[string]byte{
+		"EmptyObject": 46, // .....
+		"Food":        64, // @@@@@
+		"Creature1":   79, // OOOOO
+		"Creature2":   87, // WWWWW
+	}
+
+	drawingColors := map[string]string{
+		"EmptyObject": "white",
+		"Food":        "green",
+		"Creature1":   "cyan",
+		"Creature2":   "red",
+	}
+
+	objectColor := drawingColors[objectname]
+	returnByte := colors[objectColor]
+	returnByte = append(returnByte, drawingSymbols[objectname])
+	returnByte = append(returnByte, resetColor...)
+
+	return returnByte
+}
+
 // -------------------------------------------------- //
 // -------------------------------------------------- //
 // ALL STRUCTS HERE AND THEIR CREATE FUNCTIONS ------ //
@@ -46,13 +81,14 @@ func getObjectSymbol(objectname string) byte {
 // -------------------------------------------------- //
 
 type EmptyObject struct {
-	symbol   byte
+	symbol   []byte
 	typeDesc string
 }
 
 func newEmptyObject() *EmptyObject {
 	eo := EmptyObject{
-		symbol:   getObjectSymbol("EmptyObject"),
+		// symbol:   getObjectSymbol("EmptyObject"),
+		symbol:   getObjectSymbolWColor("EmptyObject"),
 		typeDesc: "empty",
 	}
 
@@ -62,13 +98,14 @@ func newEmptyObject() *EmptyObject {
 }
 
 type Food struct {
-	symbol   byte
+	symbol   []byte
 	typeDesc string
 }
 
 func newFoodObject() *Food {
 	f := Food{
-		symbol:   getObjectSymbol("Food"),
+		// symbol:   getObjectSymbol("Food"),
+		symbol:   getObjectSymbolWColor("Food"),
 		typeDesc: "food",
 	}
 
@@ -83,10 +120,10 @@ func newFoodObject() *Food {
 // -------------------------------------------------- //
 // -------------------------------------------------- //
 
-func (eo *EmptyObject) getSymbol() byte {
+func (eo *EmptyObject) getSymbol() []byte {
 	return eo.symbol
 }
 
-func (f *Food) getSymbol() byte {
+func (f *Food) getSymbol() []byte {
 	return f.symbol
 }

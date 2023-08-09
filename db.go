@@ -70,6 +70,7 @@ func writeBoardToDb(db *sql.DB, board *Board) {
 	}()
 }
 
+// need at add round to DB
 func writeRoundToDb(db *sql.DB, round *Round) {
 
 }

@@ -305,6 +305,13 @@ func getCurrentTimeString() string {
 	return timeString
 }
 
+// func (b *Board) killCreature(creature CreatureObject, pos Pos) Pos {
+// 	b.currentRound.creaturesKilled = append(b.currentRound.creaturesKilled, creature)
+// 	b.objectBoard[pos.y][pos.x] = newEmptyObject()
+//
+// 	return pos
+// }
+
 func (b *Board) creatureUpdatesPerTick() {
 	updatedAllCreatureObjects := make([]Pos, 0)
 	deadCreatures := make([]Pos, 0)
@@ -472,6 +479,35 @@ func (b *Board) writeSummaryOfRound() {
 
 		addMessageToCurrentGamelog("In last round, "+strconv.Itoa(cs.totalCreatures)+
 			" x "+c+" was spawned with the average speed of: "+strconv.FormatFloat(cs.averageSpeed, 'f', 2, 64), 1)
+	}
+
+	creaturesKilled := make(map[string]creatureSummary)
+
+	for _, creature := range b.currentRound.creaturesKilled {
+		creatureType := creature.getType()
+
+		if obj, ok := creaturesKilled[creatureType]; ok {
+			mapPtr := &obj
+			mapPtr.totalCreatures += 1
+			mapPtr.totalSpeed += creature.getSpeed()
+
+		} else {
+			newCreatureSummary := creatureSummary{
+				totalCreatures: 1,
+				totalSpeed:     creature.getSpeed(),
+			}
+
+			creaturesKilled[creatureType] = newCreatureSummary
+		}
+	}
+
+	b.currentRound.creaturesKilledSum = creaturesKilled
+
+	for c, cs := range b.currentRound.creaturesKilledSum {
+		cs.averageSpeed = float64(cs.totalSpeed) / float64(cs.totalCreatures)
+
+		addMessageToCurrentGamelog("In last round, "+strconv.Itoa(cs.totalCreatures)+
+			" x "+c+" was killed with the average speed of: "+strconv.FormatFloat(cs.averageSpeed, 'f', 2, 64), 1)
 	}
 }
 
