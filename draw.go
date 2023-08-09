@@ -4,8 +4,8 @@ import (
 	"fmt"
 	"os"
 	"os/exec"
+	"runtime"
 	"strconv"
-	// "runtime"
 )
 
 const edgeSymbol = byte(35) // ###### as the symbol at the edges of gui
@@ -13,8 +13,10 @@ const spaceSymbol = byte(32)
 
 var totalWidth int
 var totalHeight int
+var currentOs string
 
 func InitDrawing(b *Board) {
+	currentOs = runtime.GOOS
 	totalWidth = b.cols + b.gamelog.cols + 2 + 1 + 2
 	totalHeight = b.rows + 2 + 2 // rows + (edges + status bar) + (status bar line)
 }
@@ -91,7 +93,13 @@ func getBoardSymbolByRow(row []BoardObject) []byte {
 
 // Only works for linux as of now, needs to be adapted for other OS
 func clearScreen() {
-	cmd := exec.Command("clear")
+	osCommand := map[string]string{
+		"windows": "cls",
+		"linux":   "clear",
+		"darwin":  "clear",
+	}
+
+	cmd := exec.Command(osCommand[currentOs])
 	cmd.Stdout = os.Stdout
 	cmd.Run()
 }
