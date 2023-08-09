@@ -239,12 +239,12 @@ func (b *Board) randomPosAtEdgeOfMap() Pos {
 }
 
 func (b *Board) initBoardObjects() {
-	b.creatureIdCtr["creature1"] = 1
-	b.creatureIdCtr["creature2"] = 1
+	b.creatureIdCtr["Creature1"] = 1
+	b.creatureIdCtr["Creature2"] = 1
 
 	b.mutationrate = make(map[string]float32)
-	b.mutationrate["creature1"] = 0.1
-	b.mutationrate["creature2"] = 0.1
+	b.mutationrate["Creature1"] = 0.1
+	b.mutationrate["Creature2"] = 0.1
 }
 
 func (b *Board) randomPosWithinMap() Pos {
@@ -569,8 +569,6 @@ func (b *Board) spawnOffsprings() {
 
 				b.objectBoard[newPos.y][newPos.x] = offspring
 				allAliveCreatureObjects = append(allAliveCreatureObjects, newPos)
-
-				// qty++
 			}
 		}
 	}

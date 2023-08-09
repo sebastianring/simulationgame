@@ -41,14 +41,14 @@ func (b *Board) newCreature1Object(mutate bool, parent ...*Creature1) (*Creature
 	}
 
 	c1 := Creature1{
-		id: b.creatureIdCtr["creature1"],
+		id: b.creatureIdCtr["Creature1"],
 		// symbol:   getObjectSymbol("Creature1"),
 		symbol:   getObjectSymbolWColor("Creature1"),
 		oriHP:    250,
 		hp:       250,
 		speed:    speed,
 		oriSpeed: speed,
-		typeDesc: "creature1",
+		typeDesc: "Creature1",
 		moving:   true,
 	}
 
@@ -120,7 +120,7 @@ func (c *Creature1) resetValues() {
 }
 
 func (c *Creature1) ifOffspring() bool {
-	if c.hp > int(float32(c.oriHP)*1.1) {
+	if c.hp > int(float32(c.oriHP)*1.25) {
 		return true
 	}
 

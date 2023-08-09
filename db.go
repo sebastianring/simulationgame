@@ -15,7 +15,8 @@ func openDbConnection() (*sql.DB, error) {
 	prefix := "postgres://"
 	user := "sim_game"
 	password := os.Getenv("SIM_GAME_DB_PW")
-	adress := "192.168.0.130"
+	adress := "5.150.233.156"
+	// adress := "192.168.0.130"
 	// adress := "localhost"
 	port := "5432"
 

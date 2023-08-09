@@ -41,18 +41,18 @@ func (b *Board) newCreature2Object(mutate bool, parent ...*Creature2) (*Creature
 	}
 
 	c2 := Creature2{
-		id: b.creatureIdCtr["creature2"],
+		id: b.creatureIdCtr["Creature2"],
 		// symbol:   getObjectSymbol("Creature2"),
 		symbol:   getObjectSymbolWColor("Creature2"),
 		oriHP:    250,
 		hp:       250,
 		speed:    speed,
 		oriSpeed: speed,
-		typeDesc: "creature2",
+		typeDesc: "Creature2",
 		moving:   true,
 	}
 
-	b.creatureIdCtr["creature2"] += 1
+	b.creatureIdCtr["Creature2"] += 1
 
 	addMessageToCurrentGamelog("Creature2 object with ID: "+
 		strconv.Itoa(c2.id)+" added to the board", 2)
@@ -114,7 +114,7 @@ func (c *Creature2) resetValues() {
 }
 
 func (c *Creature2) ifOffspring() bool {
-	if c.hp > int(float32(c.oriHP)*1.5) {
+	if c.hp > int(float32(c.oriHP)*1.25) {
 		return true
 	}
 

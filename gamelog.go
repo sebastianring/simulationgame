@@ -8,11 +8,9 @@ import (
 )
 
 const cols int = 40
-
 const prioThreshold int = 1
 
 var currentGamelog *Gamelog
-
 var emptyMessage []byte
 
 type Gamelog struct {

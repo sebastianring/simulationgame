@@ -28,17 +28,6 @@ type CreatureObject interface {
 	getSpeed() int
 }
 
-func getObjectSymbol(objectname string) byte {
-	drawingSymbols := map[string]byte{
-		"EmptyObject": 46, // .....
-		"Food":        64, // @@@@@
-		"Creature1":   79, // OOOOO
-		"Creature2":   87, // WWWWW
-	}
-
-	return drawingSymbols[objectname]
-}
-
 func getObjectSymbolWColor(objectname string) []byte {
 	resetColor := []byte("\033[0m")
 
@@ -50,6 +39,7 @@ func getObjectSymbolWColor(objectname string) []byte {
 		"magenta": []byte("\033[35m"),
 		"cyan":    []byte("\033[36m"),
 		"white":   []byte("\033[37m"),
+		"black":   []byte("\033[30m"),
 	}
 
 	drawingSymbols := map[string]byte{
@@ -60,7 +50,7 @@ func getObjectSymbolWColor(objectname string) []byte {
 	}
 
 	drawingColors := map[string]string{
-		"EmptyObject": "white",
+		"EmptyObject": "black",
 		"Food":        "green",
 		"Creature1":   "cyan",
 		"Creature2":   "red",

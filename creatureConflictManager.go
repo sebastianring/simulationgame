@@ -36,8 +36,8 @@ func newConflictManager() (*conflictManager, error) {
 		},
 
 		creatureTranslation: map[string]int{
-			"creature1": 0,
-			"creature2": 1,
+			"Creature1": 0,
+			"Creature2": 1,
 		},
 
 		actionTranslation: map[string]bool{

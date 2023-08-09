@@ -17,6 +17,7 @@ var currentOs string
 
 func InitDrawing(b *Board) {
 	currentOs = runtime.GOOS
+	addMessageToCurrentGamelog("Current OS identified: "+currentOs, 1)
 	totalWidth = b.cols + b.gamelog.cols + 2 + 1 + 2
 	totalHeight = b.rows + 2 + 2 // rows + (edges + status bar) + (status bar line)
 }
@@ -91,7 +92,6 @@ func getBoardSymbolByRow(row []BoardObject) []byte {
 	return line
 }
 
-// Only works for linux as of now, needs to be adapted for other OS
 func clearScreen() {
 	osCommand := map[string]string{
 		"windows": "cls",
