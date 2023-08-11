@@ -90,7 +90,7 @@ func InitNewBoard(rows int, cols int) *Board {
 		Id:              currentBoardId,
 		rows:            rows,
 		cols:            cols,
-		gamelog:         InitTextInfo(rows),
+		gamelog:         InitGamelog(rows),
 		objectBoard:     *createEmptyObjectsArray(rows, cols),
 		time:            0,
 		roundInt:        1,
@@ -283,7 +283,6 @@ func (b *Board) tickFrame() {
 
 	// ----------- end debugging ------------------------------------ //
 
-	DrawFrame(b)
 }
 
 func checkCreatureType(bo BoardObject) (bool, *BoardObject) {

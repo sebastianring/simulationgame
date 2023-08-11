@@ -8,30 +8,59 @@ import (
 	"strconv"
 )
 
-const edgeSymbol = byte(35) // ###### as the symbol at the edges of gui
-const spaceSymbol = byte(32)
+// const edgeSymbol = byte(35) // ###### as the symbol at the edges of gui
+// const spaceSymbol = byte(32)
 
-var totalWidth int
-var totalHeight int
-var currentOs string
+// var totalWidth int
+// var totalHeight int
+// var currentOs string
 
-func InitDrawing(b *Board) {
-	currentOs = runtime.GOOS
-	addMessageToCurrentGamelog("Current OS identified: "+currentOs, 1)
-	totalWidth = b.cols + b.gamelog.cols + 2 + 1 + 2
-	totalHeight = b.rows + 2 + 2 // rows + (edges + status bar) + (status bar line)
+type Drawer struct {
+	totalWidth  int
+	totalHeight int
+	currentOs   string
+
+	edgeSymbol  byte
+	spaceSymbol byte
 }
 
-func DrawFrame(b *Board) {
-	clearScreen()
+func InitDrawing(b *Board) *Drawer {
+	newDrawer := Drawer{
+		totalHeight: b.rows + 2 + 2, // rows + (edges + status bar) + (status bar line)
+		totalWidth:  b.cols + b.gamelog.cols + 2 + 1 + 2,
+		currentOs:   runtime.GOOS,
 
-	for i := 0; i < totalHeight; i++ {
+		edgeSymbol:  byte(35), // #### Edge of GUI
+		spaceSymbol: byte(32), // "  " Space
+	}
+	// currentOs = runtime.GOOS
+	addMessageToCurrentGamelog("Current OS identified: "+newDrawer.currentOs, 1)
+
+	// totalWidth = b.cols + b.gamelog.cols + 2 + 1 + 2
+	// totalHeight = b.rows + 2 + 2 // rows + (edges + status bar) + (status bar line)
+
+	return &newDrawer
+}
+
+//
+// func InitDrawing(b *Board) {
+// 	currentOs = runtime.GOOS
+// 	addMessageToCurrentGamelog("Current OS identified: "+currentOs, 1)
+//
+// 	totalWidth = b.cols + b.gamelog.cols + 2 + 1 + 2
+// 	totalHeight = b.rows + 2 + 2 // rows + (edges + status bar) + (status bar line)
+// }
+
+func (d *Drawer) DrawFrame(b *Board) {
+	d.clearScreen()
+
+	for i := 0; i < d.totalHeight; i++ {
 		if i == 1 {
-			b.printStatusLine(totalWidth)
-		} else if i == 0 || i == 2 || i == totalHeight-1 {
-			printSymbolLine(totalWidth)
+			b.printStatusLine(d.totalWidth)
+		} else if i == 0 || i == 2 || i == d.totalHeight-1 {
+			d.printSymbolLine(d.totalWidth)
 		} else {
-			printDataLine(b.objectBoard[i-3], b.gamelog, i-3)
+			d.printDataLine(b.objectBoard[i-3], b.gamelog, i-3)
 		}
 	}
 }
@@ -43,32 +72,32 @@ func (b *Board) printStatusLine(totalWidth int) {
 		"     FOOD LEFT: " + strconv.Itoa(len(allFoodObjects)))
 }
 
-func printDataLine(boardData []BoardObject, gl *Gamelog, messageRow int) {
-	line := make([]byte, totalWidth)
+func (d *Drawer) printDataLine(boardData []BoardObject, gl *Gamelog, messageRow int) {
+	line := make([]byte, d.totalWidth)
 
-	line = append(line, edgeSymbol) // adding a # symbol at the start
+	line = append(line, d.edgeSymbol) // adding a # symbol at the start
 
 	boardDataLine := getBoardSymbolByRow(boardData)
 	for _, val := range boardDataLine {
 		line = append(line, val)
 	}
 
-	line = append(line, edgeSymbol)  // adding a # symbol at the start
-	line = append(line, spaceSymbol) // adding a " " symbol at the start
+	line = append(line, d.edgeSymbol)  // adding a # symbol at the start
+	line = append(line, d.spaceSymbol) // adding a " " symbol at the start
 
 	gamelogDataLine := gl.getMessageByRow(messageRow)
 	for _, val := range gamelogDataLine {
 		line = append(line, val)
 	}
 
-	line = append(line, spaceSymbol) // adding a " " symbol at the end
-	line = append(line, edgeSymbol)  // adding a # symbol at the end
+	line = append(line, d.spaceSymbol) // adding a " " symbol at the end
+	line = append(line, d.edgeSymbol)  // adding a # symbol at the end
 
 	fmt.Println(string(line))
 }
 
-func printSymbolLine(length int) {
-	dash := edgeSymbol
+func (d *Drawer) printSymbolLine(length int) {
+	dash := d.edgeSymbol
 	line := make([]byte, length)
 
 	for i := 0; i < length; i++ {
@@ -92,14 +121,14 @@ func getBoardSymbolByRow(row []BoardObject) []byte {
 	return line
 }
 
-func clearScreen() {
+func (d *Drawer) clearScreen() {
 	osCommand := map[string]string{
 		"windows": "cls",
 		"linux":   "clear",
 		"darwin":  "clear",
 	}
 
-	cmd := exec.Command(osCommand[currentOs])
+	cmd := exec.Command(osCommand[d.currentOs])
 	cmd.Stdout = os.Stdout
 	cmd.Run()
 }

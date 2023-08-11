@@ -21,6 +21,7 @@ type Gamelog struct {
 	displayedMessages []string
 	createdAt         time.Time
 	fileString        string
+	prioThreshold     int
 }
 
 type message struct {
@@ -30,7 +31,7 @@ type message struct {
 	Texts     string    `json:"text"`
 }
 
-func InitTextInfo(rows int) *Gamelog {
+func InitGamelog(rows int) *Gamelog {
 	gl := Gamelog{
 		cols:       cols,
 		rows:       rows,
@@ -41,7 +42,7 @@ func InitTextInfo(rows int) *Gamelog {
 	}
 
 	for i := 0; i < cols; i++ {
-		emptyMessage = append(emptyMessage, spaceSymbol)
+		emptyMessage = append(emptyMessage, byte(32))
 	}
 
 	currentGamelog = &gl

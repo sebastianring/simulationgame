@@ -13,7 +13,7 @@ func main() {
 	rand.Seed(time.Now().UnixNano())
 	gameOn = true
 	board := InitNewBoard(40, 100)
-	InitDrawing(board)
+	drawer := InitDrawing(board)
 
 	ticker := time.NewTicker(50 * time.Millisecond)
 	defer ticker.Stop()
@@ -36,6 +36,7 @@ func main() {
 
 	for range ticker.C {
 		board.tickFrame()
+		drawer.DrawFrame(board)
 
 		if gameOn == false {
 			break
