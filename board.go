@@ -16,25 +16,23 @@ import (
 // -------------------------------------------------- //
 // -------------------------------------------------- //
 
-var allFoodObjects []Pos
-var allAliveCreatureObjects []Pos
-var allDeadCreatures []*BoardObject
-var currentBoardId string
-
 type Board struct {
-	Id              string
-	rows            int
-	cols            int
-	gamelog         *Gamelog
-	objectBoard     [][]BoardObject
-	time            int
-	roundInt        int
-	rounds          []*Round
-	currentRound    *Round
-	creatureIdCtr   map[string]int
-	mutationrate    map[string]float32
-	initialFoods    int
-	conflictManager *conflictManager
+	Id                      string
+	rows                    int
+	cols                    int
+	gamelog                 *Gamelog
+	objectBoard             [][]BoardObject
+	time                    int
+	roundInt                int
+	rounds                  []*Round
+	currentRound            *Round
+	creatureIdCtr           map[string]int
+	mutationrate            map[string]float32
+	initialFoods            int
+	conflictManager         *conflictManager
+	allFoodObjects          []Pos
+	allAliveCreatureObjects []Pos
+	allDeadCreatures        []*BoardObject
 }
 
 type Round struct {
@@ -90,7 +88,7 @@ func InitNewBoard(rows int, cols int) *Board {
 		Id:              currentBoardId,
 		rows:            rows,
 		cols:            cols,
-		gamelog:         InitGamelog(rows),
+		gamelog:         InitGamelog(rows, 40),
 		objectBoard:     *createEmptyObjectsArray(rows, cols),
 		time:            0,
 		roundInt:        1,
@@ -163,7 +161,7 @@ func (b *Board) spawnCreature1OnBoard(qty int) {
 		}
 
 		b.objectBoard[pos.y][pos.x] = creaturePtr
-		allAliveCreatureObjects = append(allAliveCreatureObjects, pos)
+		b.allAliveCreatureObjects = append(b.allAliveCreatureObjects, pos)
 	}
 }
 
@@ -185,7 +183,7 @@ func (b *Board) spawnCreature2OnBoard(qty int) {
 		}
 
 		b.objectBoard[pos.y][pos.x] = creaturePtr
-		allAliveCreatureObjects = append(allAliveCreatureObjects, pos)
+		b.allAliveCreatureObjects = append(b.allAliveCreatureObjects, pos)
 	}
 }
 
@@ -203,7 +201,7 @@ func (b *Board) spawnFoodOnBoard() {
 
 	for _, pos := range spawns {
 		b.objectBoard[pos.y][pos.x] = newFoodObject()
-		allFoodObjects = append(allFoodObjects, pos)
+		b.allFoodObjects = append(b.allFoodObjects, pos)
 	}
 }
 
@@ -265,7 +263,7 @@ func checkIfPosExistsInSlice(pos Pos, slice []Pos) bool {
 	return false
 }
 
-func (b *Board) tickFrame() {
+func (b *Board) TickFrame() {
 	b.currentRound.time++
 	b.creatureUpdatesPerTick()
 
@@ -315,7 +313,7 @@ func (b *Board) creatureUpdatesPerTick() {
 	updatedAllCreatureObjects := make([]Pos, 0)
 	deadCreatures := make([]Pos, 0)
 
-	for _, pos := range allAliveCreatureObjects {
+	for _, pos := range b.allAliveCreatureObjects {
 		if obj, ok := b.objectBoard[pos.y][pos.x].(CreatureObject); ok {
 			action := obj.updateTick()
 
@@ -383,7 +381,7 @@ func (b *Board) creatureUpdatesPerTick() {
 						addMessageToCurrentGamelog("Food eaten by creature id: "+strconv.Itoa(obj.getId()), 2)
 						obj.heal(obj.getOriHP())
 						b.objectBoard[pos.y][pos.x] = newEmptyObject()
-						deleteFood(newPos)
+						b.deleteFood(newPos)
 					} else {
 						b.objectBoard[pos.y][pos.x] = newEmptyObject()
 					}
@@ -403,12 +401,12 @@ func (b *Board) creatureUpdatesPerTick() {
 
 	// delete dead creatures after tick is complete
 	for _, pos := range deadCreatures {
-		deleteCreature(pos, &b.objectBoard[pos.y][pos.x])
+		b.deleteCreature(pos, &b.objectBoard[pos.y][pos.x])
 		b.objectBoard[pos.y][pos.x] = newEmptyObject()
 	}
 
 	// update all creatures from last tick
-	allAliveCreatureObjects = updatedAllCreatureObjects
+	b.allAliveCreatureObjects = updatedAllCreatureObjects
 
 	if b.checkIfCreaturesAreInactive() {
 		if b.checkIfCreaturesAreDead() {
@@ -442,11 +440,11 @@ func (b *Board) newRound() {
 }
 
 func (b *Board) deleteAndSpawnFood() {
-	for _, pos := range allFoodObjects {
+	for _, pos := range b.allFoodObjects {
 		b.objectBoard[pos.y][pos.x] = newEmptyObject()
 	}
 
-	allFoodObjects = make([]Pos, 0)
+	b.allFoodObjects = make([]Pos, 0)
 	b.spawnFoodOnBoard()
 }
 
@@ -511,7 +509,7 @@ func (b *Board) writeSummaryOfRound() {
 }
 
 func (b *Board) findPosForAllCreatures() {
-	for i, creaturePos := range allAliveCreatureObjects {
+	for i, creaturePos := range b.allAliveCreatureObjects {
 		if obj, ok := b.objectBoard[creaturePos.y][creaturePos.x].(CreatureObject); ok {
 			findNewPos := false
 			for !findNewPos {
@@ -520,7 +518,7 @@ func (b *Board) findPosForAllCreatures() {
 					b.objectBoard[newPos.y][newPos.x] = obj
 					obj.resetValues()
 					b.objectBoard[creaturePos.y][creaturePos.x] = newEmptyObject()
-					allAliveCreatureObjects[i] = newPos
+					b.allAliveCreatureObjects[i] = newPos
 					findNewPos = true
 				}
 			}
@@ -535,7 +533,7 @@ func (b *Board) spawnOffsprings() {
 		"creature2": 0,
 	}
 
-	for _, pos := range allAliveCreatureObjects {
+	for _, pos := range b.allAliveCreatureObjects {
 		if obj, ok := b.objectBoard[pos.y][pos.x].(CreatureObject); ok {
 			if obj.ifOffspring() {
 				var offspring CreatureObject
@@ -567,7 +565,7 @@ func (b *Board) spawnOffsprings() {
 				}
 
 				b.objectBoard[newPos.y][newPos.x] = offspring
-				allAliveCreatureObjects = append(allAliveCreatureObjects, newPos)
+				b.allAliveCreatureObjects = append(b.allAliveCreatureObjects, newPos)
 			}
 		}
 	}
@@ -583,7 +581,7 @@ func (b *Board) spawnOffsprings() {
 }
 
 func (b *Board) checkIfCreaturesAreDead() bool {
-	for _, pos := range allAliveCreatureObjects {
+	for _, pos := range b.allAliveCreatureObjects {
 		if obj, ok := b.objectBoard[pos.y][pos.x].(CreatureObject); ok {
 			dead := obj.isDead()
 
@@ -597,7 +595,7 @@ func (b *Board) checkIfCreaturesAreDead() bool {
 }
 
 func (b *Board) checkIfCreaturesAreInactive() bool {
-	for _, pos := range allAliveCreatureObjects {
+	for _, pos := range b.allAliveCreatureObjects {
 		if obj, ok := b.objectBoard[pos.y][pos.x].(CreatureObject); ok {
 			dead := obj.isDead()
 			moving := obj.isMoving()
@@ -732,29 +730,29 @@ func (b *Board) checkIfNewPosIsValid(x int, y int) string {
 	return ""
 }
 
-func deleteFood(pos Pos) {
+func (b *Board) deleteFood(pos Pos) {
 	var element int
-	for i, val := range allFoodObjects {
+	for i, val := range b.allFoodObjects {
 		if val.x == pos.x && val.y == pos.y {
 			element = i
 			break
 		}
 	}
 
-	allFoodObjects = deleteIndexInPosSlice(allFoodObjects, element)
+	b.allFoodObjects = deleteIndexInPosSlice(b.allFoodObjects, element)
 }
 
-func deleteCreature(pos Pos, creature *BoardObject) {
-	allDeadCreatures = append(allDeadCreatures, creature)
+func (b *Board) deleteCreature(pos Pos, creature *BoardObject) {
+	b.allDeadCreatures = append(b.allDeadCreatures, creature)
 	var element int
-	for i, val := range allAliveCreatureObjects {
+	for i, val := range b.allAliveCreatureObjects {
 		if val.x == pos.x && val.y == pos.y {
 			element = i
 			break
 		}
 	}
 
-	allAliveCreatureObjects = deleteIndexInPosSlice(allAliveCreatureObjects, element)
+	b.allAliveCreatureObjects = deleteIndexInPosSlice(b.allAliveCreatureObjects, element)
 }
 
 func deleteIndexInPosSlice(posSlice []Pos, index int) []Pos {

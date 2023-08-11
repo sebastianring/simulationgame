@@ -45,14 +45,13 @@ func openDbConnection() (*sql.DB, error) {
 	return db, nil
 }
 
-func writeMessageToDb(db *sql.DB, msg *message) {
+func writeMessageToDb(db *sql.DB, b *Board, msg *message) {
 	go func() {
 		query := "INSERT INTO simulation_game.messages (id, prio, text, board_link) VALUES ($1, $2, $3, $4) RETURNiNG id"
-		err := db.QueryRow(query, msg.Id, msg.Prio, msg.Texts, currentBoardId).Scan(&msg.Id)
+		err := db.QueryRow(query, msg.Id, msg.Prio, msg.Texts, b.Id).Scan(&msg.Id)
 
 		if err != nil {
 			fmt.Println(err.Error())
-			// addMessageToCurrentGamelog(err.Error(), 1)
 		}
 
 	}()

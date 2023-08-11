@@ -8,13 +8,6 @@ import (
 	"strconv"
 )
 
-// const edgeSymbol = byte(35) // ###### as the symbol at the edges of gui
-// const spaceSymbol = byte(32)
-
-// var totalWidth int
-// var totalHeight int
-// var currentOs string
-
 type Drawer struct {
 	totalWidth  int
 	totalHeight int
@@ -33,23 +26,11 @@ func InitDrawing(b *Board) *Drawer {
 		edgeSymbol:  byte(35), // #### Edge of GUI
 		spaceSymbol: byte(32), // "  " Space
 	}
-	// currentOs = runtime.GOOS
-	addMessageToCurrentGamelog("Current OS identified: "+newDrawer.currentOs, 1)
 
-	// totalWidth = b.cols + b.gamelog.cols + 2 + 1 + 2
-	// totalHeight = b.rows + 2 + 2 // rows + (edges + status bar) + (status bar line)
+	addMessageToCurrentGamelog("Current OS identified: "+newDrawer.currentOs, 1)
 
 	return &newDrawer
 }
-
-//
-// func InitDrawing(b *Board) {
-// 	currentOs = runtime.GOOS
-// 	addMessageToCurrentGamelog("Current OS identified: "+currentOs, 1)
-//
-// 	totalWidth = b.cols + b.gamelog.cols + 2 + 1 + 2
-// 	totalHeight = b.rows + 2 + 2 // rows + (edges + status bar) + (status bar line)
-// }
 
 func (d *Drawer) DrawFrame(b *Board) {
 	d.clearScreen()
@@ -68,8 +49,8 @@ func (d *Drawer) DrawFrame(b *Board) {
 func (b *Board) printStatusLine(totalWidth int) {
 	fmt.Println("ROUND: " + strconv.Itoa(b.currentRound.id) +
 		"      TIME: " + strconv.Itoa(b.currentRound.time) +
-		"   CREATURES ACTIVE: " + strconv.Itoa(len(allAliveCreatureObjects)) +
-		"     FOOD LEFT: " + strconv.Itoa(len(allFoodObjects)))
+		"   CREATURES ACTIVE: " + strconv.Itoa(len(b.allAliveCreatureObjects)) +
+		"     FOOD LEFT: " + strconv.Itoa(len(b.allFoodObjects)))
 }
 
 func (d *Drawer) printDataLine(boardData []BoardObject, gl *Gamelog, messageRow int) {
@@ -115,7 +96,6 @@ func getBoardSymbolByRow(row []BoardObject) []byte {
 		for _, symbval := range symbol {
 			line = append(line, symbval)
 		}
-		// line = append(line, object.getSymbol())
 	}
 
 	return line

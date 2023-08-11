@@ -7,7 +7,6 @@ import (
 	"time"
 )
 
-const cols int = 40
 const prioThreshold int = 1
 
 var currentGamelog *Gamelog
@@ -31,7 +30,7 @@ type message struct {
 	Texts     string    `json:"text"`
 }
 
-func InitGamelog(rows int) *Gamelog {
+func InitGamelog(rows int, cols int) *Gamelog {
 	gl := Gamelog{
 		cols:       cols,
 		rows:       rows,
@@ -96,9 +95,7 @@ func addMessageToCurrentGamelog(msg string, prio int) {
 			}
 		}
 
-		// log := fmt.Sprintf("%v %v %v", i, endSlice, msgLen)
 		texts = append(texts, msg[i:endSlice])
-		// currentGamelog.messages = append(currentGamelog.messages, log)
 		endSlice++
 	}
 
@@ -152,7 +149,7 @@ func (gl *Gamelog) getMessageByRow(row int) []byte {
 	if messageOffset > numberOfMessageRows-1 || messageOffset < 0 {
 		return emptyMessage
 	} else {
-		spaces := cols - len(gl.displayedMessages[messageOffset])
+		spaces := gl.cols - len(gl.displayedMessages[messageOffset])
 		var spaceString string
 		for i := 0; i < spaces; i++ {
 			spaceString += " "
