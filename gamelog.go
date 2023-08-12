@@ -7,7 +7,7 @@ import (
 	"time"
 )
 
-const prioThreshold int = 1
+// const prioThreshold int = 1
 
 var currentGamelog *Gamelog
 var emptyMessage []byte
@@ -102,7 +102,7 @@ func addMessageToCurrentGamelog(msg string, prio int) {
 	newMessage := newMessage(currentGamelog.idCtr, prio, msg)
 	currentGamelog.messages = append(currentGamelog.messages, *newMessage)
 
-	if prio <= prioThreshold {
+	if prio <= currentGamelog.prioThreshold {
 		for _, val := range texts {
 			currentGamelog.displayedMessages = append(currentGamelog.displayedMessages, val)
 		}

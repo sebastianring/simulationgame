@@ -1,9 +1,7 @@
 package main
 
-// import "os"
 import (
 	"math/rand"
-	// "strconv"
 )
 
 type conflictManager struct {

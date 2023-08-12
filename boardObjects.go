@@ -5,7 +5,6 @@ package main
 // ALL INTERFACES AND GENERAL FUNCTIONS ------------- //
 // -------------------------------------------------- //
 // -------------------------------------------------- //
-// I really need to change architecture of the board .. this is abuse of interfaces. //
 
 type BoardObject interface {
 	getSymbol() []byte
