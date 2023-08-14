@@ -28,7 +28,9 @@ func openDbConnection() (*sql.DB, error) {
 
 	if err != nil {
 		addMessageToCurrentGamelog(err.Error(), 1)
+
 		return nil, err
+
 	} else {
 		addMessageToCurrentGamelog("Database connection secured!", 1)
 	}
@@ -37,7 +39,9 @@ func openDbConnection() (*sql.DB, error) {
 
 	if err != nil {
 		addMessageToCurrentGamelog(err.Error(), 1)
+
 		return nil, err
+
 	} else {
 		addMessageToCurrentGamelog("Database ping succesful!", 1)
 	}

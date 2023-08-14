@@ -33,6 +33,7 @@ type Board struct {
 	allFoodObjects          []Pos
 	allAliveCreatureObjects []Pos
 	allDeadCreatures        []*BoardObject
+	maxRounds               int
 }
 
 type Round struct {
@@ -96,8 +97,9 @@ func InitNewBoard(rows int, cols int) *Board {
 		currentRound:    &newRound,
 		creatureIdCtr:   make(map[string]int, 0),
 		mutationrate:    make(map[string]float32, 0),
-		initialFoods:    75,
+		initialFoods:    100,
 		conflictManager: cm,
+		maxRounds:       3,
 	}
 
 	newBoard.initBoardObjects()
@@ -335,6 +337,8 @@ func (b *Board) creatureUpdatesPerTick() {
 					break
 				}
 
+				// Note to self: need to update this whole section - it works but its not beautiful... at all
+
 				if moveType.action == "conflict" {
 					// addMessageToCurrentGamelog("Conflict at: "+strconv.Itoa(newPos.x)+", "+strconv.Itoa(newPos.y)+" ", 1)
 
@@ -357,7 +361,8 @@ func (b *Board) creatureUpdatesPerTick() {
 							addMessageToCurrentGamelog(moveType.conflict.sourceCreature.getIdAsString()+
 								" killed "+moveType.conflict.targetCreature.getIdAsString(), 1)
 
-							deadCreatures = append(deadCreatures, newPos)
+							// deadCreatures = append(deadCreatures, newPos)
+							b.deleteCreature(pos, &b.objectBoard[newPos.y][newPos.x])
 							b.objectBoard[newPos.y][newPos.x] = newEmptyObject()
 							updatedAllCreatureObjects = append(updatedAllCreatureObjects, newPos)
 
@@ -365,7 +370,8 @@ func (b *Board) creatureUpdatesPerTick() {
 							addMessageToCurrentGamelog(moveType.conflict.targetCreature.getIdAsString()+
 								" killed "+moveType.conflict.sourceCreature.getIdAsString(), 1)
 
-							deadCreatures = append(deadCreatures, pos)
+							// deadCreatures = append(deadCreatures, pos)
+							b.deleteCreature(pos, &b.objectBoard[newPos.y][newPos.x])
 							b.objectBoard[pos.y][pos.x] = newEmptyObject()
 							updatedAllCreatureObjects = append(updatedAllCreatureObjects, newPos)
 						}
@@ -420,23 +426,32 @@ func (b *Board) creatureUpdatesPerTick() {
 
 func (b *Board) newRound() {
 	addMessageToCurrentGamelog("All creatures are dead or have eaten, starting new round", 1)
-	b.spawnOffsprings()
-	b.findPosForAllCreatures()
-	b.deleteAndSpawnFood()
 	b.writeSummaryOfRound()
+	b.gamelog.writeGamelogToFile()
 
-	newRound := Round{
-		id:               b.currentRound.id + 1,
-		time:             0,
-		creaturesSpawned: make([]CreatureObject, 0),
-		creaturesKilled:  make([]CreatureObject, 0),
+	if len(b.rounds) >= b.maxRounds {
+		gameOn = false
+		addMessageToCurrentGamelog("Max number of rounds reached, ending the game.", 1)
+		fmt.Println("Max number of rounds reached, ending the game.")
+
+	} else {
+		b.spawnOffsprings()
+		b.findPosForAllCreatures()
+		b.deleteAndSpawnFood()
+
+		newRound := Round{
+			id:               b.currentRound.id + 1,
+			time:             0,
+			creaturesSpawned: make([]CreatureObject, 0),
+			creaturesKilled:  make([]CreatureObject, 0),
+		}
+
+		b.currentRound = &newRound
+		b.rounds = append(b.rounds, &newRound)
+
+		addMessageToCurrentGamelog("---- NEW ROUND ----", 1)
 	}
 
-	b.currentRound = &newRound
-	b.rounds = append(b.rounds, &newRound)
-
-	addMessageToCurrentGamelog("---- NEW ROUND ----", 1)
-	b.gamelog.writeGamelogToFile()
 }
 
 func (b *Board) deleteAndSpawnFood() {
@@ -522,7 +537,6 @@ func (b *Board) findPosForAllCreatures() {
 					findNewPos = true
 				}
 			}
-
 		}
 	}
 }

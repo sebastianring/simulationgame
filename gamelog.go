@@ -7,8 +7,6 @@ import (
 	"time"
 )
 
-// const prioThreshold int = 1
-
 var currentGamelog *Gamelog
 var emptyMessage []byte
 
@@ -32,12 +30,13 @@ type message struct {
 
 func InitGamelog(rows int, cols int) *Gamelog {
 	gl := Gamelog{
-		cols:       cols,
-		rows:       rows,
-		messages:   []message{},
-		idCtr:      1,
-		createdAt:  time.Now(),
-		fileString: getFileString(),
+		cols:          cols,
+		rows:          rows,
+		messages:      []message{},
+		idCtr:         1,
+		createdAt:     time.Now(),
+		fileString:    getFileString(),
+		prioThreshold: 1,
 	}
 
 	for i := 0; i < cols; i++ {
@@ -117,7 +116,7 @@ func addMessageToCurrentGamelog(msg string, prio int) {
 	//
 	// 	writeMessageToDb(db, newMessage)
 	// }
-	//
+
 	currentGamelog.idCtr++
 }
 
