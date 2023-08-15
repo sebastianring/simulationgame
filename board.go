@@ -61,9 +61,9 @@ type MoveType struct {
 	conflict *ConflictInfo
 }
 
-func InitNewBoard(rows int, cols int) *Board {
-	if rows < 2 || cols < 2 {
-		fmt.Printf("Too few rows or cols: %v, rows: %v \n", rows, cols)
+func InitNewBoard(sc *SimulationConfig) *Board {
+	if sc.Rows < 5 || sc.Cols < 5 {
+		fmt.Printf("Too few rows or cols: %v, rows: %v \n", sc.Rows, sc.Cols)
 		os.Exit(1)
 	}
 
@@ -86,10 +86,10 @@ func InitNewBoard(rows int, cols int) *Board {
 
 	newBoard := Board{
 		Id:              currentBoardId,
-		Rows:            rows,
-		Cols:            cols,
-		Gamelog:         InitGamelog(rows, 40),
-		ObjectBoard:     *createEmptyObjectsArray(rows, cols),
+		Rows:            sc.Rows,
+		Cols:            sc.Cols,
+		Gamelog:         InitGamelog(sc.Rows, 40),
+		ObjectBoard:     *createEmptyObjectsArray(sc.Rows, sc.Cols),
 		RoundInt:        1,
 		Rounds:          []*Round{&newRound},
 		CurrentRound:    &newRound,
@@ -97,13 +97,13 @@ func InitNewBoard(rows int, cols int) *Board {
 		Mutationrate:    make(map[string]float32, 0),
 		InitialFoods:    100,
 		ConflictManager: cm,
-		MaxRounds:       3,
+		MaxRounds:       50,
 	}
 
 	newBoard.initBoardObjects()
 
-	initialCreature1 := 20
-	initialCreature2 := 20
+	initialCreature1 := sc.Creature1
+	initialCreature2 := sc.Creature2
 
 	newBoard.spawnCreature1OnBoard(initialCreature1)
 	newBoard.spawnCreature2OnBoard(initialCreature2)
@@ -143,9 +143,9 @@ func createEmptyObjectsArray(rows int, cols int) *[][]BoardObject {
 // -------------------------------------------------- //
 // -------------------------------------------------- //
 
-func (b *Board) spawnCreature1OnBoard(qty int) {
+func (b *Board) spawnCreature1OnBoard(qty uint) {
 	spawns := make([]Pos, 0)
-	for len(spawns) < qty {
+	for uint(len(spawns)) < qty {
 		newPos := b.randomPosAtEdgeOfMap()
 		if !checkIfPosExistsInSlice(newPos, spawns) {
 			spawns = append(spawns, newPos)
@@ -165,9 +165,9 @@ func (b *Board) spawnCreature1OnBoard(qty int) {
 	}
 }
 
-func (b *Board) spawnCreature2OnBoard(qty int) {
+func (b *Board) spawnCreature2OnBoard(qty uint) {
 	spawns := make([]Pos, 0)
-	for len(spawns) < qty {
+	for uint(len(spawns)) < qty {
 		newPos := b.randomPosAtEdgeOfMap()
 		if !checkIfPosExistsInSlice(newPos, spawns) && b.isSpotEmpty(newPos) {
 			spawns = append(spawns, newPos)
@@ -540,7 +540,7 @@ func (b *Board) findPosForAllCreatures() {
 }
 
 func (b *Board) spawnOffsprings() {
-	creatureQty := map[string]int{
+	creatureQty := map[string]uint{
 		"creature1": 0,
 		"creature2": 0,
 	}
@@ -584,7 +584,7 @@ func (b *Board) spawnOffsprings() {
 
 	for key, val := range creatureQty {
 		if val > 0 {
-			addMessageToCurrentGamelog(strconv.Itoa(val)+" Creatures of type "+key+" spawned", 1)
+			addMessageToCurrentGamelog(strconv.Itoa(int(val))+" Creatures of type "+key+" spawned", 1)
 		}
 	}
 

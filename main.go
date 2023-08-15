@@ -2,6 +2,7 @@ package simulationgame
 
 import (
 	// "fmt"
+	"errors"
 	"fmt"
 	"math/rand"
 	"time"
@@ -13,12 +14,38 @@ func main() {
 	fmt.Println("..")
 }
 
-func runSimulation(draw bool) *Board {
-	board := InitNewBoard(40, 100)
-	gameOn = true
+type SimulationConfig struct {
+	Rows      int
+	Cols      int
+	Draw      bool
+	Foods     int
+	Creature1 uint 
+	Creature2 uint 
+}
+
+func RunSimulation(sc SimulationConfig) (*Board, error) {
+	if sc.Cols < 5 {
+		return nil, errors.New("Too few columns in configuration, should be at least 5.")
+	}
+
+	if sc.Rows < 5 {
+		return nil, errors.New("Too few rows in configuration, should be at least 5.")
+	}
+
+	if sc.Foods < 1 {
+		return nil, errors.New("Too few foods, should be at least 1 food.")
+	}
+
+	if sc.Creature1 < 1 && sc.Creature2 < 1 {
+		return nil, errors.New("Too few creatures, should be at least 1 creature.")
+	}
+
+  if sc.Creature1 + sc.Creature2 >  uint(((sc.Cols*2) + (sc.Rows*2 - 4)) / 2)
+
+	board := InitNewBoard(&sc) gameOn = true
 	rand.Seed(time.Now().UnixNano())
 
-	if draw {
+	if sc.Draw {
 		drawer := InitDrawing(board)
 
 		ticker := time.NewTicker(50 * time.Millisecond)
@@ -37,7 +64,7 @@ func runSimulation(draw bool) *Board {
 			board.TickFrame()
 		}
 	}
-	return board
+	return board, nil
 }
 
 func printResults(b *Board) {
