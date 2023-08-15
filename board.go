@@ -95,7 +95,7 @@ func InitNewBoard(sc SimulationConfig) *Board {
 		CurrentRound:    &newRound,
 		CreatureIdCtr:   make(map[string]int, 0),
 		Mutationrate:    make(map[string]float32, 0),
-		InitialFoods:    100,
+		InitialFoods:    sc.Foods,
 		ConflictManager: cm,
 		MaxRounds:       50,
 	}
@@ -429,6 +429,7 @@ func (b *Board) newRound() {
 
 	if len(b.Rounds) >= b.MaxRounds {
 		gameOn = false
+
 		addMessageToCurrentGamelog("Max number of rounds reached, ending the game.", 1)
 		fmt.Println("Max number of rounds reached, ending the game.")
 

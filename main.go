@@ -66,6 +66,7 @@ func RunSimulation(sc SimulationConfig) (*Board, error) {
 			board.TickFrame()
 		}
 	}
+
 	return board, nil
 }
 
