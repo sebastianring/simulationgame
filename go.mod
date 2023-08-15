@@ -1,4 +1,4 @@
-module github.com/sebastianring/simulationgame/main
+module github.com/sebastianring/simulationgame
 
 go 1.20
 

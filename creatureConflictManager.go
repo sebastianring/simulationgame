@@ -1,4 +1,4 @@
-package main
+package simulationgame
 
 import (
 	"math/rand"

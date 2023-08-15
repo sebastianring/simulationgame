@@ -1,4 +1,4 @@
-package main
+package simulationgame
 
 import (
 	"errors"
@@ -6,7 +6,7 @@ import (
 	"strconv"
 )
 
-type Creature1 struct {
+type Creature2 struct {
 	id       int
 	symbol   []byte
 	hp       int
@@ -17,7 +17,7 @@ type Creature1 struct {
 	moving   bool
 }
 
-func (b *Board) newCreature1Object(mutate bool, parent ...*Creature1) (*Creature1, error) {
+func (b *Board) newCreature2Object(mutate bool, parent ...*Creature2) (*Creature2, error) {
 	var speed int
 
 	if len(parent) == 0 {
@@ -40,24 +40,24 @@ func (b *Board) newCreature1Object(mutate bool, parent ...*Creature1) (*Creature
 		}
 	}
 
-	c1 := Creature1{
-		id: b.creatureIdCtr["Creature1"],
-		// symbol:   getObjectSymbol("Creature1"),
-		symbol:   getObjectSymbolWColor("Creature1"),
+	c2 := Creature2{
+		id: b.creatureIdCtr["Creature2"],
+		// symbol:   getObjectSymbol("Creature2"),
+		symbol:   getObjectSymbolWColor("Creature2"),
 		oriHP:    250,
 		hp:       250,
 		speed:    speed,
 		oriSpeed: speed,
-		typeDesc: "Creature1",
+		typeDesc: "Creature2",
 		moving:   true,
 	}
 
-	b.creatureIdCtr["creature1"] += 1
+	b.creatureIdCtr["Creature2"] += 1
 
-	addMessageToCurrentGamelog("Creature1 object with ID: "+
-		strconv.Itoa(c1.id)+" added to the board", 2)
+	addMessageToCurrentGamelog("Creature2 object with ID: "+
+		strconv.Itoa(c2.id)+" added to the board", 2)
 
-	return &c1, nil
+	return &c2, nil
 }
 
 //
@@ -76,10 +76,10 @@ func (b *Board) newCreature1Object(mutate bool, parent ...*Creature1) (*Creature
 // -------------------------------------------------- //
 // -------------------------------------------------- //
 
-func (c *Creature1) updateTick() string {
+func (c *Creature2) updateTick() string {
 	if c.moving && c.hp > 0 {
 		c.speed -= 1
-		if c.speed <= 0 {
+		if c.speed == 0 {
 			c.speed = c.oriSpeed
 			c.hp -= 5 + (10 / c.speed)
 			return "move"
@@ -91,21 +91,15 @@ func (c *Creature1) updateTick() string {
 	return "error"
 }
 
-func (c *Creature1) heal(val int) {
-	prio := 2
-
-	if val < 0 {
-		prio = 1
-	}
-
-	addMessageToCurrentGamelog("Creature 1 with id "+
+func (c *Creature2) heal(val int) {
+	addMessageToCurrentGamelog("Creature 2 with id "+
 		strconv.Itoa(c.id)+" healed for: "+
-		strconv.Itoa(val), prio)
+		strconv.Itoa(c.oriHP), 2)
 	c.hp += val
 	c.moving = false
 }
 
-func (c *Creature1) isDead() bool {
+func (c *Creature2) isDead() bool {
 	if c.hp <= 0 {
 		return true
 	}
@@ -113,13 +107,13 @@ func (c *Creature1) isDead() bool {
 	return false
 }
 
-func (c *Creature1) resetValues() {
+func (c *Creature2) resetValues() {
 	c.hp = c.oriHP
 	c.speed = c.oriSpeed
 	c.moving = true
 }
 
-func (c *Creature1) ifOffspring() bool {
+func (c *Creature2) ifOffspring() bool {
 	if c.hp > int(float32(c.oriHP)*1.25) {
 		return true
 	}
@@ -127,38 +121,38 @@ func (c *Creature1) ifOffspring() bool {
 	return false
 }
 
-func (c *Creature1) getHP() int {
+func (c *Creature2) getHP() int {
 	return c.hp
 }
 
-func (c *Creature1) getId() int {
+func (c *Creature2) getId() int {
 	return c.id
 }
 
-func (c *Creature1) getSymbol() []byte {
+func (c *Creature2) getSymbol() []byte {
 	return c.symbol
 }
 
-func (c *Creature1) getSpeed() int {
+func (c *Creature2) getSpeed() int {
 	return c.speed
 }
 
-func (c *Creature1) isMoving() bool {
+func (c *Creature2) isMoving() bool {
 	return c.moving
 }
 
-func (c *Creature1) getType() string {
+func (c *Creature2) getType() string {
 	return c.typeDesc
 }
 
-func (c *Creature1) kill() {
+func (c *Creature2) kill() {
 	c.hp = 0
 }
 
-func (c *Creature1) getOriHP() int {
+func (c *Creature2) getOriHP() int {
 	return c.oriHP
 }
 
-func (c *Creature1) getIdAsString() string {
+func (c *Creature2) getIdAsString() string {
 	return c.typeDesc + " (" + strconv.Itoa(c.id) + ")"
 }
