@@ -19,8 +19,8 @@ type Drawer struct {
 
 func InitDrawing(b *Board) *Drawer {
 	newDrawer := Drawer{
-		totalHeight: b.rows + 2 + 2, // rows + (edges + status bar) + (status bar line)
-		totalWidth:  b.cols + b.gamelog.cols + 2 + 1 + 2,
+		totalHeight: b.Rows + 2 + 2, // rows + (edges + status bar) + (status bar line)
+		totalWidth:  b.Cols + b.Gamelog.cols + 2 + 1 + 2,
 		currentOs:   runtime.GOOS,
 
 		edgeSymbol:  byte(35), // #### Edge of GUI
@@ -41,16 +41,16 @@ func (d *Drawer) DrawFrame(b *Board) {
 		} else if i == 0 || i == 2 || i == d.totalHeight-1 {
 			d.printSymbolLine(d.totalWidth)
 		} else {
-			d.printDataLine(b.objectBoard[i-3], b.gamelog, i-3)
+			d.printDataLine(b.ObjectBoard[i-3], b.Gamelog, i-3)
 		}
 	}
 }
 
 func (b *Board) printStatusLine(totalWidth int) {
-	fmt.Println("ROUND: " + strconv.Itoa(b.currentRound.id) +
-		"      TIME: " + strconv.Itoa(b.currentRound.time) +
-		"   CREATURES ACTIVE: " + strconv.Itoa(len(b.allAliveCreatureObjects)) +
-		"     FOOD LEFT: " + strconv.Itoa(len(b.allFoodObjects)))
+	fmt.Println("ROUND: " + strconv.Itoa(b.CurrentRound.id) +
+		"      TIME: " + strconv.Itoa(b.CurrentRound.time) +
+		"   CREATURES ACTIVE: " + strconv.Itoa(len(b.AllAliveCreatureObjects)) +
+		"     FOOD LEFT: " + strconv.Itoa(len(b.AllFoodObjects)))
 }
 
 func (d *Drawer) printDataLine(boardData []BoardObject, gl *Gamelog, messageRow int) {

@@ -7,14 +7,14 @@ import (
 )
 
 type Creature2 struct {
-	id       int
-	symbol   []byte
-	hp       int
-	oriHP    int
-	speed    int
-	oriSpeed int
-	typeDesc string
-	moving   bool
+	Id       int
+	Symbol   []byte
+	Hp       int
+	OriHP    int
+	Speed    int
+	OriSpeed int
+	TypeDesc string
+	Moving   bool
 }
 
 func (b *Board) newCreature2Object(mutate bool, parent ...*Creature2) (*Creature2, error) {
@@ -24,7 +24,7 @@ func (b *Board) newCreature2Object(mutate bool, parent ...*Creature2) (*Creature
 		speed = 5
 	} else if len(parent) == 1 {
 		for _, creature := range parent {
-			speed = creature.speed
+			speed = creature.Speed
 		}
 	} else {
 		return nil, errors.New("Too many parents")
@@ -41,21 +41,21 @@ func (b *Board) newCreature2Object(mutate bool, parent ...*Creature2) (*Creature
 	}
 
 	c2 := Creature2{
-		id: b.creatureIdCtr["Creature2"],
+		Id: b.CreatureIdCtr["Creature2"],
 		// symbol:   getObjectSymbol("Creature2"),
-		symbol:   getObjectSymbolWColor("Creature2"),
-		oriHP:    250,
-		hp:       250,
-		speed:    speed,
-		oriSpeed: speed,
-		typeDesc: "Creature2",
-		moving:   true,
+		Symbol:   getObjectSymbolWColor("Creature2"),
+		OriHP:    250,
+		Hp:       250,
+		Speed:    speed,
+		OriSpeed: speed,
+		TypeDesc: "Creature2",
+		Moving:   true,
 	}
 
-	b.creatureIdCtr["Creature2"] += 1
+	b.CreatureIdCtr["Creature2"] += 1
 
 	addMessageToCurrentGamelog("Creature2 object with ID: "+
-		strconv.Itoa(c2.id)+" added to the board", 2)
+		strconv.Itoa(c2.Id)+" added to the board", 2)
 
 	return &c2, nil
 }
@@ -77,14 +77,14 @@ func (b *Board) newCreature2Object(mutate bool, parent ...*Creature2) (*Creature
 // -------------------------------------------------- //
 
 func (c *Creature2) updateTick() string {
-	if c.moving && c.hp > 0 {
-		c.speed -= 1
-		if c.speed == 0 {
-			c.speed = c.oriSpeed
-			c.hp -= 5 + (10 / c.speed)
+	if c.Moving && c.Hp > 0 {
+		c.Speed -= 1
+		if c.Speed == 0 {
+			c.Speed = c.OriSpeed
+			c.Hp -= 5 + (10 / c.Speed)
 			return "move"
 		}
-	} else if c.hp <= 0 {
+	} else if c.Hp <= 0 {
 		return "dead"
 	}
 
@@ -93,14 +93,14 @@ func (c *Creature2) updateTick() string {
 
 func (c *Creature2) heal(val int) {
 	addMessageToCurrentGamelog("Creature 2 with id "+
-		strconv.Itoa(c.id)+" healed for: "+
-		strconv.Itoa(c.oriHP), 2)
-	c.hp += val
-	c.moving = false
+		strconv.Itoa(c.Id)+" healed for: "+
+		strconv.Itoa(c.OriHP), 2)
+	c.Hp += val
+	c.Moving = false
 }
 
 func (c *Creature2) isDead() bool {
-	if c.hp <= 0 {
+	if c.Hp <= 0 {
 		return true
 	}
 
@@ -108,13 +108,13 @@ func (c *Creature2) isDead() bool {
 }
 
 func (c *Creature2) resetValues() {
-	c.hp = c.oriHP
-	c.speed = c.oriSpeed
-	c.moving = true
+	c.Hp = c.OriHP
+	c.Speed = c.OriSpeed
+	c.Moving = true
 }
 
 func (c *Creature2) ifOffspring() bool {
-	if c.hp > int(float32(c.oriHP)*1.25) {
+	if c.Hp > int(float32(c.OriHP)*1.25) {
 		return true
 	}
 
@@ -122,37 +122,37 @@ func (c *Creature2) ifOffspring() bool {
 }
 
 func (c *Creature2) getHP() int {
-	return c.hp
+	return c.Hp
 }
 
 func (c *Creature2) getId() int {
-	return c.id
+	return c.Id
 }
 
 func (c *Creature2) getSymbol() []byte {
-	return c.symbol
+	return c.Symbol
 }
 
 func (c *Creature2) getSpeed() int {
-	return c.speed
+	return c.Speed
 }
 
 func (c *Creature2) isMoving() bool {
-	return c.moving
+	return c.Moving
 }
 
 func (c *Creature2) getType() string {
-	return c.typeDesc
+	return c.TypeDesc
 }
 
 func (c *Creature2) kill() {
-	c.hp = 0
+	c.Hp = 0
 }
 
 func (c *Creature2) getOriHP() int {
-	return c.oriHP
+	return c.OriHP
 }
 
 func (c *Creature2) getIdAsString() string {
-	return c.typeDesc + " (" + strconv.Itoa(c.id) + ")"
+	return c.TypeDesc + " (" + strconv.Itoa(c.Id) + ")"
 }

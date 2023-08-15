@@ -4,13 +4,13 @@ import (
 	"math/rand"
 )
 
-type conflictManager struct {
-	conflictMapping     [][]string
-	creatureTranslation map[string]int
-	actionTranslation   map[string]bool
+type ConflictManager struct {
+	ConflictMapping     [][]string
+	CreatureTranslation map[string]int
+	ActionTranslation   map[string]bool
 }
 
-type conflictInfo struct {
+type ConflictInfo struct {
 	attack         string
 	sourceCreature CreatureObject
 	targetCreature CreatureObject
@@ -26,19 +26,19 @@ type conflictInfo struct {
 //    ATTACK 1 = SOURCE CREATURE GETS ALL FOOD
 //    ATTACK 2 = CREATURES FIGHT - WINNER TAKES 50% - OTHER DIES
 
-func newConflictManager() (*conflictManager, error) {
-	cm := conflictManager{
-		conflictMapping: [][]string{
+func newConflictManager() (*ConflictManager, error) {
+	cm := ConflictManager{
+		ConflictMapping: [][]string{
 			{"share", "avoid"},
 			{"attack1", "attack2"},
 		},
 
-		creatureTranslation: map[string]int{
+		CreatureTranslation: map[string]int{
 			"Creature1": 0,
 			"Creature2": 1,
 		},
 
-		actionTranslation: map[string]bool{
+		ActionTranslation: map[string]bool{
 			"share":   true,
 			"avoid":   false,
 			"attack1": true,
@@ -49,43 +49,43 @@ func newConflictManager() (*conflictManager, error) {
 	return &cm, nil
 }
 
-func (cm *conflictManager) getConflict(sourceCreature CreatureObject, targetCreature CreatureObject) (bool, *conflictInfo) {
+func (cm *ConflictManager) getConflict(sourceCreature CreatureObject, targetCreature CreatureObject) (bool, *ConflictInfo) {
 	// addMessageToCurrentGamelog("Conflict between two creatures checked", 1)
-	row := cm.creatureTranslation[sourceCreature.getType()]
-	col := cm.creatureTranslation[targetCreature.getType()]
+	row := cm.CreatureTranslation[sourceCreature.getType()]
+	col := cm.CreatureTranslation[targetCreature.getType()]
 
-	strategy := cm.conflictMapping[row][col]
+	strategy := cm.ConflictMapping[row][col]
 
-	action, ok := cm.actionTranslation[strategy]
+	action, ok := cm.ActionTranslation[strategy]
 
 	if !ok {
 		addMessageToCurrentGamelog("Strategy between creatures is not mapped correctly.", 1)
 	}
 
-	conflictInfo := conflictInfo{
+	ConflictInfo := ConflictInfo{
 		attack:         strategy,
 		sourceCreature: sourceCreature,
 		targetCreature: targetCreature,
 	}
 
-	return action, &conflictInfo
+	return action, &ConflictInfo
 }
 
-func (cm *conflictManager) share(sourceCreature CreatureObject, targetCreature CreatureObject) {
+func (cm *ConflictManager) share(sourceCreature CreatureObject, targetCreature CreatureObject) {
 	sourceCreature.heal(sourceCreature.getOriHP() / 2)
 	targetCreature.heal((targetCreature.getOriHP() / 2) * -1)
 
 	addMessageToCurrentGamelog(sourceCreature.getIdAsString()+" shared the food of "+targetCreature.getIdAsString(), 1)
 }
 
-func (cm *conflictManager) attack1(sourceCreature CreatureObject, targetCreature CreatureObject) {
+func (cm *ConflictManager) attack1(sourceCreature CreatureObject, targetCreature CreatureObject) {
 	sourceCreature.heal(sourceCreature.getOriHP())
 	targetCreature.kill()
 
 	addMessageToCurrentGamelog(sourceCreature.getIdAsString()+" killed "+targetCreature.getIdAsString()+" using attack1", 1)
 }
 
-func (cm *conflictManager) attack2(sourceCreature CreatureObject, targetCreature CreatureObject) bool {
+func (cm *ConflictManager) attack2(sourceCreature CreatureObject, targetCreature CreatureObject) bool {
 	// function returns true if target is killed, if source is killed, it returns false
 	rng := rand.Intn(2)
 	if rng == 1 {

@@ -18,20 +18,20 @@ import (
 
 type Board struct {
 	Id                      string             `json:"id"`
-	rows                    int                `json:"rows"`
-	cols                    int                `json:"cols"`
-	gamelog                 *Gamelog           `json:"gamelog"`
-	objectBoard             [][]BoardObject    `json:"object_board"`
-	roundInt                int                `json:"round_int"`
-	rounds                  []*Round           `json:"rounds"`
-	currentRound            *Round             `json:"current_round"`
-	creatureIdCtr           map[string]int     `json:"creature_id_ctr"`
-	mutationrate            map[string]float32 `json:"mutationrate"`
-	initialFoods            int                `json:"initialFoods"`
-	conflictManager         *conflictManager   `json:"conflict_manager"`
-	allFoodObjects          []Pos              `json:"allFoodObjects"`
-	allAliveCreatureObjects []Pos              `json:"allAliveCreatureObjects"`
-	allDeadCreatures        []*BoardObject     `json:"allDeadCreatures"`
+	Rows                    int                `json:"rows"`
+	Cols                    int                `json:"cols"`
+	Gamelog                 *Gamelog           `json:"gamelog"`
+	ObjectBoard             [][]BoardObject    `json:"object_board"`
+	RoundInt                int                `json:"round_int"`
+	Rounds                  []*Round           `json:"rounds"`
+	CurrentRound            *Round             `json:"current_round"`
+	CreatureIdCtr           map[string]int     `json:"creature_id_ctr"`
+	Mutationrate            map[string]float32 `json:"Mutationrate"`
+	InitialFoods            int                `json:"InitialFoods"`
+	ConflictManager         *ConflictManager   `json:"conflict_manager"`
+	AllFoodObjects          []Pos              `json:"AllFoodObjects"`
+	AllAliveCreatureObjects []Pos              `json:"allAliveCreatureObjects"`
+	AllDeadCreatures        []*BoardObject     `json:"AllDeadCreatures"`
 	MaxRounds               int                `json:"max_rounds"`
 }
 
@@ -58,7 +58,7 @@ type Pos struct {
 
 type MoveType struct {
 	action   string
-	conflict *conflictInfo
+	conflict *ConflictInfo
 }
 
 func InitNewBoard(rows int, cols int) *Board {
@@ -86,17 +86,17 @@ func InitNewBoard(rows int, cols int) *Board {
 
 	newBoard := Board{
 		Id:              currentBoardId,
-		rows:            rows,
-		cols:            cols,
-		gamelog:         InitGamelog(rows, 40),
-		objectBoard:     *createEmptyObjectsArray(rows, cols),
-		roundInt:        1,
-		rounds:          []*Round{&newRound},
-		currentRound:    &newRound,
-		creatureIdCtr:   make(map[string]int, 0),
-		mutationrate:    make(map[string]float32, 0),
-		initialFoods:    100,
-		conflictManager: cm,
+		Rows:            rows,
+		Cols:            cols,
+		Gamelog:         InitGamelog(rows, 40),
+		ObjectBoard:     *createEmptyObjectsArray(rows, cols),
+		RoundInt:        1,
+		Rounds:          []*Round{&newRound},
+		CurrentRound:    &newRound,
+		CreatureIdCtr:   make(map[string]int, 0),
+		Mutationrate:    make(map[string]float32, 0),
+		InitialFoods:    100,
+		ConflictManager: cm,
 		MaxRounds:       3,
 	}
 
@@ -160,8 +160,8 @@ func (b *Board) spawnCreature1OnBoard(qty int) {
 			os.Exit(1)
 		}
 
-		b.objectBoard[pos.y][pos.x] = creaturePtr
-		b.allAliveCreatureObjects = append(b.allAliveCreatureObjects, pos)
+		b.ObjectBoard[pos.y][pos.x] = creaturePtr
+		b.AllAliveCreatureObjects = append(b.AllAliveCreatureObjects, pos)
 	}
 }
 
@@ -182,13 +182,13 @@ func (b *Board) spawnCreature2OnBoard(qty int) {
 			os.Exit(1)
 		}
 
-		b.objectBoard[pos.y][pos.x] = creaturePtr
-		b.allAliveCreatureObjects = append(b.allAliveCreatureObjects, pos)
+		b.ObjectBoard[pos.y][pos.x] = creaturePtr
+		b.AllAliveCreatureObjects = append(b.AllAliveCreatureObjects, pos)
 	}
 }
 
 func (b *Board) spawnFoodOnBoard() {
-	qty := b.initialFoods
+	qty := b.InitialFoods
 
 	spawns := make([]Pos, 0)
 
@@ -200,13 +200,13 @@ func (b *Board) spawnFoodOnBoard() {
 	}
 
 	for _, pos := range spawns {
-		b.objectBoard[pos.y][pos.x] = newFoodObject()
-		b.allFoodObjects = append(b.allFoodObjects, pos)
+		b.ObjectBoard[pos.y][pos.x] = newFoodObject()
+		b.AllFoodObjects = append(b.AllFoodObjects, pos)
 	}
 }
 
 func (b *Board) isSpotEmpty(pos Pos) bool {
-	if _, ok := b.objectBoard[pos.y][pos.x].(*EmptyObject); ok {
+	if _, ok := b.ObjectBoard[pos.y][pos.x].(*EmptyObject); ok {
 		return true
 	}
 
@@ -221,34 +221,34 @@ func (b *Board) randomPosAtEdgeOfMap() Pos {
 
 	if edge == 0 {
 		y = 0
-		x = rand.Intn(b.cols - 1)
+		x = rand.Intn(b.Cols - 1)
 	} else if edge == 1 {
-		x = b.cols - 1
-		y = rand.Intn(b.rows - 1)
+		x = b.Cols - 1
+		y = rand.Intn(b.Rows - 1)
 	} else if edge == 2 {
 		x = 0
-		y = rand.Intn(b.rows - 1)
+		y = rand.Intn(b.Rows - 1)
 	} else {
-		x = rand.Intn(b.cols - 1)
-		y = b.rows - 1
+		x = rand.Intn(b.Cols - 1)
+		y = b.Rows - 1
 	}
 
 	return Pos{x, y}
 }
 
 func (b *Board) initBoardObjects() {
-	b.creatureIdCtr["Creature1"] = 1
-	b.creatureIdCtr["Creature2"] = 1
+	b.CreatureIdCtr["Creature1"] = 1
+	b.CreatureIdCtr["Creature2"] = 1
 
-	b.mutationrate = make(map[string]float32)
-	b.mutationrate["Creature1"] = 0.1
-	b.mutationrate["Creature2"] = 0.1
+	b.Mutationrate = make(map[string]float32)
+	b.Mutationrate["Creature1"] = 0.1
+	b.Mutationrate["Creature2"] = 0.1
 }
 
 func (b *Board) randomPosWithinMap() Pos {
 	minDistanceFromBorder := 3
-	x := rand.Intn(b.cols-minDistanceFromBorder*2) + minDistanceFromBorder
-	y := rand.Intn(b.rows-minDistanceFromBorder*2) + minDistanceFromBorder
+	x := rand.Intn(b.Cols-minDistanceFromBorder*2) + minDistanceFromBorder
+	y := rand.Intn(b.Rows-minDistanceFromBorder*2) + minDistanceFromBorder
 
 	return Pos{x, y}
 }
@@ -264,7 +264,7 @@ func checkIfPosExistsInSlice(pos Pos, slice []Pos) bool {
 }
 
 func (b *Board) TickFrame() {
-	b.currentRound.time++
+	b.CurrentRound.time++
 	b.creatureUpdatesPerTick()
 
 	// ----------- debugging creatures - print speed and id ---------- //
@@ -272,7 +272,7 @@ func (b *Board) TickFrame() {
 	// res := make([]string, 1)
 	//
 	// for _, pos := range allAliveCreatureObjects {
-	// 	if obj, ok := b.objectBoard[pos.y][pos.x].(CreatureObject); ok {
+	// 	if obj, ok := b.ObjectBoard[pos.y][pos.x].(CreatureObject); ok {
 	// 		res = append(res, strconv.Itoa(obj.getId())+":"+strconv.Itoa(obj.getId()))
 	// 	}
 	// }
@@ -303,8 +303,8 @@ func getCurrentTimeString() string {
 }
 
 // func (b *Board) killCreature(creature CreatureObject, pos Pos) Pos {
-// 	b.currentRound.creaturesKilled = append(b.currentRound.creaturesKilled, creature)
-// 	b.objectBoard[pos.y][pos.x] = newEmptyObject()
+// 	b.CurrentRound.creaturesKilled = append(b.CurrentRound.creaturesKilled, creature)
+// 	b.ObjectBoard[pos.y][pos.x] = newEmptyObject()
 //
 // 	return pos
 // }
@@ -313,8 +313,8 @@ func (b *Board) creatureUpdatesPerTick() {
 	updatedAllCreatureObjects := make([]Pos, 0)
 	deadCreatures := make([]Pos, 0)
 
-	for _, pos := range b.allAliveCreatureObjects {
-		if obj, ok := b.objectBoard[pos.y][pos.x].(CreatureObject); ok {
+	for _, pos := range b.AllAliveCreatureObjects {
+		if obj, ok := b.ObjectBoard[pos.y][pos.x].(CreatureObject); ok {
 			action := obj.updateTick()
 
 			if action == "move" {
@@ -342,26 +342,26 @@ func (b *Board) creatureUpdatesPerTick() {
 
 					switch moveType.conflict.attack {
 					case "share":
-						b.conflictManager.share(moveType.conflict.sourceCreature, moveType.conflict.targetCreature)
+						b.ConflictManager.share(moveType.conflict.sourceCreature, moveType.conflict.targetCreature)
 						updatedAllCreatureObjects = append(updatedAllCreatureObjects, pos)
 
 					case "attack1":
-						b.conflictManager.attack1(moveType.conflict.sourceCreature, moveType.conflict.targetCreature)
+						b.ConflictManager.attack1(moveType.conflict.sourceCreature, moveType.conflict.targetCreature)
 
 						deadCreatures = append(deadCreatures, newPos)
-						b.objectBoard[newPos.y][newPos.x] = BoardObject(obj)
-						b.objectBoard[pos.y][pos.x] = newEmptyObject()
+						b.ObjectBoard[newPos.y][newPos.x] = BoardObject(obj)
+						b.ObjectBoard[pos.y][pos.x] = newEmptyObject()
 
 					case "attack2":
-						killTarget := b.conflictManager.attack2(moveType.conflict.sourceCreature, moveType.conflict.targetCreature)
+						killTarget := b.ConflictManager.attack2(moveType.conflict.sourceCreature, moveType.conflict.targetCreature)
 
 						if killTarget {
 							addMessageToCurrentGamelog(moveType.conflict.sourceCreature.getIdAsString()+
 								" killed "+moveType.conflict.targetCreature.getIdAsString(), 1)
 
 							// deadCreatures = append(deadCreatures, newPos)
-							b.deleteCreature(pos, &b.objectBoard[newPos.y][newPos.x])
-							b.objectBoard[newPos.y][newPos.x] = newEmptyObject()
+							b.deleteCreature(pos, &b.ObjectBoard[newPos.y][newPos.x])
+							b.ObjectBoard[newPos.y][newPos.x] = newEmptyObject()
 							updatedAllCreatureObjects = append(updatedAllCreatureObjects, newPos)
 
 						} else {
@@ -369,8 +369,8 @@ func (b *Board) creatureUpdatesPerTick() {
 								" killed "+moveType.conflict.sourceCreature.getIdAsString(), 1)
 
 							// deadCreatures = append(deadCreatures, pos)
-							b.deleteCreature(pos, &b.objectBoard[newPos.y][newPos.x])
-							b.objectBoard[pos.y][pos.x] = newEmptyObject()
+							b.deleteCreature(pos, &b.ObjectBoard[newPos.y][newPos.x])
+							b.ObjectBoard[pos.y][pos.x] = newEmptyObject()
 							updatedAllCreatureObjects = append(updatedAllCreatureObjects, newPos)
 						}
 
@@ -379,15 +379,15 @@ func (b *Board) creatureUpdatesPerTick() {
 					}
 
 				} else {
-					b.objectBoard[newPos.y][newPos.x] = BoardObject(obj)
+					b.ObjectBoard[newPos.y][newPos.x] = BoardObject(obj)
 
 					if moveType.action == "food" {
 						addMessageToCurrentGamelog("Food eaten by creature id: "+strconv.Itoa(obj.getId()), 2)
 						obj.heal(obj.getOriHP())
-						b.objectBoard[pos.y][pos.x] = newEmptyObject()
+						b.ObjectBoard[pos.y][pos.x] = newEmptyObject()
 						b.deleteFood(newPos)
 					} else {
-						b.objectBoard[pos.y][pos.x] = newEmptyObject()
+						b.ObjectBoard[pos.y][pos.x] = newEmptyObject()
 					}
 
 					updatedAllCreatureObjects = append(updatedAllCreatureObjects, newPos)
@@ -405,12 +405,12 @@ func (b *Board) creatureUpdatesPerTick() {
 
 	// delete dead creatures after tick is complete
 	for _, pos := range deadCreatures {
-		b.deleteCreature(pos, &b.objectBoard[pos.y][pos.x])
-		b.objectBoard[pos.y][pos.x] = newEmptyObject()
+		b.deleteCreature(pos, &b.ObjectBoard[pos.y][pos.x])
+		b.ObjectBoard[pos.y][pos.x] = newEmptyObject()
 	}
 
 	// update all creatures from last tick
-	b.allAliveCreatureObjects = updatedAllCreatureObjects
+	b.AllAliveCreatureObjects = updatedAllCreatureObjects
 
 	if b.checkIfCreaturesAreInactive() {
 		if b.checkIfCreaturesAreDead() {
@@ -425,9 +425,9 @@ func (b *Board) creatureUpdatesPerTick() {
 func (b *Board) newRound() {
 	addMessageToCurrentGamelog("All creatures are dead or have eaten, starting new round", 1)
 	b.writeSummaryOfRound()
-	b.gamelog.writeGamelogToFile()
+	b.Gamelog.writeGamelogToFile()
 
-	if len(b.rounds) >= b.MaxRounds {
+	if len(b.Rounds) >= b.MaxRounds {
 		gameOn = false
 		addMessageToCurrentGamelog("Max number of rounds reached, ending the game.", 1)
 		fmt.Println("Max number of rounds reached, ending the game.")
@@ -438,14 +438,14 @@ func (b *Board) newRound() {
 		b.deleteAndSpawnFood()
 
 		newRound := Round{
-			id:               b.currentRound.id + 1,
+			id:               b.CurrentRound.id + 1,
 			time:             0,
 			creaturesSpawned: make([]CreatureObject, 0),
 			creaturesKilled:  make([]CreatureObject, 0),
 		}
 
-		b.currentRound = &newRound
-		b.rounds = append(b.rounds, &newRound)
+		b.CurrentRound = &newRound
+		b.Rounds = append(b.Rounds, &newRound)
 
 		addMessageToCurrentGamelog("---- NEW ROUND ----", 1)
 	}
@@ -453,18 +453,18 @@ func (b *Board) newRound() {
 }
 
 func (b *Board) deleteAndSpawnFood() {
-	for _, pos := range b.allFoodObjects {
-		b.objectBoard[pos.y][pos.x] = newEmptyObject()
+	for _, pos := range b.AllFoodObjects {
+		b.ObjectBoard[pos.y][pos.x] = newEmptyObject()
 	}
 
-	b.allFoodObjects = make([]Pos, 0)
+	b.AllFoodObjects = make([]Pos, 0)
 	b.spawnFoodOnBoard()
 }
 
 func (b *Board) writeSummaryOfRound() {
 	creaturesSpawned := make(map[string]creatureSummary)
 
-	for _, creature := range b.currentRound.creaturesSpawned {
+	for _, creature := range b.CurrentRound.creaturesSpawned {
 		creatureType := creature.getType()
 
 		if obj, ok := creaturesSpawned[creatureType]; ok {
@@ -482,9 +482,9 @@ func (b *Board) writeSummaryOfRound() {
 		}
 	}
 
-	b.currentRound.creaturesSpawnedSum = creaturesSpawned
+	b.CurrentRound.creaturesSpawnedSum = creaturesSpawned
 
-	for c, cs := range b.currentRound.creaturesSpawnedSum {
+	for c, cs := range b.CurrentRound.creaturesSpawnedSum {
 		cs.averageSpeed = float64(cs.totalSpeed) / float64(cs.totalCreatures)
 
 		addMessageToCurrentGamelog("In last round, "+strconv.Itoa(cs.totalCreatures)+
@@ -493,7 +493,7 @@ func (b *Board) writeSummaryOfRound() {
 
 	creaturesKilled := make(map[string]creatureSummary)
 
-	for _, creature := range b.currentRound.creaturesKilled {
+	for _, creature := range b.CurrentRound.creaturesKilled {
 		creatureType := creature.getType()
 
 		if obj, ok := creaturesKilled[creatureType]; ok {
@@ -511,9 +511,9 @@ func (b *Board) writeSummaryOfRound() {
 		}
 	}
 
-	b.currentRound.creaturesKilledSum = creaturesKilled
+	b.CurrentRound.creaturesKilledSum = creaturesKilled
 
-	for c, cs := range b.currentRound.creaturesKilledSum {
+	for c, cs := range b.CurrentRound.creaturesKilledSum {
 		cs.averageSpeed = float64(cs.totalSpeed) / float64(cs.totalCreatures)
 
 		addMessageToCurrentGamelog("In last round, "+strconv.Itoa(cs.totalCreatures)+
@@ -522,16 +522,16 @@ func (b *Board) writeSummaryOfRound() {
 }
 
 func (b *Board) findPosForAllCreatures() {
-	for i, creaturePos := range b.allAliveCreatureObjects {
-		if obj, ok := b.objectBoard[creaturePos.y][creaturePos.x].(CreatureObject); ok {
+	for i, creaturePos := range b.AllAliveCreatureObjects {
+		if obj, ok := b.ObjectBoard[creaturePos.y][creaturePos.x].(CreatureObject); ok {
 			findNewPos := false
 			for !findNewPos {
 				newPos := b.randomPosAtEdgeOfMap()
 				if b.isSpotEmpty(newPos) {
-					b.objectBoard[newPos.y][newPos.x] = obj
+					b.ObjectBoard[newPos.y][newPos.x] = obj
 					obj.resetValues()
-					b.objectBoard[creaturePos.y][creaturePos.x] = newEmptyObject()
-					b.allAliveCreatureObjects[i] = newPos
+					b.ObjectBoard[creaturePos.y][creaturePos.x] = newEmptyObject()
+					b.AllAliveCreatureObjects[i] = newPos
 					findNewPos = true
 				}
 			}
@@ -545,8 +545,8 @@ func (b *Board) spawnOffsprings() {
 		"creature2": 0,
 	}
 
-	for _, pos := range b.allAliveCreatureObjects {
-		if obj, ok := b.objectBoard[pos.y][pos.x].(CreatureObject); ok {
+	for _, pos := range b.AllAliveCreatureObjects {
+		if obj, ok := b.ObjectBoard[pos.y][pos.x].(CreatureObject); ok {
 			if obj.ifOffspring() {
 				var offspring CreatureObject
 				var err error
@@ -569,15 +569,15 @@ func (b *Board) spawnOffsprings() {
 					creatureQty["creature2"]++
 				}
 
-				b.currentRound.creaturesSpawned = append(b.currentRound.creaturesSpawned, offspring)
+				b.CurrentRound.creaturesSpawned = append(b.CurrentRound.creaturesSpawned, offspring)
 
 				newPos := b.randomPosAtEdgeOfMap()
 				for !b.isSpotEmpty(newPos) {
 					newPos = b.randomPosAtEdgeOfMap()
 				}
 
-				b.objectBoard[newPos.y][newPos.x] = offspring
-				b.allAliveCreatureObjects = append(b.allAliveCreatureObjects, newPos)
+				b.ObjectBoard[newPos.y][newPos.x] = offspring
+				b.AllAliveCreatureObjects = append(b.AllAliveCreatureObjects, newPos)
 			}
 		}
 	}
@@ -593,8 +593,8 @@ func (b *Board) spawnOffsprings() {
 }
 
 func (b *Board) checkIfCreaturesAreDead() bool {
-	for _, pos := range b.allAliveCreatureObjects {
-		if obj, ok := b.objectBoard[pos.y][pos.x].(CreatureObject); ok {
+	for _, pos := range b.AllAliveCreatureObjects {
+		if obj, ok := b.ObjectBoard[pos.y][pos.x].(CreatureObject); ok {
 			dead := obj.isDead()
 
 			if !dead {
@@ -607,8 +607,8 @@ func (b *Board) checkIfCreaturesAreDead() bool {
 }
 
 func (b *Board) checkIfCreaturesAreInactive() bool {
-	for _, pos := range b.allAliveCreatureObjects {
-		if obj, ok := b.objectBoard[pos.y][pos.x].(CreatureObject); ok {
+	for _, pos := range b.AllAliveCreatureObjects {
+		if obj, ok := b.ObjectBoard[pos.y][pos.x].(CreatureObject); ok {
 			dead := obj.isDead()
 			moving := obj.isMoving()
 
@@ -642,8 +642,8 @@ func (b *Board) newPosAndMove(currentPos Pos) (Pos, MoveType) {
 		var x int
 		var y int
 		if direction == 0 {
-			xdirection := rand.Intn(b.cols)
-			xprobability := b.cols - 1 - currentPos.x
+			xdirection := rand.Intn(b.Cols)
+			xprobability := b.Cols - 1 - currentPos.x
 			if xdirection < xprobability {
 				x = currentPos.x + 1
 			} else {
@@ -651,8 +651,8 @@ func (b *Board) newPosAndMove(currentPos Pos) (Pos, MoveType) {
 			}
 			y = currentPos.y
 		} else {
-			ydirection := rand.Intn(b.rows)
-			yprobability := b.rows - 1 - currentPos.y
+			ydirection := rand.Intn(b.Rows)
+			yprobability := b.Rows - 1 - currentPos.y
 			if ydirection < yprobability {
 				y = currentPos.y + 1
 			} else {
@@ -684,7 +684,7 @@ func (b *Board) newPosAndMove(currentPos Pos) (Pos, MoveType) {
 					addMessageToCurrentGamelog(err.Error(), 1)
 				}
 
-				action, conflict := b.conflictManager.getConflict(sourceCreature, targetCreature)
+				action, conflict := b.ConflictManager.getConflict(sourceCreature, targetCreature)
 
 				if action {
 					valid = true
@@ -714,7 +714,7 @@ func (b *Board) newPosAndMove(currentPos Pos) (Pos, MoveType) {
 }
 
 func (b *Board) getCreatureObjectFromBoard(pos Pos) (CreatureObject, error) {
-	if creature, ok := b.objectBoard[pos.y][pos.x].(CreatureObject); ok {
+	if creature, ok := b.ObjectBoard[pos.y][pos.x].(CreatureObject); ok {
 		return creature, nil
 	}
 
@@ -722,15 +722,15 @@ func (b *Board) getCreatureObjectFromBoard(pos Pos) (CreatureObject, error) {
 }
 
 func (b *Board) checkIfNewPosIsValid(x int, y int) string {
-	if x < 0 || x >= b.cols || y < 0 || y >= b.rows {
+	if x < 0 || x >= b.Cols || y < 0 || y >= b.Rows {
 		return ""
 	}
 
-	if _, ok := b.objectBoard[y][x].(*EmptyObject); ok {
+	if _, ok := b.ObjectBoard[y][x].(*EmptyObject); ok {
 		return "empty"
-	} else if _, ok := b.objectBoard[y][x].(*Food); ok {
+	} else if _, ok := b.ObjectBoard[y][x].(*Food); ok {
 		return "food"
-	} else if obj, ok := b.objectBoard[y][x].(CreatureObject); ok {
+	} else if obj, ok := b.ObjectBoard[y][x].(CreatureObject); ok {
 
 		if obj.isMoving() {
 			return "no food"
@@ -744,27 +744,27 @@ func (b *Board) checkIfNewPosIsValid(x int, y int) string {
 
 func (b *Board) deleteFood(pos Pos) {
 	var element int
-	for i, val := range b.allFoodObjects {
+	for i, val := range b.AllFoodObjects {
 		if val.x == pos.x && val.y == pos.y {
 			element = i
 			break
 		}
 	}
 
-	b.allFoodObjects = deleteIndexInPosSlice(b.allFoodObjects, element)
+	b.AllFoodObjects = deleteIndexInPosSlice(b.AllFoodObjects, element)
 }
 
 func (b *Board) deleteCreature(pos Pos, creature *BoardObject) {
-	b.allDeadCreatures = append(b.allDeadCreatures, creature)
+	b.AllDeadCreatures = append(b.AllDeadCreatures, creature)
 	var element int
-	for i, val := range b.allAliveCreatureObjects {
+	for i, val := range b.AllAliveCreatureObjects {
 		if val.x == pos.x && val.y == pos.y {
 			element = i
 			break
 		}
 	}
 
-	b.allAliveCreatureObjects = deleteIndexInPosSlice(b.allAliveCreatureObjects, element)
+	b.AllAliveCreatureObjects = deleteIndexInPosSlice(b.AllAliveCreatureObjects, element)
 }
 
 func deleteIndexInPosSlice(posSlice []Pos, index int) []Pos {

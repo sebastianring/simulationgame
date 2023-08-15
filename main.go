@@ -45,5 +45,5 @@ func runSimulation(draw bool) *Board {
 
 func printResults(b *Board) {
 	fmt.Println("A simulation was completed and these are the results:")
-	fmt.Println("Total rounds: ", len(b.rounds))
+	fmt.Println("Total rounds: ", len(b.Rounds))
 }

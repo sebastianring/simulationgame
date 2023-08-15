@@ -64,7 +64,7 @@ func writeMessageToDb(db *sql.DB, b *Board, msg *message) {
 func writeBoardToDb(db *sql.DB, board *Board) {
 	go func() {
 		query := "INSERT INTO simulation_game.boards (id, rows, cols) VALUES ($1, $2, $3) RETURNiNG id"
-		err := db.QueryRow(query, board.Id, board.rows, board.cols).Scan(&board.Id)
+		err := db.QueryRow(query, board.Id, board.Rows, board.Cols).Scan(&board.Id)
 
 		if err != nil {
 			fmt.Println(err.Error())
