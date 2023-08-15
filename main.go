@@ -1,7 +1,6 @@
 package simulationgame
 
 import (
-	// "fmt"
 	"errors"
 	"fmt"
 	"math/rand"
@@ -19,8 +18,8 @@ type SimulationConfig struct {
 	Cols      int
 	Draw      bool
 	Foods     int
-	Creature1 uint 
-	Creature2 uint 
+	Creature1 uint
+	Creature2 uint
 }
 
 func RunSimulation(sc SimulationConfig) (*Board, error) {
@@ -40,9 +39,12 @@ func RunSimulation(sc SimulationConfig) (*Board, error) {
 		return nil, errors.New("Too few creatures, should be at least 1 creature.")
 	}
 
-  if sc.Creature1 + sc.Creature2 >  uint(((sc.Cols*2) + (sc.Rows*2 - 4)) / 2)
+	if sc.Creature1+sc.Creature2 > uint(((sc.Cols*2)+(sc.Rows*2-4))/2) {
+		return nil, errors.New("Too many creatures, need to less than half available spawn locations.")
+	}
 
-	board := InitNewBoard(&sc) gameOn = true
+	board := InitNewBoard(sc)
+	gameOn := true
 	rand.Seed(time.Now().UnixNano())
 
 	if sc.Draw {

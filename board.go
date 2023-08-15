@@ -61,7 +61,7 @@ type MoveType struct {
 	conflict *ConflictInfo
 }
 
-func InitNewBoard(sc *SimulationConfig) *Board {
+func InitNewBoard(sc SimulationConfig) *Board {
 	if sc.Rows < 5 || sc.Cols < 5 {
 		fmt.Printf("Too few rows or cols: %v, rows: %v \n", sc.Rows, sc.Cols)
 		os.Exit(1)
