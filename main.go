@@ -10,10 +10,7 @@ import (
 var gameOn bool
 
 func main() {
-	// resultBoard := runSimulation(false)
-	// printResults(resultBoard)
-
-	fmt.Println("ENDED")
+	fmt.Println("..")
 }
 
 func runSimulation(draw bool) *Board {
