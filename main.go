@@ -43,8 +43,9 @@ func RunSimulation(sc SimulationConfig) (*Board, error) {
 		return nil, errors.New("Too many creatures, need to less than half available spawn locations.")
 	}
 
+	gameOn = true
+
 	board := InitNewBoard(sc)
-	gameOn := true
 	rand.Seed(time.Now().UnixNano())
 
 	if sc.Draw {
