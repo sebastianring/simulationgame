@@ -17,23 +17,22 @@ import (
 // -------------------------------------------------- //
 
 type Board struct {
-	Id                      string
-	rows                    int
-	cols                    int
-	gamelog                 *Gamelog
-	objectBoard             [][]BoardObject
-	time                    int
-	roundInt                int
-	rounds                  []*Round
-	currentRound            *Round
-	creatureIdCtr           map[string]int
-	mutationrate            map[string]float32
-	initialFoods            int
-	conflictManager         *conflictManager
-	allFoodObjects          []Pos
-	allAliveCreatureObjects []Pos
-	allDeadCreatures        []*BoardObject
-	maxRounds               int
+	Id                      string             `json:"id"`
+	rows                    int                `json:"rows"`
+	cols                    int                `json:"cols"`
+	gamelog                 *Gamelog           `json:"gamelog"`
+	objectBoard             [][]BoardObject    `json:"object_board"`
+	roundInt                int                `json:"round_int"`
+	rounds                  []*Round           `json:"rounds"`
+	currentRound            *Round             `json:"current_round"`
+	creatureIdCtr           map[string]int     `json:"creature_id_ctr"`
+	mutationrate            map[string]float32 `json:"mutationrate"`
+	initialFoods            int                `json:"initialFoods"`
+	conflictManager         *conflictManager   `json:"conflict_manager"`
+	allFoodObjects          []Pos              `json:"allFoodObjects"`
+	allAliveCreatureObjects []Pos              `json:"allAliveCreatureObjects"`
+	allDeadCreatures        []*BoardObject     `json:"allDeadCreatures"`
+	MaxRounds               int                `json:"max_rounds"`
 }
 
 type Round struct {
@@ -91,7 +90,6 @@ func InitNewBoard(rows int, cols int) *Board {
 		cols:            cols,
 		gamelog:         InitGamelog(rows, 40),
 		objectBoard:     *createEmptyObjectsArray(rows, cols),
-		time:            0,
 		roundInt:        1,
 		rounds:          []*Round{&newRound},
 		currentRound:    &newRound,
@@ -99,7 +97,7 @@ func InitNewBoard(rows int, cols int) *Board {
 		mutationrate:    make(map[string]float32, 0),
 		initialFoods:    100,
 		conflictManager: cm,
-		maxRounds:       3,
+		MaxRounds:       3,
 	}
 
 	newBoard.initBoardObjects()
@@ -429,7 +427,7 @@ func (b *Board) newRound() {
 	b.writeSummaryOfRound()
 	b.gamelog.writeGamelogToFile()
 
-	if len(b.rounds) >= b.maxRounds {
+	if len(b.rounds) >= b.MaxRounds {
 		gameOn = false
 		addMessageToCurrentGamelog("Max number of rounds reached, ending the game.", 1)
 		fmt.Println("Max number of rounds reached, ending the game.")

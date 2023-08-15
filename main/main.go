@@ -2,41 +2,18 @@ package main
 
 import (
 	// "fmt"
-	"encoding/json"
 	"fmt"
 	"math/rand"
-	"net/http"
-	"os"
 	"time"
 )
 
 var gameOn bool
 
 func main() {
-	resultBoard := runSimulation(false)
-	printResults(resultBoard)
+	// resultBoard := runSimulation(false)
+	// printResults(resultBoard)
 
 	fmt.Println("ENDED")
-}
-
-func runServer() {
-	http.HandleFunc("/api/new_sim", func(w http.ResponseWriter, r *http.Request) {
-		fmt.Println("Something is happening")
-		resultBoard := runSimulation(false)
-		jsonBytes, err := json.Marshal(resultBoard)
-
-		if err != nil {
-			http.Error(w, err.Error(), http.StatusInternalServerError)
-			fmt.Println(err.Error())
-			os.Exit(1)
-		}
-
-		w.Header().Set("Content-type", "application/json")
-		w.Write(jsonBytes)
-	})
-
-	fmt.Println("Server running at port 8080")
-	http.ListenAndServe(":8080", nil)
 }
 
 func runSimulation(draw bool) *Board {
