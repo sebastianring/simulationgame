@@ -107,7 +107,7 @@ func InitNewBoard(sc SimulationConfig) *Board {
 
 	newBoard.spawnCreature1OnBoard(initialCreature1)
 	newBoard.spawnCreature2OnBoard(initialCreature2)
-	newBoard.spawnFoodOnBoard()
+	newBoard.spawnFoodOnBoard(newBoard.InitialFoods)
 
 	db, err := openDbConnection()
 
@@ -187,8 +187,8 @@ func (b *Board) spawnCreature2OnBoard(qty uint) {
 	}
 }
 
-func (b *Board) spawnFoodOnBoard() {
-	qty := b.InitialFoods
+func (b *Board) spawnFoodOnBoard(qty int) {
+	// qty := b.InitialFoods
 
 	spawns := make([]Pos, 0)
 
@@ -459,7 +459,7 @@ func (b *Board) deleteAndSpawnFood() {
 	}
 
 	b.AllFoodObjects = make([]Pos, 0)
-	b.spawnFoodOnBoard()
+	b.spawnFoodOnBoard(b.InitialFoods)
 }
 
 func (b *Board) writeSummaryOfRound() {
