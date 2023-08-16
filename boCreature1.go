@@ -7,13 +7,13 @@ import (
 )
 
 type Creature1 struct {
-	Id       int
+	Id       int `json:"id"`
 	Symbol   []byte
 	Hp       int
 	OriHP    int
 	Speed    int
 	OriSpeed int
-	TypeDesc string
+	TypeDesc string `json:"type_desc"`
 	Moving   bool
 }
 

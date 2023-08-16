@@ -57,11 +57,31 @@ type Pos struct {
 }
 
 type MoveType struct {
-	action   string
+	action   Action
 	conflict *ConflictInfo
 }
 
-func InitNewBoard(sc SimulationConfig) *Board {
+type Action int
+
+const (
+	NoAction     Action = 0 // No action from creature
+	MoveAction   Action = 1 // Action to move
+	AttackAction Action = 2 // Action to attack
+	WaitAction   Action = 3 // Action to wait
+	AvoidAction  Action = 4 // Actively trying to avoid another creature
+	FoodAction   Action = 5 // Getting food at new pos
+)
+
+type PosValidity int
+
+const (
+	InvalidPos    PosValidity = 0
+	ConflictAtPos PosValidity = 1
+	FoodAtPos     PosValidity = 2
+	EmptyPos      PosValidity = 3
+)
+
+func InitNewBoard(sc *SimulationConfig) *Board {
 	if sc.Rows < 5 || sc.Cols < 5 {
 		fmt.Printf("Too few rows or cols: %v, rows: %v \n", sc.Rows, sc.Cols)
 		os.Exit(1)
@@ -321,23 +341,24 @@ func (b *Board) creatureUpdatesPerTick() {
 				newPos := Pos{
 					x: -1,
 					y: -1}
+
 				moveType := MoveType{}
 
 				for {
 					newPos, moveType = b.newPosAndMove(pos)
 
-					if moveType.action != "avoid" {
+					if moveType.action != AvoidAction {
 						break
 					}
 				}
 
-				if moveType.action == "wait" {
+				if moveType.action == WaitAction {
 					break
 				}
 
 				// Note to self: need to update this whole section - it works but its not beautiful... at all
 
-				if moveType.action == "conflict" {
+				if moveType.action == AttackAction {
 					// addMessageToCurrentGamelog("Conflict at: "+strconv.Itoa(newPos.x)+", "+strconv.Itoa(newPos.y)+" ", 1)
 
 					switch moveType.conflict.attack {
@@ -381,7 +402,7 @@ func (b *Board) creatureUpdatesPerTick() {
 				} else {
 					b.ObjectBoard[newPos.y][newPos.x] = BoardObject(obj)
 
-					if moveType.action == "food" {
+					if moveType.action == FoodAction {
 						addMessageToCurrentGamelog("Food eaten by creature id: "+strconv.Itoa(obj.getId()), 2)
 						obj.heal(obj.getOriHP())
 						b.ObjectBoard[pos.y][pos.x] = newEmptyObject()
@@ -626,10 +647,10 @@ func (b *Board) checkIfCreaturesAreInactive() bool {
 func (b *Board) newPosAndMove(currentPos Pos) (Pos, MoveType) {
 	newPos := Pos{-1, -1}
 	moveType := MoveType{
-		action: "",
+		action: NoAction,
 	}
 
-	validMoveTypes := []string{"empty", "food"}
+	// validPosTypes := []PosValidity{EmptyPos, FoodAtPos}
 	counter := 0
 
 	// HOW TO MAKE THE CREATURES MOVE INWARDS TO LOOK FOR FOOD?
@@ -665,14 +686,25 @@ func (b *Board) newPosAndMove(currentPos Pos) (Pos, MoveType) {
 		valid := false
 
 		for {
-			moveType.action = b.checkIfNewPosIsValid(x, y)
+			newPosType := b.checkIfNewPosIsValid(x, y)
 
-			if containsString(validMoveTypes, moveType.action) {
+			// if containsString(validMoveTypes, moveType.action) {
+			// 	valid = true
+			// 	break
+			// }
+
+			if newPosType == FoodAtPos {
+				moveType.action = FoodAction
+				valid = true
+				break
+			} else if newPosType == EmptyPos {
+				moveType.action = MoveAction
 				valid = true
 				break
 			}
 
-			if moveType.action == "conflict" {
+			// if moveType.action == "conflict" {
+			if newPosType == ConflictAtPos {
 				sourceCreature, err := b.getCreatureObjectFromBoard(currentPos)
 
 				if err != nil {
@@ -689,6 +721,7 @@ func (b *Board) newPosAndMove(currentPos Pos) (Pos, MoveType) {
 
 				if action {
 					valid = true
+					moveType.action = AttackAction
 					moveType.conflict = conflict
 					break
 				} else {
@@ -700,7 +733,7 @@ func (b *Board) newPosAndMove(currentPos Pos) (Pos, MoveType) {
 		}
 
 		if counter > 10 {
-			moveType.action = "wait"
+			moveType.action = NoAction
 			return newPos, moveType
 		}
 
@@ -722,25 +755,25 @@ func (b *Board) getCreatureObjectFromBoard(pos Pos) (CreatureObject, error) {
 	return nil, errors.New("Was not a creature")
 }
 
-func (b *Board) checkIfNewPosIsValid(x int, y int) string {
+func (b *Board) checkIfNewPosIsValid(x int, y int) PosValidity {
 	if x < 0 || x >= b.Cols || y < 0 || y >= b.Rows {
-		return ""
+		return InvalidPos
 	}
 
 	if _, ok := b.ObjectBoard[y][x].(*EmptyObject); ok {
-		return "empty"
+		return EmptyPos
 	} else if _, ok := b.ObjectBoard[y][x].(*Food); ok {
-		return "food"
+		return FoodAtPos
 	} else if obj, ok := b.ObjectBoard[y][x].(CreatureObject); ok {
 
 		if obj.isMoving() {
-			return "no food"
+			return InvalidPos
 		}
 
-		return "conflict"
+		return ConflictAtPos
 	}
 
-	return ""
+	return InvalidPos
 }
 
 func (b *Board) deleteFood(pos Pos) {
@@ -776,6 +809,16 @@ func deleteIndexInPosSlice(posSlice []Pos, index int) []Pos {
 func containsString(slice []string, target string) bool {
 	for _, element := range slice {
 		if element == target {
+			return true
+		}
+	}
+
+	return false
+}
+
+func containsValidPosType(slice []PosValidity, posType PosValidity) bool {
+	for _, element := range slice {
+		if element == posType {
 			return true
 		}
 	}

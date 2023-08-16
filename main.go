@@ -22,7 +22,7 @@ type SimulationConfig struct {
 	Creature2 uint
 }
 
-func RunSimulation(sc SimulationConfig) (*Board, error) {
+func RunSimulation(sc *SimulationConfig) (*Board, error) {
 	if sc.Cols < 5 {
 		return nil, errors.New("Too few columns in configuration, should be at least 5.")
 	}
