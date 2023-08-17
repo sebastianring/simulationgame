@@ -114,3 +114,49 @@ func (cm *ConflictManager) attack2(SourceCreature CreatureObject, TargetCreature
 		return false
 	}
 }
+
+func (ci *ConflictInfo) commitConflict(b *Board) {
+	switch ci.Conflict {
+	case Share:
+		ci.share(b)
+	case Attack1:
+		ci.attack1(b)
+	case Attack2:
+		ci.attack2(b)
+	default:
+		addMessageToCurrentGamelog("Conflict manager does not work properly, please have a look", 1)
+	}
+}
+
+func (ci *ConflictInfo) share(b *Board) {
+	ci.SourceCreature.heal(ci.SourceCreature.getOriHP() / 2)
+	ci.TargetCreature.heal((ci.TargetCreature.getOriHP() / 2) * -1)
+
+	addMessageToCurrentGamelog(ci.SourceCreature.getIdAsString()+" shared the food of "+ci.TargetCreature.getIdAsString(), 1)
+}
+
+func (ci *ConflictInfo) attack1(b *Board) {
+	ci.SourceCreature.heal(ci.SourceCreature.getOriHP())
+
+	b.moveCreature(ci.SourceCreature, ci.TargetCreature.getPos(), true)
+	b.killCreature(ci.TargetCreature, false)
+
+	addMessageToCurrentGamelog(ci.SourceCreature.getIdAsString()+" killed "+ci.TargetCreature.getIdAsString()+" using attack1", 1)
+}
+
+func (ci *ConflictInfo) attack2(b *Board) {
+	rng := rand.Intn(2)
+	if rng == 1 {
+		ci.SourceCreature.heal((ci.SourceCreature.getOriHP() / 2) * -1)
+		b.moveCreature(ci.SourceCreature, ci.TargetCreature.getPos(), true)
+		b.killCreature(ci.TargetCreature, false)
+
+		addMessageToCurrentGamelog(ci.SourceCreature.getIdAsString()+" killed "+ci.TargetCreature.getIdAsString()+" using attack2", 1)
+
+	} else {
+		ci.SourceCreature.kill()
+		ci.TargetCreature.heal((ci.TargetCreature.getOriHP() / 2) * -1)
+
+		addMessageToCurrentGamelog(ci.TargetCreature.getIdAsString()+" killed "+ci.SourceCreature.getIdAsString()+" using attack2", 1)
+	}
+}

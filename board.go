@@ -58,8 +58,8 @@ type Pos struct {
 }
 
 type MoveType struct {
-	action   Action
-	conflict *ConflictInfo
+	action       Action
+	conflictinfo *ConflictInfo
 }
 
 type Action int
@@ -184,7 +184,7 @@ func (b *Board) spawnCreature1OnBoard(qty uint) {
 		creaturePtr.Pos = pos
 
 		b.ObjectBoard[pos.y][pos.x] = creaturePtr
-		b.AllAliveCreatureObjects = append(b.AllAliveCreatureObjects, pos)
+		// b.AllAliveCreatureObjects = append(b.AllAliveCreatureObjects, pos)
 
 		var creatureObject CreatureObject = creaturePtr
 
@@ -212,7 +212,7 @@ func (b *Board) spawnCreature2OnBoard(qty uint) {
 		creaturePtr.Pos = pos
 
 		b.ObjectBoard[pos.y][pos.x] = creaturePtr
-		b.AllAliveCreatureObjects = append(b.AllAliveCreatureObjects, pos)
+		// b.AllAliveCreatureObjects = append(b.AllAliveCreatureObjects, pos)
 
 		var creatureObject CreatureObject = creaturePtr
 
@@ -336,108 +336,160 @@ func getCurrentTimeString() string {
 }
 
 func (b *Board) creatureUpdatesPerTick() {
-	updatedAllCreatureObjects := make([]Pos, 0)
-	deadCreatures := make([]Pos, 0)
+	// updatedAllCreatureObjects := make([]Pos, 0)
+	// deadCreatures := make([]Pos, 0)
 
-	// -------------------------------- REFACTORING THIS SOON --------------------
-	for _, pos := range b.AllAliveCreatureObjects {
-		if obj, ok := b.ObjectBoard[pos.y][pos.x].(CreatureObject); ok {
-			action := obj.updateTick()
+	for _, creature := range b.AliveCreatureObjects {
+		sourceCreature := (*creature)
+		// oldPos := sourceCreature.getPos()
+		status := sourceCreature.updateTick()
 
-			if action == StatusMove {
-				newPos := Pos{
-					x: -1,
-					y: -1}
+		if status == StatusMove {
+			newPos := Pos{
+				x: -1,
+				y: -1,
+			}
 
-				moveType := MoveType{}
+			newMove := MoveType{}
 
-				for {
-					newPos, moveType = b.newPosAndMove(pos)
+			for {
+				newPos, newMove = b.newPosAndMove(sourceCreature.getPos())
 
-					if moveType.action != AvoidAction {
-						break
-					}
-				}
-
-				if moveType.action == WaitAction {
+				if newMove.action != AvoidAction {
 					break
 				}
-
-				// Note to self: need to update this whole section - it works but its not beautiful... at all
-				if moveType.action == AttackAction {
-					// addMessageToCurrentGamelog("Conflict at: "+strconv.Itoa(newPos.x)+", "+strconv.Itoa(newPos.y)+" ", 1)
-
-					switch moveType.conflict.Conflict {
-					case Share:
-						b.ConflictManager.share(moveType.conflict.SourceCreature, moveType.conflict.TargetCreature)
-						updatedAllCreatureObjects = append(updatedAllCreatureObjects, pos)
-
-					case Attack1:
-						b.ConflictManager.attack1(moveType.conflict.SourceCreature, moveType.conflict.TargetCreature)
-
-						deadCreatures = append(deadCreatures, newPos)
-						b.ObjectBoard[newPos.y][newPos.x] = BoardObject(obj)
-						b.ObjectBoard[pos.y][pos.x] = newEmptyObject()
-
-					case Attack2:
-						killTarget := b.ConflictManager.attack2(moveType.conflict.SourceCreature, moveType.conflict.TargetCreature)
-
-						if killTarget {
-							addMessageToCurrentGamelog(moveType.conflict.SourceCreature.getIdAsString()+
-								" killed "+moveType.conflict.TargetCreature.getIdAsString(), 1)
-
-							// deadCreatures = append(deadCreatures, newPos)
-							b.deleteCreatureFromAliveList(pos, &b.ObjectBoard[newPos.y][newPos.x])
-							b.ObjectBoard[newPos.y][newPos.x] = newEmptyObject()
-							updatedAllCreatureObjects = append(updatedAllCreatureObjects, newPos)
-
-						} else {
-							addMessageToCurrentGamelog(moveType.conflict.TargetCreature.getIdAsString()+
-								" killed "+moveType.conflict.SourceCreature.getIdAsString(), 1)
-
-							// deadCreatures = append(deadCreatures, pos)
-							b.deleteCreatureFromAliveList(pos, &b.ObjectBoard[newPos.y][newPos.x])
-							b.ObjectBoard[pos.y][pos.x] = newEmptyObject()
-							updatedAllCreatureObjects = append(updatedAllCreatureObjects, newPos)
-						}
-
-					default:
-						addMessageToCurrentGamelog("Conflict manager not setup properly", 1)
-					}
-
-				} else {
-					b.ObjectBoard[newPos.y][newPos.x] = BoardObject(obj)
-
-					if moveType.action == FoodAction {
-						addMessageToCurrentGamelog("Food eaten by creature id: "+strconv.Itoa(obj.getId()), 2)
-						obj.heal(obj.getOriHP())
-						b.ObjectBoard[pos.y][pos.x] = newEmptyObject()
-						b.deleteFood(newPos)
-					} else {
-						b.ObjectBoard[pos.y][pos.x] = newEmptyObject()
-					}
-
-					updatedAllCreatureObjects = append(updatedAllCreatureObjects, newPos)
-				}
-
-			} else if action == StatusDead {
-				deadCreatures = append(deadCreatures, pos)
-
-			} else {
-				updatedAllCreatureObjects = append(updatedAllCreatureObjects, pos)
-
 			}
+
+			switch newMove.action {
+			case WaitAction:
+				break
+
+			case AttackAction:
+				newMove.conflictinfo.commitConflict(b)
+
+			case FoodAction:
+				b.moveCreature(sourceCreature, newPos, true)
+
+			case MoveAction:
+				b.moveCreature(sourceCreature, newPos, true)
+
+			default:
+				addMessageToCurrentGamelog("Issue with MoveType newMove, please have a look.", 1)
+			}
+			//
+			// if newMove.action == WaitAction {
+			// 	break
+			// }
+			//
+			// if newMove.action == AttackAction {
+			// 	newMove.conflictinfo.commitConflict(b)
+			// } {
+			//
+			// }
+		} else if status == StatusDead {
+			b.killCreature(sourceCreature, true)
 		}
 	}
 
-	// delete dead creatures after tick is complete
-	for _, pos := range deadCreatures {
-		b.deleteCreatureFromAliveList(pos, &b.ObjectBoard[pos.y][pos.x])
-		b.ObjectBoard[pos.y][pos.x] = newEmptyObject()
-	}
-
-	// update all creatures from last tick
-	b.AllAliveCreatureObjects = updatedAllCreatureObjects
+	// -------------------------------- REFACTORING THIS SOON --------------------
+	// for _, pos := range b.AllAliveCreatureObjects {
+	// 	if obj, ok := b.ObjectBoard[pos.y][pos.x].(CreatureObject); ok {
+	// 		action := obj.updateTick()
+	//
+	// 		if action == StatusMove {
+	// 			newPos := Pos{
+	// 				x: -1,
+	// 				y: -1}
+	//
+	// 			moveType := MoveType{}
+	//
+	// 			for {
+	// 				newPos, moveType = b.newPosAndMove(pos)
+	//
+	// 				if moveType.action != AvoidAction {
+	// 					break
+	// 				}
+	// 			}
+	//
+	// 			if moveType.action == WaitAction {
+	// 				break
+	// 			}
+	//
+	// 			// Note to self: need to update this whole section - it works but its not beautiful... at all
+	// 			if moveType.action == AttackAction {
+	// 				// addMessageToCurrentGamelog("Conflict at: "+strconv.Itoa(newPos.x)+", "+strconv.Itoa(newPos.y)+" ", 1)
+	//
+	// 				switch moveType.conflictinfo.Conflict {
+	// 				case Share:
+	// 					b.ConflictManager.share(moveType.conflictinfo.SourceCreature, moveType.conflictinfo.TargetCreature)
+	// 					updatedAllCreatureObjects = append(updatedAllCreatureObjects, pos)
+	//
+	// 				case Attack1:
+	// 					b.ConflictManager.attack1(moveType.conflictinfo.SourceCreature, moveType.conflictinfo.TargetCreature)
+	//
+	// 					deadCreatures = append(deadCreatures, newPos)
+	// 					b.ObjectBoard[newPos.y][newPos.x] = BoardObject(obj)
+	// 					b.ObjectBoard[pos.y][pos.x] = newEmptyObject()
+	//
+	// 				case Attack2:
+	// 					killTarget := b.ConflictManager.attack2(moveType.conflictinfo.SourceCreature, moveType.conflictinfo.TargetCreature)
+	//
+	// 					if killTarget {
+	// 						addMessageToCurrentGamelog(moveType.conflictinfo.SourceCreature.getIdAsString()+
+	// 							" killed "+moveType.conflictinfo.TargetCreature.getIdAsString(), 1)
+	//
+	// 						// deadCreatures = append(deadCreatures, newPos)
+	// 						b.deleteCreatureFromAliveList(pos, &b.ObjectBoard[newPos.y][newPos.x])
+	// 						b.ObjectBoard[newPos.y][newPos.x] = newEmptyObject()
+	// 						updatedAllCreatureObjects = append(updatedAllCreatureObjects, newPos)
+	//
+	// 					} else {
+	// 						addMessageToCurrentGamelog(moveType.conflictinfo.TargetCreature.getIdAsString()+
+	// 							" killed "+moveType.conflictinfo.SourceCreature.getIdAsString(), 1)
+	//
+	// 						// deadCreatures = append(deadCreatures, pos)
+	// 						b.deleteCreatureFromAliveList(pos, &b.ObjectBoard[newPos.y][newPos.x])
+	// 						b.ObjectBoard[pos.y][pos.x] = newEmptyObject()
+	// 						updatedAllCreatureObjects = append(updatedAllCreatureObjects, newPos)
+	// 					}
+	//
+	// 				default:
+	// 					addMessageToCurrentGamelog("Conflict manager not setup properly", 1)
+	// 				}
+	//
+	// 			} else {
+	// 				b.ObjectBoard[newPos.y][newPos.x] = BoardObject(obj)
+	//
+	// 				if moveType.action == FoodAction {
+	// 					addMessageToCurrentGamelog("Food eaten by creature id: "+strconv.Itoa(obj.getId()), 2)
+	// 					obj.heal(obj.getOriHP())
+	// 					b.ObjectBoard[pos.y][pos.x] = newEmptyObject()
+	// 					b.deleteFood(newPos)
+	// 				} else {
+	// 					b.ObjectBoard[pos.y][pos.x] = newEmptyObject()
+	// 				}
+	//
+	// 				updatedAllCreatureObjects = append(updatedAllCreatureObjects, newPos)
+	// 			}
+	//
+	// 		} else if action == StatusDead {
+	// 			deadCreatures = append(deadCreatures, pos)
+	//
+	// 		} else {
+	// 			updatedAllCreatureObjects = append(updatedAllCreatureObjects, pos)
+	//
+	// 		}
+	// 	}
+	// }
+	//
+	// // delete dead creatures after tick is complete
+	// for _, pos := range deadCreatures {
+	// 	b.deleteCreatureFromAliveList(pos, &b.ObjectBoard[pos.y][pos.x])
+	// 	b.ObjectBoard[pos.y][pos.x] = newEmptyObject()
+	// }
+	//
+	// // update all creatures from last tick
+	// b.AllAliveCreatureObjects = updatedAllCreatureObjects
 
 	if b.checkIfCreaturesAreInactive() {
 		if b.checkIfCreaturesAreDead() {
@@ -449,20 +501,26 @@ func (b *Board) creatureUpdatesPerTick() {
 	}
 }
 
-func (b *Board) moveCreature(creature CreatureObject, newPos Pos) {
-	oldPos := creature.getPos()
-	creature.setPos(newPos)
+func (b *Board) moveCreature(creature CreatureObject, newPos Pos, placeEmptyObject bool) {
 
-	b.ObjectBoard[oldPos.y][oldPos.x] = newEmptyObject()
+	if placeEmptyObject {
+		oldPos := creature.getPos()
+		b.ObjectBoard[oldPos.y][oldPos.x] = newEmptyObject()
+	}
+
+	creature.setPos(newPos)
+	b.ObjectBoard[newPos.y][newPos.x] = creature
 }
 
-func (b *Board) killCreature(creature CreatureObject, pos Pos, placeEmptyObject bool) {
+func (b *Board) killCreature(creature CreatureObject, placeEmptyObject bool) {
+	pos := creature.getPos()
 
 	if creature.getHP() > 0 {
 		creature.kill()
 	}
 
-	b.deleteCreatureFromAliveList(pos, &b.ObjectBoard[pos.y][pos.x])
+	// b.deleteCreatureFromAliveList(pos, &b.ObjectBoard[pos.y][pos.x])
+	b.deleteCreatureFromAliveSlice(&creature)
 
 	if placeEmptyObject {
 		b.ObjectBoard[pos.y][pos.x] = newEmptyObject()
@@ -570,20 +628,33 @@ func (b *Board) writeSummaryOfRound() {
 }
 
 func (b *Board) findPosForAllCreatures() {
-	for i, creaturePos := range b.AllAliveCreatureObjects {
-		if obj, ok := b.ObjectBoard[creaturePos.y][creaturePos.x].(CreatureObject); ok {
-			findNewPos := false
+	// for i, creaturePos := range b.AllAliveCreatureObjects {
+	// 	if obj, ok := b.ObjectBoard[creaturePos.y][creaturePos.x].(CreatureObject); ok {
+	// 		findNewPos := false
+	//
+	// 		for !findNewPos {
+	// 			newPos := b.randomPosAtEdgeOfMap()
+	// 			if b.isSpotEmpty(newPos) {
+	// 				// b.ObjectBoard[newPos.y][newPos.x] = obj
+	// 				obj.resetValues()
+	// 				b.moveCreature(obj, newPos, true)
+	// 				// b.ObjectBoard[creaturePos.y][creaturePos.x] = newEmptyObject()
+	// 				b.AllAliveCreatureObjects[i] = newPos
+	// 				findNewPos = true
+	// 			}
+	// 		}
+	// 	}
+	// }
 
-			for !findNewPos {
-				newPos := b.randomPosAtEdgeOfMap()
-				if b.isSpotEmpty(newPos) {
-					// b.ObjectBoard[newPos.y][newPos.x] = obj
-					obj.resetValues()
-					b.moveCreature(obj, newPos)
-					// b.ObjectBoard[creaturePos.y][creaturePos.x] = newEmptyObject()
-					b.AllAliveCreatureObjects[i] = newPos
-					findNewPos = true
-				}
+	for _, creature := range b.AliveCreatureObjects {
+		creature := (*creature)
+
+		for {
+			newPos := b.randomPosAtEdgeOfMap()
+			if b.isSpotEmpty(newPos) {
+				creature.resetValues()
+				b.moveCreature(creature, newPos, true)
+				break
 			}
 		}
 	}
@@ -595,42 +666,47 @@ func (b *Board) spawnOffsprings() {
 		"creature2": 0,
 	}
 
-	for _, pos := range b.AllAliveCreatureObjects {
-		if obj, ok := b.ObjectBoard[pos.y][pos.x].(CreatureObject); ok {
-			if obj.ifOffspring() {
-				var offspring CreatureObject
-				var err error
+	// for _, pos := range b.AllAliveCreatureObjects {
+	// if obj, ok := b.ObjectBoard[pos.y][pos.x].(CreatureObject); ok {
+	for _, obj := range b.AliveCreatureObjects {
+		obj := (*obj)
 
-				if obj2, ok := obj.(*Creature1); ok {
-					offspring, err = b.newCreature1Object(true, obj2)
+		if obj.ifOffspring() {
+			var offspring CreatureObject
+			var err error
 
-					if err != nil {
-						fmt.Println("Error creating offspring: " + err.Error())
-					}
+			if obj2, ok := obj.(*Creature1); ok {
+				offspring, err = b.newCreature1Object(true, obj2)
 
-					creatureQty["creature1"]++
-
-				} else if obj2, ok := obj.(*Creature2); ok {
-					offspring, err = b.newCreature2Object(true, obj2)
-					if err != nil {
-						fmt.Println("Error creating offspring: " + err.Error())
-					}
-
-					creatureQty["creature2"]++
+				if err != nil {
+					fmt.Println("Error creating offspring: " + err.Error())
 				}
 
-				b.CurrentRound.CreaturesSpawned = append(b.CurrentRound.CreaturesSpawned, offspring)
+				creatureQty["creature1"]++
 
-				newPos := b.randomPosAtEdgeOfMap()
-				for !b.isSpotEmpty(newPos) {
-					newPos = b.randomPosAtEdgeOfMap()
+			} else if obj2, ok := obj.(*Creature2); ok {
+				offspring, err = b.newCreature2Object(true, obj2)
+				if err != nil {
+					fmt.Println("Error creating offspring: " + err.Error())
 				}
 
-				b.ObjectBoard[newPos.y][newPos.x] = offspring
-				b.AllAliveCreatureObjects = append(b.AllAliveCreatureObjects, newPos)
+				creatureQty["creature2"]++
 			}
+
+			b.CurrentRound.CreaturesSpawned = append(b.CurrentRound.CreaturesSpawned, offspring)
+
+			newPos := b.randomPosAtEdgeOfMap()
+			for !b.isSpotEmpty(newPos) {
+				newPos = b.randomPosAtEdgeOfMap()
+			}
+
+			// b.ObjectBoard[newPos.y][newPos.x] = offspring
+			b.moveCreature(offspring, newPos, false)
+			// b.AllAliveCreatureObjects = append(b.AllAliveCreatureObjects, newPos)
+			b.AliveCreatureObjects = append(b.AliveCreatureObjects, &offspring)
 		}
 	}
+	// }
 
 	for key, val := range creatureQty {
 		if val > 0 {
@@ -643,13 +719,20 @@ func (b *Board) spawnOffsprings() {
 }
 
 func (b *Board) checkIfCreaturesAreDead() bool {
-	for _, pos := range b.AllAliveCreatureObjects {
-		if obj, ok := b.ObjectBoard[pos.y][pos.x].(CreatureObject); ok {
-			dead := obj.isDead()
+	// for _, pos := range b.AllAliveCreatureObjects {
+	// 	if obj, ok := b.ObjectBoard[pos.y][pos.x].(CreatureObject); ok {
+	// 		dead := obj.isDead()
+	//
+	// 		if !dead {
+	// 			return false
+	// 		}
+	// 	}
+	// }
 
-			if !dead {
-				return false
-			}
+	for _, obj := range b.AliveCreatureObjects {
+		obj := (*obj)
+		if obj.isDead() {
+			return false
 		}
 	}
 
@@ -657,16 +740,23 @@ func (b *Board) checkIfCreaturesAreDead() bool {
 }
 
 func (b *Board) checkIfCreaturesAreInactive() bool {
-	for _, pos := range b.AllAliveCreatureObjects {
-		if obj, ok := b.ObjectBoard[pos.y][pos.x].(CreatureObject); ok {
-			dead := obj.isDead()
-			moving := obj.isMoving()
+	// for _, pos := range b.AllAliveCreatureObjects {
+	// 	if obj, ok := b.ObjectBoard[pos.y][pos.x].(CreatureObject); ok {
+	// 		dead := obj.isDead()
+	// 		moving := obj.isMoving()
+	//
+	// 		if !dead && moving || dead {
+	// 			return false
+	// 		}
+	// 	}
+	//
+	// }
 
-			if !dead && moving || dead {
-				return false
-			}
+	for _, obj := range b.AliveCreatureObjects {
+		obj := (*obj)
+		if !obj.isDead() && obj.isMoving() || obj.isDead() {
+			return false
 		}
-
 	}
 
 	return true
@@ -745,12 +835,12 @@ func (b *Board) newPosAndMove(currentPos Pos) (Pos, MoveType) {
 					addMessageToCurrentGamelog(err.Error(), 1)
 				}
 
-				action, conflict := b.ConflictManager.getConflict(sourceCreature, targetCreature)
+				action, conflictinfo := b.ConflictManager.getConflict(sourceCreature, targetCreature)
 
 				if action {
 					valid = true
 					moveType.action = AttackAction
-					moveType.conflict = conflict
+					moveType.conflictinfo = conflictinfo
 					break
 				} else {
 					break
@@ -816,22 +906,40 @@ func (b *Board) deleteFood(pos Pos) {
 	b.AllFoodObjects = deleteIndexInPosSlice(b.AllFoodObjects, element)
 }
 
-func (b *Board) deleteCreatureFromAliveList(pos Pos, creature *BoardObject) {
-	b.AllDeadCreatures = append(b.AllDeadCreatures, creature)
+//
+// func (b *Board) deleteCreatureFromAliveList(pos Pos, creature *BoardObject) {
+// 	b.AllDeadCreatures = append(b.AllDeadCreatures, creature)
+// 	var element int
+// 	for i, val := range b.AllAliveCreatureObjects {
+// 		if val.x == pos.x && val.y == pos.y {
+// 			element = i
+// 			break
+// 		}
+// 	}
+//
+// 	b.AllAliveCreatureObjects = deleteIndexInPosSlice(b.AllAliveCreatureObjects, element)
+// }
+
+func (b *Board) deleteCreatureFromAliveSlice(creature *CreatureObject) {
 	var element int
-	for i, val := range b.AllAliveCreatureObjects {
-		if val.x == pos.x && val.y == pos.y {
+	for i, aliveCreature := range b.AliveCreatureObjects {
+		if aliveCreature == creature {
 			element = i
 			break
 		}
 	}
 
-	b.AllAliveCreatureObjects = deleteIndexInPosSlice(b.AllAliveCreatureObjects, element)
+	b.AliveCreatureObjects = deleteIndexInCreatureSlice(b.AliveCreatureObjects, element)
 }
 
 func deleteIndexInPosSlice(posSlice []Pos, index int) []Pos {
 	posSlice[index] = posSlice[len(posSlice)-1]
 	return posSlice[:len(posSlice)-1]
+}
+
+func deleteIndexInCreatureSlice(creatureSlice []*CreatureObject, index int) []*CreatureObject {
+	creatureSlice[index] = creatureSlice[len(creatureSlice)-1]
+	return creatureSlice[:len(creatureSlice)-1]
 }
 
 func containsString(slice []string, target string) bool {

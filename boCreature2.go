@@ -86,7 +86,7 @@ func (c *Creature2) updateTick() TickStatus {
 			return StatusMove
 		}
 	} else if c.Hp <= 0 {
-		return StatusMove
+		return StatusDead
 	}
 
 	return StatusError
