@@ -50,7 +50,7 @@ func (d *Drawer) DrawFrame(b *Board) {
 func (b *Board) printStatusLine(totalWidth int) {
 	fmt.Println("      ROUND: " + strconv.Itoa(b.CurrentRound.Id) +
 		"      TIME: " + strconv.Itoa(b.CurrentRound.Time) +
-		"   CREATURES ACTIVE: " + strconv.Itoa(len(b.AliveCreatureObjects)) +
+		"   CREATURES ALIVE: " + strconv.Itoa(len(b.AliveCreatureObjects)) +
 		"     FOOD LEFT: " + strconv.Itoa(len(b.AllFoodObjects)))
 }
 

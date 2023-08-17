@@ -88,7 +88,7 @@ func (c *Creature1) updateTick() TickStatus {
 		return StatusDead
 	}
 
-	return StatusError
+	return StatusInactive
 }
 
 func (c *Creature1) heal(val int) {

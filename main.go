@@ -68,6 +68,8 @@ func RunSimulation(sc *SimulationConfig) (*Board, error) {
 		}
 	}
 
+	printResults(board)
+
 	return board, nil
 }
 

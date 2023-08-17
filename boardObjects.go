@@ -107,9 +107,9 @@ func newFoodObject() *Food {
 type TickStatus int
 
 const (
-	StatusMove  TickStatus = 0
-	StatusDead  TickStatus = 1
-	StatusError TickStatus = 2
+	StatusMove     TickStatus = 0
+	StatusDead     TickStatus = 1
+	StatusInactive TickStatus = 2
 )
 
 // -------------------------------------------------- //

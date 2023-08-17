@@ -5,9 +5,8 @@ import (
 	"fmt"
 	// _ "database/sql/driver"
 	// "fmt"
-	"os"
-
 	_ "github.com/lib/pq"
+	"os"
 	// _ "github.com/lib/pq"
 )
 

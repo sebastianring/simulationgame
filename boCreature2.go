@@ -89,7 +89,7 @@ func (c *Creature2) updateTick() TickStatus {
 		return StatusDead
 	}
 
-	return StatusError
+	return StatusInactive
 }
 
 func (c *Creature2) heal(val int) {

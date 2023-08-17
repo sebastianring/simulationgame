@@ -138,8 +138,8 @@ func (ci *ConflictInfo) share(b *Board) {
 func (ci *ConflictInfo) attack1(b *Board) {
 	ci.SourceCreature.heal(ci.SourceCreature.getOriHP())
 
-	b.moveCreature(ci.SourceCreature, ci.TargetCreature.getPos(), true)
 	b.killCreature(ci.TargetCreature, false)
+	b.moveCreature(ci.SourceCreature, ci.TargetCreature.getPos(), true)
 
 	addMessageToCurrentGamelog(ci.SourceCreature.getIdAsString()+" killed "+ci.TargetCreature.getIdAsString()+" using attack1", 1)
 }
@@ -148,14 +148,17 @@ func (ci *ConflictInfo) attack2(b *Board) {
 	rng := rand.Intn(2)
 	if rng == 1 {
 		ci.SourceCreature.heal((ci.SourceCreature.getOriHP() / 2) * -1)
-		b.moveCreature(ci.SourceCreature, ci.TargetCreature.getPos(), true)
+
 		b.killCreature(ci.TargetCreature, false)
+		b.moveCreature(ci.SourceCreature, ci.TargetCreature.getPos(), true)
 
 		addMessageToCurrentGamelog(ci.SourceCreature.getIdAsString()+" killed "+ci.TargetCreature.getIdAsString()+" using attack2", 1)
 
 	} else {
-		ci.SourceCreature.kill()
 		ci.TargetCreature.heal((ci.TargetCreature.getOriHP() / 2) * -1)
+
+		b.killCreature(ci.SourceCreature, false)
+		b.moveCreature(ci.TargetCreature, ci.SourceCreature.getPos(), true)
 
 		addMessageToCurrentGamelog(ci.TargetCreature.getIdAsString()+" killed "+ci.SourceCreature.getIdAsString()+" using attack2", 1)
 	}
