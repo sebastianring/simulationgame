@@ -7,14 +7,14 @@ import (
 )
 
 type Creature1 struct {
-	Id       int `json:"id"`
-	Symbol   []byte
-	Hp       int
-	OriHP    int
-	Speed    int
-	OriSpeed int
+	Id       int    `json:"id"`
+	Symbol   []byte `json:"symbol"`
+	Hp       int    `json:"hp"`
+	OriHP    int    `json:"ori_hp"`
+	Speed    int    `json:"speed"`
+	OriSpeed int    `json:"ori_speed"`
 	TypeDesc string `json:"type_desc"`
-	Moving   bool
+	Moving   bool   `json:"moving"`
 }
 
 func (b *Board) newCreature1Object(mutate bool, parent ...*Creature1) (*Creature1, error) {
@@ -51,7 +51,7 @@ func (b *Board) newCreature1Object(mutate bool, parent ...*Creature1) (*Creature
 		Moving:   true,
 	}
 
-	b.CreatureIdCtr["creature1"] += 1
+	b.CreatureIdCtr["Creature1"] += 1
 
 	addMessageToCurrentGamelog("Creature1 object with ID: "+
 		strconv.Itoa(c1.Id)+" added to the board", 2)

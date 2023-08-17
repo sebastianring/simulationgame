@@ -5,16 +5,25 @@ import (
 )
 
 type ConflictManager struct {
-	ConflictMapping     [][]string
+	ConflictMapping     [][]Conflict
 	CreatureTranslation map[string]int
-	ActionTranslation   map[string]bool
+	ActionTranslation   map[Conflict]bool
 }
 
 type ConflictInfo struct {
-	attack         string
-	sourceCreature CreatureObject
-	targetCreature CreatureObject
+	Conflict       Conflict
+	SourceCreature CreatureObject
+	TargetCreature CreatureObject
 }
+
+type Conflict int
+
+const (
+	Share   Conflict = 0
+	Avoid   Conflict = 1
+	Attack1 Conflict = 2
+	Attack2 Conflict = 3
+)
 
 // ------ CURRENT STRATEGY MAPPINGS ---------
 //       C1         C2
@@ -28,9 +37,9 @@ type ConflictInfo struct {
 
 func newConflictManager() (*ConflictManager, error) {
 	cm := ConflictManager{
-		ConflictMapping: [][]string{
-			{"share", "avoid"},
-			{"attack1", "attack2"},
+		ConflictMapping: [][]Conflict{
+			{Share, Avoid},
+			{Attack1, Attack2},
 		},
 
 		CreatureTranslation: map[string]int{
@@ -38,69 +47,69 @@ func newConflictManager() (*ConflictManager, error) {
 			"Creature2": 1,
 		},
 
-		ActionTranslation: map[string]bool{
-			"share":   true,
-			"avoid":   false,
-			"attack1": true,
-			"attack2": true,
+		ActionTranslation: map[Conflict]bool{
+			Share:   true,
+			Avoid:   false,
+			Attack1: true,
+			Attack2: true,
 		},
 	}
 
 	return &cm, nil
 }
 
-func (cm *ConflictManager) getConflict(sourceCreature CreatureObject, targetCreature CreatureObject) (bool, *ConflictInfo) {
+func (cm *ConflictManager) getConflict(SourceCreature CreatureObject, TargetCreature CreatureObject) (bool, *ConflictInfo) {
 	// addMessageToCurrentGamelog("Conflict between two creatures checked", 1)
-	row := cm.CreatureTranslation[sourceCreature.getType()]
-	col := cm.CreatureTranslation[targetCreature.getType()]
+	row := cm.CreatureTranslation[SourceCreature.getType()]
+	col := cm.CreatureTranslation[TargetCreature.getType()]
 
-	strategy := cm.ConflictMapping[row][col]
+	conflictType := cm.ConflictMapping[row][col]
 
-	action, ok := cm.ActionTranslation[strategy]
+	action, ok := cm.ActionTranslation[conflictType]
 
 	if !ok {
 		addMessageToCurrentGamelog("Strategy between creatures is not mapped correctly.", 1)
 	}
 
 	ConflictInfo := ConflictInfo{
-		attack:         strategy,
-		sourceCreature: sourceCreature,
-		targetCreature: targetCreature,
+		Conflict:       conflictType,
+		SourceCreature: SourceCreature,
+		TargetCreature: TargetCreature,
 	}
 
 	return action, &ConflictInfo
 }
 
-func (cm *ConflictManager) share(sourceCreature CreatureObject, targetCreature CreatureObject) {
-	sourceCreature.heal(sourceCreature.getOriHP() / 2)
-	targetCreature.heal((targetCreature.getOriHP() / 2) * -1)
+func (cm *ConflictManager) share(SourceCreature CreatureObject, TargetCreature CreatureObject) {
+	SourceCreature.heal(SourceCreature.getOriHP() / 2)
+	TargetCreature.heal((TargetCreature.getOriHP() / 2) * -1)
 
-	addMessageToCurrentGamelog(sourceCreature.getIdAsString()+" shared the food of "+targetCreature.getIdAsString(), 1)
+	addMessageToCurrentGamelog(SourceCreature.getIdAsString()+" shared the food of "+TargetCreature.getIdAsString(), 1)
 }
 
-func (cm *ConflictManager) attack1(sourceCreature CreatureObject, targetCreature CreatureObject) {
-	sourceCreature.heal(sourceCreature.getOriHP())
-	targetCreature.kill()
+func (cm *ConflictManager) attack1(SourceCreature CreatureObject, TargetCreature CreatureObject) {
+	SourceCreature.heal(SourceCreature.getOriHP())
+	TargetCreature.kill()
 
-	addMessageToCurrentGamelog(sourceCreature.getIdAsString()+" killed "+targetCreature.getIdAsString()+" using attack1", 1)
+	addMessageToCurrentGamelog(SourceCreature.getIdAsString()+" killed "+TargetCreature.getIdAsString()+" using attack1", 1)
 }
 
-func (cm *ConflictManager) attack2(sourceCreature CreatureObject, targetCreature CreatureObject) bool {
+func (cm *ConflictManager) attack2(SourceCreature CreatureObject, TargetCreature CreatureObject) bool {
 	// function returns true if target is killed, if source is killed, it returns false
 	rng := rand.Intn(2)
 	if rng == 1 {
-		sourceCreature.heal((sourceCreature.getOriHP() / 2) * -1)
-		targetCreature.kill()
+		SourceCreature.heal((SourceCreature.getOriHP() / 2) * -1)
+		TargetCreature.kill()
 
-		addMessageToCurrentGamelog(sourceCreature.getIdAsString()+" killed "+targetCreature.getIdAsString()+" using attack2", 1)
+		addMessageToCurrentGamelog(SourceCreature.getIdAsString()+" killed "+TargetCreature.getIdAsString()+" using attack2", 1)
 
 		return true
 
 	} else {
-		sourceCreature.kill()
-		targetCreature.heal((targetCreature.getOriHP() / 2) * -1)
+		SourceCreature.kill()
+		TargetCreature.heal((TargetCreature.getOriHP() / 2) * -1)
 
-		addMessageToCurrentGamelog(targetCreature.getIdAsString()+" killed "+sourceCreature.getIdAsString()+" using attack2", 1)
+		addMessageToCurrentGamelog(TargetCreature.getIdAsString()+" killed "+SourceCreature.getIdAsString()+" using attack2", 1)
 
 		return false
 	}

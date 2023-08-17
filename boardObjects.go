@@ -70,15 +70,15 @@ func getObjectSymbolWColor(objectname string) []byte {
 // -------------------------------------------------- //
 
 type EmptyObject struct {
-	symbol   []byte
-	typeDesc string
+	Symbol   []byte `json:"symbol"`
+	TypeDesc string `json:"type_desc"`
 }
 
 func newEmptyObject() *EmptyObject {
 	eo := EmptyObject{
 		// symbol:   getObjectSymbol("EmptyObject"),
-		symbol:   getObjectSymbolWColor("EmptyObject"),
-		typeDesc: "empty",
+		Symbol:   getObjectSymbolWColor("EmptyObject"),
+		TypeDesc: "EmptyObject",
 	}
 
 	// addMessageToCurrentGamelog("New empty object added", 2)
@@ -87,15 +87,14 @@ func newEmptyObject() *EmptyObject {
 }
 
 type Food struct {
-	symbol   []byte
-	typeDesc string
+	Symbol   []byte `json:"symbol"`
+	TypeDesc string `json:"type_desc"`
 }
 
 func newFoodObject() *Food {
 	f := Food{
-		// symbol:   getObjectSymbol("Food"),
-		symbol:   getObjectSymbolWColor("Food"),
-		typeDesc: "food",
+		Symbol:   getObjectSymbolWColor("Food"),
+		TypeDesc: "Food",
 	}
 
 	addMessageToCurrentGamelog("New food object added", 2)
@@ -110,9 +109,9 @@ func newFoodObject() *Food {
 // -------------------------------------------------- //
 
 func (eo *EmptyObject) getSymbol() []byte {
-	return eo.symbol
+	return eo.Symbol
 }
 
 func (f *Food) getSymbol() []byte {
-	return f.symbol
+	return f.Symbol
 }

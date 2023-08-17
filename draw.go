@@ -46,9 +46,10 @@ func (d *Drawer) DrawFrame(b *Board) {
 	}
 }
 
+// Should be adapted so the status line always centered
 func (b *Board) printStatusLine(totalWidth int) {
-	fmt.Println("ROUND: " + strconv.Itoa(b.CurrentRound.id) +
-		"      TIME: " + strconv.Itoa(b.CurrentRound.time) +
+	fmt.Println("      ROUND: " + strconv.Itoa(b.CurrentRound.Id) +
+		"      TIME: " + strconv.Itoa(b.CurrentRound.Time) +
 		"   CREATURES ACTIVE: " + strconv.Itoa(len(b.AllAliveCreatureObjects)) +
 		"     FOOD LEFT: " + strconv.Itoa(len(b.AllFoodObjects)))
 }
