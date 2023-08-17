@@ -31,6 +31,7 @@ type Board struct {
 	ConflictManager         *ConflictManager   `json:"conflict_manager"`
 	AllFoodObjects          []Pos              `json:"all_food_objects"`
 	AllAliveCreatureObjects []Pos              `json:"all_alive_creature_objects"`
+	AliveCreatureObjects    []*CreatureObject  `json:"alive_creature_objects"`
 	AllDeadCreatures        []*BoardObject     `json:"all_dead_creatures"`
 	MaxRounds               int                `json:"max_rounds"`
 }
@@ -180,8 +181,14 @@ func (b *Board) spawnCreature1OnBoard(qty uint) {
 			os.Exit(1)
 		}
 
+		creaturePtr.Pos = pos
+
 		b.ObjectBoard[pos.y][pos.x] = creaturePtr
 		b.AllAliveCreatureObjects = append(b.AllAliveCreatureObjects, pos)
+
+		var creatureObject CreatureObject = creaturePtr
+
+		b.AliveCreatureObjects = append(b.AliveCreatureObjects, &creatureObject)
 	}
 }
 
@@ -202,8 +209,14 @@ func (b *Board) spawnCreature2OnBoard(qty uint) {
 			os.Exit(1)
 		}
 
+		creaturePtr.Pos = pos
+
 		b.ObjectBoard[pos.y][pos.x] = creaturePtr
 		b.AllAliveCreatureObjects = append(b.AllAliveCreatureObjects, pos)
+
+		var creatureObject CreatureObject = creaturePtr
+
+		b.AliveCreatureObjects = append(b.AliveCreatureObjects, &creatureObject)
 	}
 }
 
@@ -322,22 +335,16 @@ func getCurrentTimeString() string {
 	return timeString
 }
 
-// func (b *Board) killCreature(creature CreatureObject, pos Pos) Pos {
-// 	b.CurrentRound.creaturesKilled = append(b.CurrentRound.creaturesKilled, creature)
-// 	b.ObjectBoard[pos.y][pos.x] = newEmptyObject()
-//
-// 	return pos
-// }
-
 func (b *Board) creatureUpdatesPerTick() {
 	updatedAllCreatureObjects := make([]Pos, 0)
 	deadCreatures := make([]Pos, 0)
 
+	// -------------------------------- REFACTORING THIS SOON --------------------
 	for _, pos := range b.AllAliveCreatureObjects {
 		if obj, ok := b.ObjectBoard[pos.y][pos.x].(CreatureObject); ok {
 			action := obj.updateTick()
 
-			if action == "move" {
+			if action == StatusMove {
 				newPos := Pos{
 					x: -1,
 					y: -1}
@@ -380,7 +387,7 @@ func (b *Board) creatureUpdatesPerTick() {
 								" killed "+moveType.conflict.TargetCreature.getIdAsString(), 1)
 
 							// deadCreatures = append(deadCreatures, newPos)
-							b.deleteCreature(pos, &b.ObjectBoard[newPos.y][newPos.x])
+							b.deleteCreatureFromAliveList(pos, &b.ObjectBoard[newPos.y][newPos.x])
 							b.ObjectBoard[newPos.y][newPos.x] = newEmptyObject()
 							updatedAllCreatureObjects = append(updatedAllCreatureObjects, newPos)
 
@@ -389,7 +396,7 @@ func (b *Board) creatureUpdatesPerTick() {
 								" killed "+moveType.conflict.SourceCreature.getIdAsString(), 1)
 
 							// deadCreatures = append(deadCreatures, pos)
-							b.deleteCreature(pos, &b.ObjectBoard[newPos.y][newPos.x])
+							b.deleteCreatureFromAliveList(pos, &b.ObjectBoard[newPos.y][newPos.x])
 							b.ObjectBoard[pos.y][pos.x] = newEmptyObject()
 							updatedAllCreatureObjects = append(updatedAllCreatureObjects, newPos)
 						}
@@ -413,7 +420,7 @@ func (b *Board) creatureUpdatesPerTick() {
 					updatedAllCreatureObjects = append(updatedAllCreatureObjects, newPos)
 				}
 
-			} else if action == "dead" {
+			} else if action == StatusDead {
 				deadCreatures = append(deadCreatures, pos)
 
 			} else {
@@ -425,7 +432,7 @@ func (b *Board) creatureUpdatesPerTick() {
 
 	// delete dead creatures after tick is complete
 	for _, pos := range deadCreatures {
-		b.deleteCreature(pos, &b.ObjectBoard[pos.y][pos.x])
+		b.deleteCreatureFromAliveList(pos, &b.ObjectBoard[pos.y][pos.x])
 		b.ObjectBoard[pos.y][pos.x] = newEmptyObject()
 	}
 
@@ -439,6 +446,26 @@ func (b *Board) creatureUpdatesPerTick() {
 		}
 
 		b.newRound()
+	}
+}
+
+func (b *Board) moveCreature(creature CreatureObject, newPos Pos) {
+	oldPos := creature.getPos()
+	creature.setPos(newPos)
+
+	b.ObjectBoard[oldPos.y][oldPos.x] = newEmptyObject()
+}
+
+func (b *Board) killCreature(creature CreatureObject, pos Pos, placeEmptyObject bool) {
+
+	if creature.getHP() > 0 {
+		creature.kill()
+	}
+
+	b.deleteCreatureFromAliveList(pos, &b.ObjectBoard[pos.y][pos.x])
+
+	if placeEmptyObject {
+		b.ObjectBoard[pos.y][pos.x] = newEmptyObject()
 	}
 }
 
@@ -550,9 +577,10 @@ func (b *Board) findPosForAllCreatures() {
 			for !findNewPos {
 				newPos := b.randomPosAtEdgeOfMap()
 				if b.isSpotEmpty(newPos) {
-					b.ObjectBoard[newPos.y][newPos.x] = obj
+					// b.ObjectBoard[newPos.y][newPos.x] = obj
 					obj.resetValues()
-					b.ObjectBoard[creaturePos.y][creaturePos.x] = newEmptyObject()
+					b.moveCreature(obj, newPos)
+					// b.ObjectBoard[creaturePos.y][creaturePos.x] = newEmptyObject()
 					b.AllAliveCreatureObjects[i] = newPos
 					findNewPos = true
 				}
@@ -788,7 +816,7 @@ func (b *Board) deleteFood(pos Pos) {
 	b.AllFoodObjects = deleteIndexInPosSlice(b.AllFoodObjects, element)
 }
 
-func (b *Board) deleteCreature(pos Pos, creature *BoardObject) {
+func (b *Board) deleteCreatureFromAliveList(pos Pos, creature *BoardObject) {
 	b.AllDeadCreatures = append(b.AllDeadCreatures, creature)
 	var element int
 	for i, val := range b.AllAliveCreatureObjects {

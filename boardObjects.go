@@ -12,7 +12,7 @@ type BoardObject interface {
 
 type CreatureObject interface {
 	getSymbol() []byte
-	updateTick() string
+	updateTick() TickStatus
 	ifOffspring() bool
 	getHP() int
 	getId() int
@@ -25,6 +25,8 @@ type CreatureObject interface {
 	getOriHP() int
 	getIdAsString() string
 	getSpeed() int
+	getPos() Pos
+	setPos(Pos)
 }
 
 func getObjectSymbolWColor(objectname string) []byte {
@@ -101,6 +103,14 @@ func newFoodObject() *Food {
 
 	return &f
 }
+
+type TickStatus int
+
+const (
+	StatusMove  TickStatus = 0
+	StatusDead  TickStatus = 1
+	StatusError TickStatus = 2
+)
 
 // -------------------------------------------------- //
 // -------------------------------------------------- //

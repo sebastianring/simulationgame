@@ -9,6 +9,7 @@ import (
 type Creature1 struct {
 	Id       int    `json:"id"`
 	Symbol   []byte `json:"symbol"`
+	Pos      Pos    `json:"pos"`
 	Hp       int    `json:"hp"`
 	OriHP    int    `json:"ori_hp"`
 	Speed    int    `json:"speed"`
@@ -75,19 +76,19 @@ func (b *Board) newCreature1Object(mutate bool, parent ...*Creature1) (*Creature
 // -------------------------------------------------- //
 // -------------------------------------------------- //
 
-func (c *Creature1) updateTick() string {
+func (c *Creature1) updateTick() TickStatus {
 	if c.Moving && c.Hp > 0 {
 		c.Speed -= 1
 		if c.Speed <= 0 {
 			c.Speed = c.OriSpeed
 			c.Hp -= 5 + (10 / c.Speed)
-			return "move"
+			return StatusMove
 		}
 	} else if c.Hp <= 0 {
-		return "dead"
+		return StatusDead
 	}
 
-	return "error"
+	return StatusError
 }
 
 func (c *Creature1) heal(val int) {
@@ -160,4 +161,12 @@ func (c *Creature1) getOriHP() int {
 
 func (c *Creature1) getIdAsString() string {
 	return c.TypeDesc + " (" + strconv.Itoa(c.Id) + ")"
+}
+
+func (c *Creature1) getPos() Pos {
+	return c.Pos
+}
+
+func (c *Creature1) setPos(pos Pos) {
+	c.Pos = pos
 }

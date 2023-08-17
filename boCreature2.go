@@ -7,14 +7,15 @@ import (
 )
 
 type Creature2 struct {
-	Id       int
-	Symbol   []byte
-	Hp       int
-	OriHP    int
-	Speed    int
-	OriSpeed int
-	TypeDesc string
-	Moving   bool
+	Id       int    `json:"id"`
+	Symbol   []byte `json:"symbol"`
+	Pos      Pos    `json:"pos"`
+	Hp       int    `json:"hp"`
+	OriHP    int    `json:"ori_hp"`
+	Speed    int    `json:"speed"`
+	OriSpeed int    `json:"ori_speed"`
+	TypeDesc string `json:"type_desc"`
+	Moving   bool   `json:"moving"`
 }
 
 func (b *Board) newCreature2Object(mutate bool, parent ...*Creature2) (*Creature2, error) {
@@ -76,19 +77,19 @@ func (b *Board) newCreature2Object(mutate bool, parent ...*Creature2) (*Creature
 // -------------------------------------------------- //
 // -------------------------------------------------- //
 
-func (c *Creature2) updateTick() string {
+func (c *Creature2) updateTick() TickStatus {
 	if c.Moving && c.Hp > 0 {
 		c.Speed -= 1
 		if c.Speed == 0 {
 			c.Speed = c.OriSpeed
 			c.Hp -= 5 + (10 / c.Speed)
-			return "move"
+			return StatusMove
 		}
 	} else if c.Hp <= 0 {
-		return "dead"
+		return StatusMove
 	}
 
-	return "error"
+	return StatusError
 }
 
 func (c *Creature2) heal(val int) {
@@ -155,4 +156,12 @@ func (c *Creature2) getOriHP() int {
 
 func (c *Creature2) getIdAsString() string {
 	return c.TypeDesc + " (" + strconv.Itoa(c.Id) + ")"
+}
+
+func (c *Creature2) getPos() Pos {
+	return c.Pos
+}
+
+func (c *Creature2) setPos(pos Pos) {
+	c.Pos = pos
 }
