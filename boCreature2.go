@@ -42,9 +42,8 @@ func (b *Board) newCreature2Object(mutate bool, parent ...*Creature2) (*Creature
 	}
 
 	c2 := Creature2{
-		Id: b.CreatureIdCtr["Creature2"],
-		// symbol:   getObjectSymbol("Creature2"),
-		Symbol:   getObjectSymbolWColor("Creature2"),
+		Id:       b.CreatureIdCtr[Creature2Type],
+		Symbol:   getObjectSymbolWColor(Creature2Type),
 		OriHP:    250,
 		Hp:       250,
 		Speed:    speed,
@@ -53,7 +52,7 @@ func (b *Board) newCreature2Object(mutate bool, parent ...*Creature2) (*Creature
 		Moving:   true,
 	}
 
-	b.CreatureIdCtr["Creature2"] += 1
+	b.CreatureIdCtr[Creature2Type] += 1
 
 	addMessageToCurrentGamelog("Creature2 object with ID: "+
 		strconv.Itoa(c2.Id)+" added to the board", 2)

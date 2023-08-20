@@ -29,7 +29,7 @@ type CreatureObject interface {
 	setPos(Pos)
 }
 
-func getObjectSymbolWColor(objectname string) []byte {
+func getObjectSymbolWColor(ObjectType BoardObjectType) []byte {
 	resetColor := []byte("\033[0m")
 
 	colors := map[string][]byte{
@@ -43,23 +43,23 @@ func getObjectSymbolWColor(objectname string) []byte {
 		"black":   []byte("\033[30m"),
 	}
 
-	drawingSymbols := map[string]byte{
-		"EmptyObject": 46, // .....
-		"Food":        64, // @@@@@
-		"Creature1":   79, // OOOOO
-		"Creature2":   87, // WWWWW
+	drawingSymbols := map[BoardObjectType]byte{
+		EmptyType:     46, // .....
+		FoodType:      64, // @@@@@
+		Creature1Type: 79, // OOOOO
+		Creature2Type: 87, // WWWWW
 	}
 
-	drawingColors := map[string]string{
-		"EmptyObject": "black",
-		"Food":        "green",
-		"Creature1":   "cyan",
-		"Creature2":   "red",
+	drawingColors := map[BoardObjectType]string{
+		EmptyType:     "black",
+		FoodType:      "green",
+		Creature1Type: "cyan",
+		Creature2Type: "red",
 	}
 
-	objectColor := drawingColors[objectname]
+	objectColor := drawingColors[ObjectType]
 	returnByte := colors[objectColor]
-	returnByte = append(returnByte, drawingSymbols[objectname])
+	returnByte = append(returnByte, drawingSymbols[ObjectType])
 	returnByte = append(returnByte, resetColor...)
 
 	return returnByte
@@ -78,8 +78,7 @@ type EmptyObject struct {
 
 func newEmptyObject() *EmptyObject {
 	eo := EmptyObject{
-		// symbol:   getObjectSymbol("EmptyObject"),
-		Symbol:   getObjectSymbolWColor("EmptyObject"),
+		Symbol:   getObjectSymbolWColor(EmptyType),
 		TypeDesc: "EmptyObject",
 	}
 
@@ -95,7 +94,7 @@ type Food struct {
 
 func newFoodObject() *Food {
 	f := Food{
-		Symbol:   getObjectSymbolWColor("Food"),
+		Symbol:   getObjectSymbolWColor(FoodType),
 		TypeDesc: "Food",
 	}
 
@@ -104,12 +103,17 @@ func newFoodObject() *Food {
 	return &f
 }
 
+type BoardObjectType int
 type TickStatus int
 
 const (
-	StatusMove     TickStatus = 0
-	StatusDead     TickStatus = 1
-	StatusInactive TickStatus = 2
+	StatusMove     TickStatus      = 0
+	StatusDead     TickStatus      = 1
+	StatusInactive TickStatus      = 2
+	Creature1Type  BoardObjectType = 1
+	Creature2Type  BoardObjectType = 2
+	EmptyType      BoardObjectType = 100
+	FoodType       BoardObjectType = 101
 )
 
 // -------------------------------------------------- //

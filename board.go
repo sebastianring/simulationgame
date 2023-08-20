@@ -17,22 +17,22 @@ import (
 // -------------------------------------------------- //
 
 type Board struct {
-	Id                   string             `json:"id"`
-	Rows                 int                `json:"rows"`
-	Cols                 int                `json:"cols"`
-	Gamelog              *Gamelog           `json:"gamelog"`
-	ObjectBoard          [][]BoardObject    `json:"object_board"`
-	RoundInt             int                `json:"round_int"`
-	Rounds               []*Round           `json:"rounds"`
-	CurrentRound         *Round             `json:"current_round"`
-	CreatureIdCtr        map[string]int     `json:"creature_id_ctr"`
-	Mutationrate         map[string]float32 `json:"mutationrate"`
-	InitialFoods         int                `json:"initial_foods"`
-	ConflictManager      *ConflictManager   `json:"conflict_manager"`
-	AllFoodObjects       []Pos              `json:"all_food_objects"`
-	AliveCreatureObjects []CreatureObject   `json:"alive_creature_objects"`
-	AllDeadCreatures     []BoardObject      `json:"all_dead_creatures"`
-	MaxRounds            int                `json:"max_rounds"`
+	Id                   string                      `json:"id"`
+	Rows                 int                         `json:"rows"`
+	Cols                 int                         `json:"cols"`
+	Gamelog              *Gamelog                    `json:"gamelog"`
+	ObjectBoard          [][]BoardObject             `json:"object_board"`
+	RoundInt             int                         `json:"round_int"`
+	Rounds               []*Round                    `json:"rounds"`
+	CurrentRound         *Round                      `json:"current_round"`
+	CreatureIdCtr        map[BoardObjectType]int     `json:"creature_id_ctr"`
+	Mutationrate         map[BoardObjectType]float32 `json:"mutationrate"`
+	InitialFoods         int                         `json:"initial_foods"`
+	ConflictManager      *ConflictManager            `json:"conflict_manager"`
+	AllFoodObjects       []Pos                       `json:"all_food_objects"`
+	AliveCreatureObjects []CreatureObject            `json:"alive_creature_objects"`
+	AllDeadCreatures     []BoardObject               `json:"all_dead_creatures"`
+	MaxRounds            int                         `json:"max_rounds"`
 }
 
 type Round struct {
@@ -113,8 +113,8 @@ func InitNewBoard(sc *SimulationConfig) *Board {
 		RoundInt:        1,
 		Rounds:          []*Round{&newRound},
 		CurrentRound:    &newRound,
-		CreatureIdCtr:   make(map[string]int, 0),
-		Mutationrate:    make(map[string]float32, 0),
+		CreatureIdCtr:   make(map[BoardObjectType]int, 0),
+		Mutationrate:    make(map[BoardObjectType]float32, 0),
 		InitialFoods:    sc.Foods,
 		ConflictManager: cm,
 		MaxRounds:       50,
@@ -261,12 +261,12 @@ func (b *Board) randomPosAtEdgeOfMap() Pos {
 }
 
 func (b *Board) initBoardObjects() {
-	b.CreatureIdCtr["Creature1"] = 1
-	b.CreatureIdCtr["Creature2"] = 1
+	b.CreatureIdCtr[Creature1Type] = 1
+	b.CreatureIdCtr[Creature2Type] = 1
 
-	b.Mutationrate = make(map[string]float32)
-	b.Mutationrate["Creature1"] = 0.1
-	b.Mutationrate["Creature2"] = 0.1
+	b.Mutationrate = make(map[BoardObjectType]float32)
+	b.Mutationrate[Creature1Type] = 0.1
+	b.Mutationrate[Creature2Type] = 0.1
 }
 
 func (b *Board) randomPosWithinMap() Pos {
@@ -307,7 +307,7 @@ func (b *Board) TickFrame() {
 
 }
 
-func checkCreatureType(bo BoardObject) (bool, *BoardObject) {
+func checkBoardObjectType(bo BoardObject) (bool, *BoardObject) {
 	switch bo.(type) {
 	case *Creature1:
 		return true, &bo
