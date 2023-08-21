@@ -36,16 +36,17 @@ type Board struct {
 }
 
 type Round struct {
-	Id                  int                        `json:"id"`
-	Time                int                        `json:"time"`
-	CreaturesSpawned    []CreatureObject           `json:"creatures_spawned"`
-	CreaturesKilled     []CreatureObject           `json:"creatures_killed"`
-	BoardLink           string                     `json:"board_link"`
-	CreaturesSpawnedSum map[string]creatureSummary `json:"creatures_spawned_sum"`
-	CreaturesKilledSum  map[string]creatureSummary `json:"creatures_killed_sum"`
+	Id                  int                                  `json:"id"`
+	Time                int                                  `json:"time"`
+	CreaturesSpawned    []CreatureObject                     `json:"creatures_spawned"`
+	CreaturesKilled     []CreatureObject                     `json:"creatures_killed"`
+	BoardLink           string                               `json:"board_link"`
+	CreaturesSpawnedSum map[BoardObjectType]*creatureSummary `json:"creatures_spawned_sum"`
+	CreaturesKilledSum  map[BoardObjectType]*creatureSummary `json:"creatures_killed_sum"`
 }
 
 type creatureSummary struct {
+	CreatureType   string  `json:"creature_type"`
 	TotalCreatures int     `json:"total_creatures"`
 	TotalSpeed     int     `json:"total_speed"`
 	AverageSpeed   float64 `json:"average_speed"`
@@ -403,6 +404,7 @@ func (b *Board) killCreature(creature CreatureObject, placeEmptyObject bool) {
 	}
 
 	b.deleteCreatureFromAliveSlice(creature)
+	b.CurrentRound.CreaturesKilled = append(b.CurrentRound.CreaturesKilled, creature)
 
 	if placeEmptyObject {
 		b.ObjectBoard[pos.y][pos.x] = newEmptyObject()
@@ -411,7 +413,7 @@ func (b *Board) killCreature(creature CreatureObject, placeEmptyObject bool) {
 
 func (b *Board) newRound() {
 	addMessageToCurrentGamelog("All creatures are dead or have eaten, starting new round", 1)
-	addMessageToCurrentGamelog("This many creatures are alive: "+strconv.Itoa(len(b.AliveCreatureObjects)), 1)
+	b.spawnOffsprings()
 	b.writeSummaryOfRound()
 	b.Gamelog.writeGamelogToFile()
 
@@ -422,7 +424,6 @@ func (b *Board) newRound() {
 		fmt.Println("Max number of rounds reached, ending the game.")
 
 	} else {
-		b.spawnOffsprings()
 		b.findPosForAllCreatures()
 		b.deleteAndSpawnFood()
 
@@ -452,63 +453,58 @@ func (b *Board) deleteAndSpawnFood() {
 }
 
 func (b *Board) writeSummaryOfRound() {
-	creaturesSpawned := make(map[string]creatureSummary)
+	b.CurrentRound.CreaturesSpawnedSum = getSummary(b.CurrentRound.CreaturesSpawned)
+	summaryStrings := getSummariesAsString(b.CurrentRound.CreaturesSpawnedSum, "spawned")
 
-	for _, creature := range b.CurrentRound.CreaturesSpawned {
-		creatureType := creature.getType()
+	for _, msg := range summaryStrings {
+		addMessageToCurrentGamelog(msg, 1)
+	}
 
-		if obj, ok := creaturesSpawned[creatureType]; ok {
-			mapPtr := &obj
-			mapPtr.TotalCreatures += 1
-			mapPtr.TotalSpeed += creature.getSpeed()
+	b.CurrentRound.CreaturesKilledSum = getSummary(b.CurrentRound.CreaturesKilled)
+	summaryStrings = getSummariesAsString(b.CurrentRound.CreaturesKilledSum, "killed")
+
+	for _, msg := range summaryStrings {
+		addMessageToCurrentGamelog(msg, 1)
+	}
+}
+
+func getSummary(creatureList []CreatureObject) map[BoardObjectType]*creatureSummary {
+	returnCreatureSummary := make(map[BoardObjectType]*creatureSummary)
+
+	for _, creature := range creatureList {
+		creatureType := creature.getBoardObjectType()
+
+		if obj, ok := returnCreatureSummary[creatureType]; ok {
+			obj.TotalCreatures += 1
+			obj.TotalSpeed += creature.getSpeed()
 
 		} else {
 			newCreatureSummary := creatureSummary{
+				CreatureType:   creature.getType(),
 				TotalCreatures: 1,
 				TotalSpeed:     creature.getSpeed(),
 			}
 
-			creaturesSpawned[creatureType] = newCreatureSummary
+			returnCreatureSummary[creatureType] = &newCreatureSummary
 		}
 	}
 
-	b.CurrentRound.CreaturesSpawnedSum = creaturesSpawned
+	return returnCreatureSummary
+}
 
-	for c, cs := range b.CurrentRound.CreaturesSpawnedSum {
+func getSummariesAsString(summaries map[BoardObjectType]*creatureSummary, action string) []string {
+	returnString := []string{}
+
+	for _, cs := range summaries {
 		cs.AverageSpeed = float64(cs.TotalSpeed) / float64(cs.TotalCreatures)
+		summary := "In last round, " + strconv.Itoa(cs.TotalCreatures) +
+			" x " + cs.CreatureType + " was " + action + " with the average speed of: " +
+			strconv.FormatFloat(cs.AverageSpeed, 'f', 2, 64)
 
-		addMessageToCurrentGamelog("In last round, "+strconv.Itoa(cs.TotalCreatures)+
-			" x "+c+" was spawned with the average speed of: "+strconv.FormatFloat(cs.AverageSpeed, 'f', 2, 64), 1)
+		returnString = append(returnString, summary)
 	}
 
-	creaturesKilled := make(map[string]creatureSummary)
-
-	for _, creature := range b.CurrentRound.CreaturesKilled {
-		creatureType := creature.getType()
-
-		if obj, ok := creaturesKilled[creatureType]; ok {
-			mapPtr := &obj
-			mapPtr.TotalCreatures += 1
-			mapPtr.TotalSpeed += creature.getSpeed()
-
-		} else {
-			newCreatureSummary := creatureSummary{
-				TotalCreatures: 1,
-				TotalSpeed:     creature.getSpeed(),
-			}
-
-			creaturesKilled[creatureType] = newCreatureSummary
-		}
-	}
-
-	b.CurrentRound.CreaturesKilledSum = creaturesKilled
-
-	for c, cs := range b.CurrentRound.CreaturesKilledSum {
-		cs.AverageSpeed = float64(cs.TotalSpeed) / float64(cs.TotalCreatures)
-
-		addMessageToCurrentGamelog("In last round, "+strconv.Itoa(cs.TotalCreatures)+
-			" x "+c+" was killed with the average speed of: "+strconv.FormatFloat(cs.AverageSpeed, 'f', 2, 64), 1)
-	}
+	return returnString
 }
 
 func (b *Board) findPosForAllCreatures() {
@@ -528,6 +524,7 @@ func (b *Board) findPosForAllCreatures() {
 
 func (b *Board) spawnOffsprings() {
 	addMessageToCurrentGamelog("Spawning offsprings from last round", 1)
+
 	creatureQty := map[string]uint{
 		"creature1": 0,
 		"creature2": 0,
@@ -569,10 +566,8 @@ func (b *Board) spawnOffsprings() {
 			}
 
 			b.moveCreature(offspring, newPos, false)
-			// b.AliveCreatureObjects = append(b.AliveCreatureObjects, &offspring)
 		}
 	}
-	// }
 
 	for key, val := range creatureQty {
 		if val > 0 {
@@ -580,8 +575,6 @@ func (b *Board) spawnOffsprings() {
 		}
 	}
 
-	// b.spawnCreature1OnBoard(creatureQty["creature1"])
-	// b.spawnCreature2OnBoard(creatureQty["creature2"])
 }
 
 func (b *Board) checkIfCreaturesAreDead() bool {

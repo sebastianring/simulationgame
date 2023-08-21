@@ -7,15 +7,16 @@ import (
 )
 
 type Creature1 struct {
-	Id       int    `json:"id"`
-	Symbol   []byte `json:"symbol"`
-	Pos      Pos    `json:"pos"`
-	Hp       int    `json:"hp"`
-	OriHP    int    `json:"ori_hp"`
-	Speed    int    `json:"speed"`
-	OriSpeed int    `json:"ori_speed"`
-	TypeDesc string `json:"type_desc"`
-	Moving   bool   `json:"moving"`
+	Id              int             `json:"id"`
+	Symbol          []byte          `json:"symbol"`
+	Pos             Pos             `json:"pos"`
+	Hp              int             `json:"hp"`
+	OriHP           int             `json:"ori_hp"`
+	Speed           int             `json:"speed"`
+	OriSpeed        int             `json:"ori_speed"`
+	TypeDesc        string          `json:"type_desc"`
+	BoardObjectType BoardObjectType `json:"board_object_type"`
+	Moving          bool            `json:"moving"`
 }
 
 func (b *Board) newCreature1Object(mutate bool, parent ...*Creature1) (*Creature1, error) {
@@ -169,4 +170,8 @@ func (c *Creature1) getPos() Pos {
 
 func (c *Creature1) setPos(pos Pos) {
 	c.Pos = pos
+}
+
+func (c *Creature1) getBoardObjectType() BoardObjectType {
+	return c.BoardObjectType
 }

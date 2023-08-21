@@ -8,6 +8,7 @@ package simulationgame
 
 type BoardObject interface {
 	getSymbol() []byte
+	getBoardObjectType() BoardObjectType
 }
 
 type CreatureObject interface {
@@ -27,6 +28,7 @@ type CreatureObject interface {
 	getSpeed() int
 	getPos() Pos
 	setPos(Pos)
+	getBoardObjectType() BoardObjectType
 }
 
 func getObjectSymbolWColor(ObjectType BoardObjectType) []byte {
@@ -72,8 +74,9 @@ func getObjectSymbolWColor(ObjectType BoardObjectType) []byte {
 // -------------------------------------------------- //
 
 type EmptyObject struct {
-	Symbol   []byte `json:"symbol"`
-	TypeDesc string `json:"type_desc"`
+	Symbol          []byte          `json:"symbol"`
+	TypeDesc        string          `json:"type_desc"`
+	BoardObjectType BoardObjectType `json:"board_object_type"`
 }
 
 func newEmptyObject() *EmptyObject {
@@ -88,8 +91,9 @@ func newEmptyObject() *EmptyObject {
 }
 
 type Food struct {
-	Symbol   []byte `json:"symbol"`
-	TypeDesc string `json:"type_desc"`
+	Symbol          []byte          `json:"symbol"`
+	TypeDesc        string          `json:"type_desc"`
+	BoardObjectType BoardObjectType `json:"board_object_type"`
 }
 
 func newFoodObject() *Food {
@@ -128,4 +132,12 @@ func (eo *EmptyObject) getSymbol() []byte {
 
 func (f *Food) getSymbol() []byte {
 	return f.Symbol
+}
+
+func (c *Food) getBoardObjectType() BoardObjectType {
+	return c.BoardObjectType
+}
+
+func (c *EmptyObject) getBoardObjectType() BoardObjectType {
+	return c.BoardObjectType
 }
