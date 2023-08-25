@@ -48,7 +48,7 @@ type Round struct {
 type creatureSummary struct {
 	CreatureType   string  `json:"creature_type"`
 	TotalCreatures int     `json:"total_creatures"`
-	TotalSpeed     int     `json:"total_speed"`
+	TotalSpeed     float64 `json:"total_speed"`
 	AverageSpeed   float64 `json:"average_speed"`
 }
 

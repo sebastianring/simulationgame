@@ -25,10 +25,11 @@ type CreatureObject interface {
 	kill()
 	getOriHP() int
 	getIdAsString() string
-	getSpeed() int
+	getSpeed() float64
 	getPos() Pos
 	setPos(Pos)
 	getBoardObjectType() BoardObjectType
+	getScanProcChance() float64
 }
 
 func getObjectSymbolWColor(ObjectType BoardObjectType) []byte {

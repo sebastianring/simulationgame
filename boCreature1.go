@@ -12,17 +12,17 @@ type Creature1 struct {
 	Pos             Pos             `json:"pos"`
 	Hp              int             `json:"hp"`
 	OriHP           int             `json:"ori_hp"`
-	Speed           int             `json:"speed"`
-	OriSpeed        int             `json:"ori_speed"`
-	ProcScanChance  int             `json:"proc_scan_chance"`
+	Speed           float64         `json:"speed"`
+	OriSpeed        float64         `json:"ori_speed"`
+	ProcScanChance  float64         `json:"proc_scan_chance"`
 	TypeDesc        string          `json:"type_desc"`
 	BoardObjectType BoardObjectType `json:"board_object_type"`
 	Moving          bool            `json:"moving"`
 }
 
 func (b *Board) newCreature1Object(mutate bool, parent ...*Creature1) (*Creature1, error) {
-	var speed int
-	var procScanChance int
+	var speed float64
+	var procScanChance float64
 
 	if len(parent) == 0 {
 		speed = 5
@@ -40,9 +40,9 @@ func (b *Board) newCreature1Object(mutate bool, parent ...*Creature1) (*Creature
 		chance := rand.Intn(100)
 
 		if chance < 33 {
-			speed++
+			speed += 1
 		} else if chance < 67 {
-			speed--
+			speed -= 1
 		}
 
 		chance = rand.Intn(100)
@@ -89,7 +89,7 @@ func (c *Creature1) updateTick() TickStatus {
 		c.Speed -= 1
 		if c.Speed <= 0 {
 			c.Speed = c.OriSpeed
-			c.Hp -= 5 + (10 / c.Speed)
+			c.Hp -= 5 + (10 / int(c.Speed))
 			return StatusMove
 		}
 	} else if c.Hp <= 0 {
@@ -147,7 +147,7 @@ func (c *Creature1) getSymbol() []byte {
 	return c.Symbol
 }
 
-func (c *Creature1) getSpeed() int {
+func (c *Creature1) getSpeed() float64 {
 	return c.Speed
 }
 
@@ -181,4 +181,8 @@ func (c *Creature1) setPos(pos Pos) {
 
 func (c *Creature1) getBoardObjectType() BoardObjectType {
 	return c.BoardObjectType
+}
+
+func (c *Creature1) getScanProcChance() float64 {
+	return c.ProcScanChance
 }

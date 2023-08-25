@@ -12,21 +12,24 @@ type Creature2 struct {
 	Pos             Pos             `json:"pos"`
 	Hp              int             `json:"hp"`
 	OriHP           int             `json:"ori_hp"`
-	Speed           int             `json:"speed"`
-	OriSpeed        int             `json:"ori_speed"`
+	Speed           float64         `json:"speed"`
+	OriSpeed        float64         `json:"ori_speed"`
+	ProcScanChance  float64         `json:"proc_scan_chance"`
 	TypeDesc        string          `json:"type_desc"`
 	BoardObjectType BoardObjectType `json:"board_object_type"`
 	Moving          bool            `json:"moving"`
 }
 
 func (b *Board) newCreature2Object(mutate bool, parent ...*Creature2) (*Creature2, error) {
-	var speed int
+	var speed float64
+	var procScanChance float64
 
 	if len(parent) == 0 {
 		speed = 5
 	} else if len(parent) == 1 {
 		for _, creature := range parent {
 			speed = creature.Speed
+			procScanChance = creature.ProcScanChance
 		}
 	} else {
 		return nil, errors.New("Too many parents")
@@ -43,14 +46,15 @@ func (b *Board) newCreature2Object(mutate bool, parent ...*Creature2) (*Creature
 	}
 
 	c2 := Creature2{
-		Id:       b.CreatureIdCtr[Creature2Type],
-		Symbol:   getObjectSymbolWColor(Creature2Type),
-		OriHP:    250,
-		Hp:       250,
-		Speed:    speed,
-		OriSpeed: speed,
-		TypeDesc: "Creature2",
-		Moving:   true,
+		Id:             b.CreatureIdCtr[Creature2Type],
+		Symbol:         getObjectSymbolWColor(Creature2Type),
+		OriHP:          250,
+		Hp:             250,
+		Speed:          speed,
+		OriSpeed:       speed,
+		ProcScanChance: procScanChance,
+		TypeDesc:       "Creature2",
+		Moving:         true,
 	}
 
 	b.CreatureIdCtr[Creature2Type] += 1
@@ -82,7 +86,7 @@ func (c *Creature2) updateTick() TickStatus {
 		c.Speed -= 1
 		if c.Speed == 0 {
 			c.Speed = c.OriSpeed
-			c.Hp -= 5 + (10 / c.Speed)
+			c.Hp -= 5 + (10 / int(c.Speed))
 			return StatusMove
 		}
 	} else if c.Hp <= 0 {
@@ -134,7 +138,7 @@ func (c *Creature2) getSymbol() []byte {
 	return c.Symbol
 }
 
-func (c *Creature2) getSpeed() int {
+func (c *Creature2) getSpeed() float64 {
 	return c.Speed
 }
 
@@ -168,4 +172,8 @@ func (c *Creature2) setPos(pos Pos) {
 
 func (c *Creature2) getBoardObjectType() BoardObjectType {
 	return c.BoardObjectType
+}
+
+func (c *Creature2) getScanProcChance() float64 {
+	return c.ProcScanChance
 }
