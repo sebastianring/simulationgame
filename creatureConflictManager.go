@@ -16,7 +16,7 @@ type ConflictInfo struct {
 	TargetCreature CreatureObject
 }
 
-type Conflict int
+type Conflict byte
 
 const (
 	Share   Conflict = 0

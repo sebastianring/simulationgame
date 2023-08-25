@@ -107,8 +107,8 @@ func newFoodObject() *Food {
 	return &f
 }
 
-type BoardObjectType int
-type TickStatus int
+type BoardObjectType byte
+type TickStatus byte
 
 const (
 	StatusMove     TickStatus      = 0

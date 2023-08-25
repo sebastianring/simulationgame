@@ -62,7 +62,7 @@ type MoveType struct {
 	conflictinfo *ConflictInfo
 }
 
-type Action int
+type Action byte
 
 const (
 	NoAction     Action = 0 // No action from creature
@@ -73,7 +73,7 @@ const (
 	FoodAction   Action = 5 // Getting food at new pos
 )
 
-type PosValidity int
+type PosValidity byte
 
 const (
 	InvalidPos    PosValidity = 0
