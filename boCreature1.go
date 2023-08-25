@@ -14,6 +14,7 @@ type Creature1 struct {
 	OriHP           int             `json:"ori_hp"`
 	Speed           int             `json:"speed"`
 	OriSpeed        int             `json:"ori_speed"`
+	ProcScanChance  int             `json:"proc_scan_chance"`
 	TypeDesc        string          `json:"type_desc"`
 	BoardObjectType BoardObjectType `json:"board_object_type"`
 	Moving          bool            `json:"moving"`
@@ -21,12 +22,15 @@ type Creature1 struct {
 
 func (b *Board) newCreature1Object(mutate bool, parent ...*Creature1) (*Creature1, error) {
 	var speed int
+	var procScanChance int
 
 	if len(parent) == 0 {
 		speed = 5
+		procScanChance = 50
 	} else if len(parent) == 1 {
 		for _, creature := range parent {
 			speed = creature.Speed
+			procScanChance = creature.ProcScanChance
 		}
 	} else {
 		return nil, errors.New("Too many parents")
@@ -40,17 +44,20 @@ func (b *Board) newCreature1Object(mutate bool, parent ...*Creature1) (*Creature
 		} else if chance < 67 {
 			speed--
 		}
+
+		chance = rand.Intn(100)
 	}
 
 	c1 := Creature1{
-		Id:       b.CreatureIdCtr[Creature1Type],
-		Symbol:   getObjectSymbolWColor(Creature1Type),
-		OriHP:    250,
-		Hp:       250,
-		Speed:    speed,
-		OriSpeed: speed,
-		TypeDesc: "Creature1",
-		Moving:   true,
+		Id:             b.CreatureIdCtr[Creature1Type],
+		Symbol:         getObjectSymbolWColor(Creature1Type),
+		OriHP:          250,
+		Hp:             250,
+		Speed:          speed,
+		OriSpeed:       speed,
+		ProcScanChance: procScanChance,
+		TypeDesc:       "Creature1",
+		Moving:         true,
 	}
 
 	b.CreatureIdCtr[Creature1Type] += 1

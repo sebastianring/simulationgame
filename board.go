@@ -17,22 +17,22 @@ import (
 // -------------------------------------------------- //
 
 type Board struct {
-	Id                   string                      `json:"id"`
-	Rows                 int                         `json:"rows"`
-	Cols                 int                         `json:"cols"`
-	Gamelog              *Gamelog                    `json:"gamelog"`
-	ObjectBoard          [][]BoardObject             `json:"object_board"`
-	RoundInt             int                         `json:"round_int"`
-	Rounds               []*Round                    `json:"rounds"`
-	CurrentRound         *Round                      `json:"current_round"`
-	CreatureIdCtr        map[BoardObjectType]int     `json:"creature_id_ctr"`
-	Mutationrate         map[BoardObjectType]float32 `json:"mutationrate"`
-	InitialFoods         int                         `json:"initial_foods"`
-	ConflictManager      *ConflictManager            `json:"conflict_manager"`
-	AllFoodObjects       []Pos                       `json:"all_food_objects"`
-	AliveCreatureObjects []CreatureObject            `json:"alive_creature_objects"`
-	AllDeadCreatures     []BoardObject               `json:"all_dead_creatures"`
-	MaxRounds            int                         `json:"max_rounds"`
+	Id            string                  `json:"id"`
+	Rows          int                     `json:"rows"`
+	Cols          int                     `json:"cols"`
+	Gamelog       *Gamelog                `json:"gamelog"`
+	ObjectBoard   [][]BoardObject         `json:"object_board"`
+	RoundInt      int                     `json:"round_int"`
+	Rounds        []*Round                `json:"rounds"`
+	CurrentRound  *Round                  `json:"current_round"`
+	CreatureIdCtr map[BoardObjectType]int `json:"creature_id_ctr"`
+	// Mutationrate         map[BoardObjectType]float32 `json:"mutationrate"`
+	InitialFoods         int              `json:"initial_foods"`
+	ConflictManager      *ConflictManager `json:"conflict_manager"`
+	AllFoodObjects       []Pos            `json:"all_food_objects"`
+	AliveCreatureObjects []CreatureObject `json:"alive_creature_objects"`
+	AllDeadCreatures     []BoardObject    `json:"all_dead_creatures"`
+	MaxRounds            int              `json:"max_rounds"`
 }
 
 type Round struct {
@@ -106,16 +106,16 @@ func InitNewBoard(sc *SimulationConfig) *Board {
 	}
 
 	newBoard := Board{
-		Id:              currentBoardId,
-		Rows:            sc.Rows,
-		Cols:            sc.Cols,
-		Gamelog:         InitGamelog(sc.Rows, 40),
-		ObjectBoard:     *createEmptyObjectsArray(sc.Rows, sc.Cols),
-		RoundInt:        1,
-		Rounds:          []*Round{&newRound},
-		CurrentRound:    &newRound,
-		CreatureIdCtr:   make(map[BoardObjectType]int, 0),
-		Mutationrate:    make(map[BoardObjectType]float32, 0),
+		Id:            currentBoardId,
+		Rows:          sc.Rows,
+		Cols:          sc.Cols,
+		Gamelog:       InitGamelog(sc.Rows, 40),
+		ObjectBoard:   *createEmptyObjectsArray(sc.Rows, sc.Cols),
+		RoundInt:      1,
+		Rounds:        []*Round{&newRound},
+		CurrentRound:  &newRound,
+		CreatureIdCtr: make(map[BoardObjectType]int, 0),
+		// Mutationrate:    make(map[BoardObjectType]float32, 0),
 		InitialFoods:    sc.Foods,
 		ConflictManager: cm,
 		MaxRounds:       50,
@@ -265,9 +265,9 @@ func (b *Board) initBoardObjects() {
 	b.CreatureIdCtr[Creature1Type] = 1
 	b.CreatureIdCtr[Creature2Type] = 1
 
-	b.Mutationrate = make(map[BoardObjectType]float32)
-	b.Mutationrate[Creature1Type] = 0.1
-	b.Mutationrate[Creature2Type] = 0.1
+	// b.Mutationrate = make(map[BoardObjectType]float32)
+	// b.Mutationrate[Creature1Type] = 0.1
+	// b.Mutationrate[Creature2Type] = 0.1
 }
 
 func (b *Board) randomPosWithinMap() Pos {
@@ -342,7 +342,7 @@ func (b *Board) creatureUpdatesPerTick() {
 			newMove := MoveType{}
 
 			for {
-				newPos, newMove = b.newPosAndMove(sourceCreature.getPos())
+				newPos, newMove = b.newPosAndMove(sourceCreature)
 
 				if newMove.action != AvoidAction {
 					break
@@ -596,8 +596,17 @@ func (b *Board) checkIfCreaturesAreInactive() bool {
 	return true
 }
 
-func (b *Board) newPosAndMove(currentPos Pos) (Pos, MoveType) {
+func (b *Board) newPosAndMove(creature CreatureObject) (Pos, MoveType) {
+	// Check if food is nearby
+	ok, pos := b.scanForFood(creature)
+
+	if ok {
+		return pos, MoveType{action: FoodAction}
+	}
+
+	currentPos := creature.getPos()
 	newPos := Pos{-1, -1}
+
 	moveType := MoveType{
 		action: NoAction,
 	}
@@ -748,6 +757,28 @@ func (b *Board) deleteCreatureFromAliveSlice(creature CreatureObject) {
 	b.AliveCreatureObjects = deleteIndexInCreatureSlice(b.AliveCreatureObjects, element)
 }
 
+func (b *Board) scanForFood(creature CreatureObject) (bool, Pos) {
+	maxY := min(creature.getPos().y+1, b.Rows-1)
+	maxX := min(creature.getPos().x+1, b.Cols-1)
+
+	minY := max(creature.getPos().y-1, 0)
+	minX := max(creature.getPos().x-1, 0)
+
+	for minY <= maxY {
+		for minX <= maxX {
+			if _, ok := b.ObjectBoard[minY][minX].(*Food); ok {
+				addMessageToCurrentGamelog(creature.getIdAsString()+" found food, by scanning for it, at: "+strconv.Itoa(minX)+" "+strconv.Itoa(minY), 1)
+				return true, Pos{y: minY, x: minX}
+
+			}
+			minX++
+		}
+		minY++
+	}
+
+	return false, Pos{y: -1, x: -1}
+}
+
 func deleteIndexInPosSlice(posSlice []Pos, index int) []Pos {
 	posSlice[index] = posSlice[len(posSlice)-1]
 	return posSlice[:len(posSlice)-1]
@@ -776,4 +807,12 @@ func containsValidPosType(slice []PosValidity, posType PosValidity) bool {
 	}
 
 	return false
+}
+
+func max(a int, b int) int {
+	if a > b {
+		return a
+	} else {
+		return b
+	}
 }

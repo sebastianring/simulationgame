@@ -75,6 +75,7 @@ func getFileString() string {
 	return fullLogName
 }
 
+// Need to adapt log to be able to receive any type of values and convert them to string automatically
 func addMessageToCurrentGamelog(msg string, prio int) {
 	endSlice := 0
 	msgLen := len(msg)
