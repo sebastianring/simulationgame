@@ -27,10 +27,27 @@ func (b *Board) newCreature2Object(mutate bool, parent ...*Creature2) (*Creature
 	if len(parent) == 0 {
 		speed = 5
 	} else if len(parent) == 1 {
-		for _, creature := range parent {
-			speed = creature.Speed
-			procScanChance = creature.ProcScanChance
+		if mutate {
+			tempspeed, err := b.MutationManager.getVariableValue(speedVariable, parent[0])
+
+			if err != nil {
+				addMessageToCurrentGamelog(err.Error(), 1)
+				return nil, errors.New("Error creating new creature.")
+			}
+
+			speed = tempspeed
+
+			tempProcChance, err := b.MutationManager.getVariableValue(scanVariable, parent[0])
+
+			if err != nil {
+				addMessageToCurrentGamelog(err.Error(), 1)
+				return nil, errors.New("Error creating new creature.")
+			}
+
+			procScanChance = tempProcChance
 		}
+		addMessageToCurrentGamelog("Mutated speed: "+strconv.FormatFloat(speed, 'f', 2, 64), 1)
+
 	} else {
 		return nil, errors.New("Too many parents")
 	}
@@ -46,15 +63,16 @@ func (b *Board) newCreature2Object(mutate bool, parent ...*Creature2) (*Creature
 	}
 
 	c2 := Creature2{
-		Id:             b.CreatureIdCtr[Creature2Type],
-		Symbol:         getObjectSymbolWColor(Creature2Type),
-		OriHP:          250,
-		Hp:             250,
-		Speed:          speed,
-		OriSpeed:       speed,
-		ProcScanChance: procScanChance,
-		TypeDesc:       "Creature2",
-		Moving:         true,
+		Id:              b.CreatureIdCtr[Creature2Type],
+		Symbol:          getObjectSymbolWColor(Creature2Type),
+		OriHP:           500,
+		Hp:              500,
+		Speed:           speed,
+		OriSpeed:        speed,
+		ProcScanChance:  procScanChance,
+		TypeDesc:        "Creature2",
+		BoardObjectType: Creature2Type,
+		Moving:          true,
 	}
 
 	b.CreatureIdCtr[Creature2Type] += 1
@@ -97,9 +115,15 @@ func (c *Creature2) updateTick() TickStatus {
 }
 
 func (c *Creature2) heal(val int) {
+	prio := 2
+
+	if val < 0 {
+		prio = 1
+	}
+
 	addMessageToCurrentGamelog("Creature 2 with id "+
 		strconv.Itoa(c.Id)+" healed for: "+
-		strconv.Itoa(c.OriHP), 2)
+		strconv.Itoa(c.OriHP), prio)
 	c.Hp += val
 	c.Moving = false
 }
@@ -176,4 +200,8 @@ func (c *Creature2) getBoardObjectType() BoardObjectType {
 
 func (c *Creature2) getScanProcChance() float64 {
 	return c.ProcScanChance
+}
+
+func (c *Creature2) scan() {
+	c.Hp -= 5 + int(c.Speed)
 }

@@ -17,22 +17,22 @@ import (
 // -------------------------------------------------- //
 
 type Board struct {
-	Id            string                  `json:"id"`
-	Rows          int                     `json:"rows"`
-	Cols          int                     `json:"cols"`
-	Gamelog       *Gamelog                `json:"gamelog"`
-	ObjectBoard   [][]BoardObject         `json:"object_board"`
-	RoundInt      int                     `json:"round_int"`
-	Rounds        []*Round                `json:"rounds"`
-	CurrentRound  *Round                  `json:"current_round"`
-	CreatureIdCtr map[BoardObjectType]int `json:"creature_id_ctr"`
-	// Mutationrate         map[BoardObjectType]float32 `json:"mutationrate"`
-	InitialFoods         int              `json:"initial_foods"`
-	ConflictManager      *ConflictManager `json:"conflict_manager"`
-	AllFoodObjects       []Pos            `json:"all_food_objects"`
-	AliveCreatureObjects []CreatureObject `json:"alive_creature_objects"`
-	AllDeadCreatures     []BoardObject    `json:"all_dead_creatures"`
-	MaxRounds            int              `json:"max_rounds"`
+	Id                   string                  `json:"id"`
+	Rows                 int                     `json:"rows"`
+	Cols                 int                     `json:"cols"`
+	Gamelog              *Gamelog                `json:"gamelog"`
+	ObjectBoard          [][]BoardObject         `json:"object_board"`
+	RoundInt             int                     `json:"round_int"`
+	Rounds               []*Round                `json:"rounds"`
+	CurrentRound         *Round                  `json:"current_round"`
+	CreatureIdCtr        map[BoardObjectType]int `json:"creature_id_ctr"`
+	MutationManager      *MutationManager        `json:"mutation_manager"`
+	InitialFoods         int                     `json:"initial_foods"`
+	ConflictManager      *ConflictManager        `json:"conflict_manager"`
+	AllFoodObjects       []Pos                   `json:"all_food_objects"`
+	AliveCreatureObjects []CreatureObject        `json:"alive_creature_objects"`
+	AllDeadCreatures     []BoardObject           `json:"all_dead_creatures"`
+	MaxRounds            int                     `json:"max_rounds"`
 }
 
 type Round struct {
@@ -46,10 +46,12 @@ type Round struct {
 }
 
 type creatureSummary struct {
-	CreatureType   string  `json:"creature_type"`
-	TotalCreatures int     `json:"total_creatures"`
-	TotalSpeed     float64 `json:"total_speed"`
-	AverageSpeed   float64 `json:"average_speed"`
+	CreatureType      string  `json:"creature_type"`
+	TotalCreatures    int     `json:"total_creatures"`
+	TotalSpeed        float64 `json:"total_speed"`
+	AverageSpeed      float64 `json:"average_speed"`
+	TotalScanChance   float64 `json:"total_scan_chance"`
+	AverageScanChance float64 `json:"average_scan_chance"`
 }
 
 type Pos struct {
@@ -105,17 +107,23 @@ func InitNewBoard(sc *SimulationConfig) *Board {
 		os.Exit(1)
 	}
 
+	mm, err := newMutationManager()
+
+	if err != nil {
+		fmt.Println("Error creating mutation manager, please debug.")
+	}
+
 	newBoard := Board{
-		Id:            currentBoardId,
-		Rows:          sc.Rows,
-		Cols:          sc.Cols,
-		Gamelog:       InitGamelog(sc.Rows, 40),
-		ObjectBoard:   *createEmptyObjectsArray(sc.Rows, sc.Cols),
-		RoundInt:      1,
-		Rounds:        []*Round{&newRound},
-		CurrentRound:  &newRound,
-		CreatureIdCtr: make(map[BoardObjectType]int, 0),
-		// Mutationrate:    make(map[BoardObjectType]float32, 0),
+		Id:              currentBoardId,
+		Rows:            sc.Rows,
+		Cols:            sc.Cols,
+		Gamelog:         InitGamelog(sc.Rows, 40),
+		ObjectBoard:     *createEmptyObjectsArray(sc.Rows, sc.Cols),
+		RoundInt:        1,
+		Rounds:          []*Round{&newRound},
+		CurrentRound:    &newRound,
+		CreatureIdCtr:   make(map[BoardObjectType]int, 0),
+		MutationManager: mm,
 		InitialFoods:    sc.Foods,
 		ConflictManager: cm,
 		MaxRounds:       50,
@@ -213,8 +221,6 @@ func (b *Board) spawnCreature2OnBoard(qty uint) {
 }
 
 func (b *Board) spawnFoodOnBoard(qty int) {
-	// qty := b.InitialFoods
-
 	spawns := make([]Pos, 0)
 
 	for len(spawns) < qty {
@@ -264,10 +270,6 @@ func (b *Board) randomPosAtEdgeOfMap() Pos {
 func (b *Board) initBoardObjects() {
 	b.CreatureIdCtr[Creature1Type] = 1
 	b.CreatureIdCtr[Creature2Type] = 1
-
-	// b.Mutationrate = make(map[BoardObjectType]float32)
-	// b.Mutationrate[Creature1Type] = 0.1
-	// b.Mutationrate[Creature2Type] = 0.1
 }
 
 func (b *Board) randomPosWithinMap() Pos {
@@ -357,7 +359,7 @@ func (b *Board) creatureUpdatesPerTick() {
 				newMove.conflictinfo.commitConflict(b)
 
 			case FoodAction:
-				addMessageToCurrentGamelog("Food eaten by creature id: "+strconv.Itoa(sourceCreature.getId()), 1)
+				addMessageToCurrentGamelog("Food eaten by creature id: "+strconv.Itoa(sourceCreature.getId()), 2)
 				b.deleteFood(newPos)
 				b.moveCreature(sourceCreature, newPos, true)
 				sourceCreature.heal(sourceCreature.getOriHP())
@@ -368,6 +370,7 @@ func (b *Board) creatureUpdatesPerTick() {
 			default:
 				addMessageToCurrentGamelog("Issue with MoveType newMove, please have a look.", 1)
 			}
+
 		} else if status == StatusDead {
 			b.killCreature(sourceCreature, true)
 		}
@@ -477,12 +480,14 @@ func getSummary(creatureList []CreatureObject) map[BoardObjectType]*creatureSumm
 		if obj, ok := returnCreatureSummary[creatureType]; ok {
 			obj.TotalCreatures += 1
 			obj.TotalSpeed += creature.getSpeed()
+			obj.TotalScanChance += creature.getScanProcChance()
 
 		} else {
 			newCreatureSummary := creatureSummary{
-				CreatureType:   creature.getType(),
-				TotalCreatures: 1,
-				TotalSpeed:     creature.getSpeed(),
+				CreatureType:    creature.getType(),
+				TotalCreatures:  1,
+				TotalSpeed:      creature.getSpeed(),
+				TotalScanChance: creature.getScanProcChance(),
 			}
 
 			returnCreatureSummary[creatureType] = &newCreatureSummary
@@ -497,9 +502,11 @@ func getSummariesAsString(summaries map[BoardObjectType]*creatureSummary, action
 
 	for _, cs := range summaries {
 		cs.AverageSpeed = float64(cs.TotalSpeed) / float64(cs.TotalCreatures)
+		cs.AverageScanChance = cs.TotalScanChance / float64(cs.TotalCreatures)
 		summary := "In last round, " + strconv.Itoa(cs.TotalCreatures) +
 			" x " + cs.CreatureType + " was " + action + " with the average speed of: " +
-			strconv.FormatFloat(cs.AverageSpeed, 'f', 2, 64)
+			strconv.FormatFloat(cs.AverageSpeed, 'f', 2, 64) + " and average scan chance: " +
+			strconv.FormatFloat(cs.AverageScanChance, 'f', 2, 64)
 
 		returnString = append(returnString, summary)
 	}
@@ -598,18 +605,24 @@ func (b *Board) checkIfCreaturesAreInactive() bool {
 
 func (b *Board) newPosAndMove(creature CreatureObject) (Pos, MoveType) {
 	// Check if food is nearby
-	ok, pos := b.scanForFood(creature)
+	moveType := MoveType{
+		action: NoAction,
+	}
 
-	if ok {
-		return pos, MoveType{action: FoodAction}
+	chance := rand.Intn(100)
+
+	if chance < int(creature.getScanProcChance()) {
+		creature.scan()
+		foodFound, newPos := b.scanForFood(creature)
+		if foodFound {
+			moveType.action = FoodAction
+			// addMessageToCurrentGamelog("FOOD FOUND AT: "+strconv.Itoa(newPos.x)+" "+strconv.Itoa(newPos.y)+"with moveaction: "+strconv.Itoa(int(moveType.action)), 1)
+			return newPos, moveType
+		}
 	}
 
 	currentPos := creature.getPos()
 	newPos := Pos{-1, -1}
-
-	moveType := MoveType{
-		action: NoAction,
-	}
 
 	counter := 0
 
@@ -769,7 +782,6 @@ func (b *Board) scanForFood(creature CreatureObject) (bool, Pos) {
 			if _, ok := b.ObjectBoard[minY][minX].(*Food); ok {
 				addMessageToCurrentGamelog(creature.getIdAsString()+" found food, by scanning for it, at: "+strconv.Itoa(minX)+" "+strconv.Itoa(minY), 1)
 				return true, Pos{y: minY, x: minX}
-
 			}
 			minX++
 		}

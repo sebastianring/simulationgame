@@ -2,7 +2,6 @@ package simulationgame
 
 import (
 	"errors"
-	"math/rand"
 	"strconv"
 )
 
@@ -28,36 +27,77 @@ func (b *Board) newCreature1Object(mutate bool, parent ...*Creature1) (*Creature
 		speed = 5
 		procScanChance = 50
 	} else if len(parent) == 1 {
-		for _, creature := range parent {
-			speed = creature.Speed
-			procScanChance = creature.ProcScanChance
+		if mutate {
+			tempspeed, err := b.MutationManager.getVariableValue(speedVariable, parent[0])
+
+			if err != nil {
+				addMessageToCurrentGamelog(err.Error(), 1)
+				return nil, errors.New("Error creating new creature.")
+			}
+
+			speed = tempspeed
+
+			tempProcChance, err := b.MutationManager.getVariableValue(scanVariable, parent[0])
+
+			if err != nil {
+				addMessageToCurrentGamelog(err.Error(), 1)
+				return nil, errors.New("Error creating new creature.")
+			}
+
+			procScanChance = tempProcChance
+
+			// //Mutate speed value
+			// trigger, err := b.MutationManager.rollMutationDice(speedVariable, parent[0])
+			//
+			// if err != nil {
+			// 	addMessageToCurrentGamelog("Error when mutating creature speed value: "+err.Error(), 1)
+			// }
+			//
+			// if trigger {
+			// 	speed, err = b.MutationManager.getMutatedValue(speedVariable, parent[0])
+			//
+			// 	if err != nil {
+			// 		addMessageToCurrentGamelog("Error when getting speed value "+err.Error(), 1)
+			// 	}
+			// } else {
+			// 	speed = parent[0].getSpeed()
+			// }
+			//
+			// //Mutate scan proc chance value
+			// trigger, err = b.MutationManager.rollMutationDice(scanVariable, parent[0])
+			//
+			// if err != nil {
+			// 	addMessageToCurrentGamelog("Error when mutating creature scan value"+err.Error(), 1)
+			// }
+			//
+			// if trigger {
+			// 	procScanChance, err = b.MutationManager.getMutatedValue(scanVariable, parent[0])
+			//
+			// 	if err != nil {
+			// 		addMessageToCurrentGamelog("Error when getting scan value"+err.Error(), 1)
+			// 	}
+			// } else {
+			// 	speed = parent[0].getSpeed()
+			// }
 		}
+
+		// addMessageToCurrentGamelog("Mutated speed: "+strconv.FormatFloat(speed, 'f', 2, 64), 1)
+
 	} else {
 		return nil, errors.New("Too many parents")
 	}
 
-	if mutate {
-		chance := rand.Intn(100)
-
-		if chance < 33 {
-			speed += 1
-		} else if chance < 67 {
-			speed -= 1
-		}
-
-		chance = rand.Intn(100)
-	}
-
 	c1 := Creature1{
-		Id:             b.CreatureIdCtr[Creature1Type],
-		Symbol:         getObjectSymbolWColor(Creature1Type),
-		OriHP:          250,
-		Hp:             250,
-		Speed:          speed,
-		OriSpeed:       speed,
-		ProcScanChance: procScanChance,
-		TypeDesc:       "Creature1",
-		Moving:         true,
+		Id:              b.CreatureIdCtr[Creature1Type],
+		Symbol:          getObjectSymbolWColor(Creature1Type),
+		OriHP:           500,
+		Hp:              500,
+		Speed:           speed,
+		OriSpeed:        speed,
+		ProcScanChance:  procScanChance,
+		TypeDesc:        "Creature1",
+		BoardObjectType: Creature1Type,
+		Moving:          true,
 	}
 
 	b.CreatureIdCtr[Creature1Type] += 1
@@ -89,7 +129,7 @@ func (c *Creature1) updateTick() TickStatus {
 		c.Speed -= 1
 		if c.Speed <= 0 {
 			c.Speed = c.OriSpeed
-			c.Hp -= 5 + (10 / int(c.Speed))
+			c.Hp -= 5 + int(c.Speed)
 			return StatusMove
 		}
 	} else if c.Hp <= 0 {
@@ -185,4 +225,8 @@ func (c *Creature1) getBoardObjectType() BoardObjectType {
 
 func (c *Creature1) getScanProcChance() float64 {
 	return c.ProcScanChance
+}
+
+func (c *Creature1) scan() {
+	c.Hp -= 5 + int(c.Speed)
 }

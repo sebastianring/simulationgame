@@ -1,13 +1,13 @@
 package simulationgame
 
-import "errors"
-
-// "fmt"
+import (
+	"errors"
+	"math/rand"
+	"strconv"
+)
 
 type MutationManager struct {
 	variables map[VariableToMutate]map[BoardObjectType]*MutationCalc
-	// speedMutation map[BoardObjectType]*MutationCalc
-	// scanMutation  map[BoardObjectType]*MutationCalc
 }
 
 type MutationCalc struct {
@@ -30,7 +30,7 @@ const (
 	multiply
 )
 
-func newMutationManager() *MutationManager {
+func newMutationManager() (*MutationManager, error) {
 	speedMutationCreature1 := MutationCalc{
 		chance:           25,
 		mutationRateType: flat,
@@ -46,13 +46,13 @@ func newMutationManager() *MutationManager {
 	scanMutationCreature1 := MutationCalc{
 		chance:           50,
 		mutationRateType: multiply,
-		rate:             1.25,
+		rate:             0.10,
 	}
 
 	scanMutationCreature2 := MutationCalc{
 		chance:           50,
 		mutationRateType: multiply,
-		rate:             1.25,
+		rate:             0.10,
 	}
 
 	mm := MutationManager{
@@ -68,11 +68,52 @@ func newMutationManager() *MutationManager {
 		},
 	}
 
-	return &mm
+	return &mm, nil
+}
+
+func (mm *MutationManager) getVariableValue(variable VariableToMutate, parent CreatureObject) (float64, error) {
+	trigger, err := mm.rollMutationDice(variable, parent)
+	var returnValue float64
+
+	if err != nil {
+		// addMessageToCurrentGamelog("Error when mutating creature speed value: "+err.Error(), 1)
+		return returnValue, errors.New("Error when mutating creature " + strconv.Itoa(int(variable)) + " value: " + err.Error())
+	}
+
+	if trigger {
+		returnValue, err = mm.getMutatedValue(speedVariable, parent)
+
+		if err != nil {
+			// addMessageToCurrentGamelog("Error when getting speed value "+err.Error(), 1)
+			return returnValue, errors.New("Error when getting " + strconv.Itoa(int(variable)) + " value: " + err.Error())
+		}
+	} else {
+		returnValue = parent.getSpeed()
+	}
+
+	return returnValue, nil
+}
+
+func (mm *MutationManager) rollMutationDice(variable VariableToMutate, parent CreatureObject) (bool, error) {
+	values, ok := mm.variables[variable][parent.getBoardObjectType()]
+
+	if !ok {
+		return false, errors.New("Could not find the correct config for creature or variable in the mutation manager. Parent board type: " + strconv.Itoa(int(parent.getBoardObjectType())))
+	}
+
+	chance := rand.Intn(100)
+
+	if chance < values.chance {
+		return true, nil
+	}
+
+	return false, nil
 }
 
 func (mm *MutationManager) getMutatedValue(variable VariableToMutate, parent CreatureObject) (float64, error) {
 	values, ok := mm.variables[variable][parent.getBoardObjectType()]
+
+	// addMessageToCurrentGamelog("Parents speed: "+strconv.FormatFloat(parent.getSpeed(), 'f', 2, 64), 1)
 
 	if !ok {
 		return 0, errors.New("Could not find the correct config for creature or variable in the mutation manager.")
@@ -86,11 +127,19 @@ func (mm *MutationManager) getMutatedValue(variable VariableToMutate, parent Cre
 		originalValue = parent.getScanProcChance()
 	}
 
+	negativeOrPositive := rand.Intn(2)
+	var adjustor float64
+	if negativeOrPositive == 0 {
+		adjustor = -1.00
+	} else {
+		adjustor = 1.00
+	}
+
 	if values.mutationRateType == multiply {
-		returnValue := originalValue * values.rate
+		returnValue := originalValue + ((originalValue * values.rate) * adjustor)
 		return returnValue, nil
 	} else if values.mutationRateType == flat {
-		returnValue := originalValue + values.rate
+		returnValue := originalValue + (values.rate * adjustor)
 		return returnValue, nil
 	}
 
