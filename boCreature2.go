@@ -2,7 +2,6 @@ package simulationgame
 
 import (
 	"errors"
-	"math/rand"
 	"strconv"
 )
 
@@ -46,20 +45,9 @@ func (b *Board) newCreature2Object(mutate bool, parent ...*Creature2) (*Creature
 
 			procScanChance = tempProcChance
 		}
-		addMessageToCurrentGamelog("Mutated speed: "+strconv.FormatFloat(speed, 'f', 2, 64), 1)
 
 	} else {
 		return nil, errors.New("Too many parents")
-	}
-
-	if mutate {
-		chance := rand.Intn(100)
-
-		if chance < 33 {
-			speed++
-		} else if chance < 67 {
-			speed--
-		}
 	}
 
 	c2 := Creature2{

@@ -46,42 +46,7 @@ func (b *Board) newCreature1Object(mutate bool, parent ...*Creature1) (*Creature
 
 			procScanChance = tempProcChance
 
-			// //Mutate speed value
-			// trigger, err := b.MutationManager.rollMutationDice(speedVariable, parent[0])
-			//
-			// if err != nil {
-			// 	addMessageToCurrentGamelog("Error when mutating creature speed value: "+err.Error(), 1)
-			// }
-			//
-			// if trigger {
-			// 	speed, err = b.MutationManager.getMutatedValue(speedVariable, parent[0])
-			//
-			// 	if err != nil {
-			// 		addMessageToCurrentGamelog("Error when getting speed value "+err.Error(), 1)
-			// 	}
-			// } else {
-			// 	speed = parent[0].getSpeed()
-			// }
-			//
-			// //Mutate scan proc chance value
-			// trigger, err = b.MutationManager.rollMutationDice(scanVariable, parent[0])
-			//
-			// if err != nil {
-			// 	addMessageToCurrentGamelog("Error when mutating creature scan value"+err.Error(), 1)
-			// }
-			//
-			// if trigger {
-			// 	procScanChance, err = b.MutationManager.getMutatedValue(scanVariable, parent[0])
-			//
-			// 	if err != nil {
-			// 		addMessageToCurrentGamelog("Error when getting scan value"+err.Error(), 1)
-			// 	}
-			// } else {
-			// 	speed = parent[0].getSpeed()
-			// }
 		}
-
-		// addMessageToCurrentGamelog("Mutated speed: "+strconv.FormatFloat(speed, 'f', 2, 64), 1)
 
 	} else {
 		return nil, errors.New("Too many parents")
@@ -107,16 +72,6 @@ func (b *Board) newCreature1Object(mutate bool, parent ...*Creature1) (*Creature
 
 	return &c1, nil
 }
-
-//
-// func getMutationChanges(creaturename string, oriqty float32) {
-// 	mutationinterval := int(mutationrate[creaturename] * oriqty)
-//
-// 	if mutationinterval < 10 {
-//
-// 	}
-//
-// }
 
 // -------------------------------------------------- //
 // -------------------------------------------------- //
