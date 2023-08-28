@@ -250,21 +250,39 @@ func (b *Board) randomPosAtEdgeOfMap() Pos {
 	var x int
 	var y int
 
-	if edge == 0 {
-		y = 0
-		x = rand.Intn(b.Cols - 1)
-	} else if edge == 1 {
-		x = b.Cols - 1
-		y = rand.Intn(b.Rows - 1)
-	} else if edge == 2 {
-		x = 0
-		y = rand.Intn(b.Rows - 1)
-	} else {
-		x = rand.Intn(b.Cols - 1)
-		y = b.Rows - 1
+	for {
+		if edge == 0 {
+			y = 0
+			x = rand.Intn(b.Cols - 1)
+		} else if edge == 1 {
+			x = b.Cols - 1
+			y = rand.Intn(b.Rows - 1)
+		} else if edge == 2 {
+			x = 0
+			y = rand.Intn(b.Rows - 1)
+		} else {
+			x = rand.Intn(b.Cols - 1)
+			y = b.Rows - 1
+		}
+
+		if b.cornerAvoided(Pos{x, y}) {
+			break
+		}
 	}
 
 	return Pos{x, y}
+}
+
+func (b *Board) cornerAvoided(pos Pos) bool {
+	if pos.x == 0 && pos.y == 0 ||
+		pos.x == b.Cols-1 && pos.y == b.Rows-1 ||
+		pos.x == 0 && pos.y == b.Rows-1 ||
+		pos.x == b.Cols-1 && pos.y == 0 {
+
+		return false
+	}
+
+	return true
 }
 
 func (b *Board) initBoardObjects() {
@@ -611,7 +629,7 @@ func (b *Board) newPosAndMove(creature CreatureObject) (Pos, MoveType) {
 
 	chance := rand.Intn(100)
 
-	if chance < int(creature.getScanProcChance()) {
+	if creature.getSpeed()+6 < float64(creature.getHP()) && chance < int(creature.getScanProcChance()) {
 		creature.scan()
 		foodFound, newPos := b.scanForFood(creature)
 		if foodFound {
