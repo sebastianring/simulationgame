@@ -81,14 +81,19 @@ func (mm *MutationManager) getVariableValue(variable VariableToMutate, parent Cr
 	}
 
 	if trigger {
-		returnValue, err = mm.getMutatedValue(speedVariable, parent)
+		returnValue, err = mm.getMutatedValue(variable, parent)
 
 		if err != nil {
 			// addMessageToCurrentGamelog("Error when getting speed value "+err.Error(), 1)
 			return returnValue, errors.New("Error when getting " + strconv.Itoa(int(variable)) + " value: " + err.Error())
 		}
 	} else {
-		returnValue = parent.getSpeed()
+		switch variable {
+		case speedVariable:
+			returnValue = parent.getSpeed()
+		case scanVariable:
+			returnValue = parent.getScanProcChance()
+		}
 	}
 
 	return returnValue, nil

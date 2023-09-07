@@ -19,8 +19,8 @@ type Drawer struct {
 
 func InitDrawing(b *Board) *Drawer {
 	newDrawer := Drawer{
-		totalHeight: b.Rows + 2 + 2, // rows + (edges + status bar) + (status bar line)
-		totalWidth:  b.Cols + b.Gamelog.cols + 2 + 1 + 2,
+		totalHeight: b.Rows + 2 + 2,                      // rows + (edges + status bar) + (status bar line)
+		totalWidth:  b.Cols + b.Gamelog.cols + 2 + 1 + 2, // board cols + gamelog cols + board edges + line between board and gamelog + gamelog edges
 		currentOs:   runtime.GOOS,
 
 		edgeSymbol:  byte(35), // #### Edge of GUI

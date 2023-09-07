@@ -22,7 +22,6 @@ type Board struct {
 	Cols                 int                     `json:"cols"`
 	Gamelog              *Gamelog                `json:"gamelog"`
 	ObjectBoard          [][]BoardObject         `json:"object_board"`
-	RoundInt             int                     `json:"round_int"`
 	Rounds               []*Round                `json:"rounds"`
 	CurrentRound         *Round                  `json:"current_round"`
 	CreatureIdCtr        map[BoardObjectType]int `json:"creature_id_ctr"`
@@ -119,7 +118,6 @@ func InitNewBoard(sc *SimulationConfig) *Board {
 		Cols:            sc.Cols,
 		Gamelog:         InitGamelog(sc.Rows, 40),
 		ObjectBoard:     *createEmptyObjectsArray(sc.Rows, sc.Cols),
-		RoundInt:        1,
 		Rounds:          []*Round{&newRound},
 		CurrentRound:    &newRound,
 		CreatureIdCtr:   make(map[BoardObjectType]int, 0),
