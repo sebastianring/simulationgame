@@ -35,13 +35,15 @@ type Board struct {
 }
 
 type Round struct {
-	Id                  int                                  `json:"id"`
-	Time                int                                  `json:"time"`
-	CreaturesSpawned    []CreatureObject                     `json:"creatures_spawned"`
-	CreaturesKilled     []CreatureObject                     `json:"creatures_killed"`
-	BoardLink           string                               `json:"board_link"`
-	CreaturesSpawnedSum map[BoardObjectType]*creatureSummary `json:"creatures_spawned_sum"`
-	CreaturesKilledSum  map[BoardObjectType]*creatureSummary `json:"creatures_killed_sum"`
+	Id                     int                                  `json:"id"`
+	Time                   int                                  `json:"time"`
+	CreaturesSpawned       []CreatureObject                     `json:"creatures_spawned"`
+	CreaturesKilled        []CreatureObject                     `json:"creatures_killed"`
+	CreaturesAliveAtEnd    []CreatureObject                     `json:"creatures_alive_at_end"`
+	BoardLink              string                               `json:"board_link"`
+	CreaturesSpawnedSum    map[BoardObjectType]*creatureSummary `json:"creatures_spawned_sum"`
+	CreaturesKilledSum     map[BoardObjectType]*creatureSummary `json:"creatures_killed_sum"`
+	CreaturesAliveAtEndSum map[BoardObjectType]*creatureSummary `json:"creatures_alive_at_end_sum"`
 }
 
 type creatureSummary struct {
@@ -433,6 +435,7 @@ func (b *Board) killCreature(creature CreatureObject, placeEmptyObject bool) {
 func (b *Board) newRound() {
 	addMessageToCurrentGamelog("All creatures are dead or have eaten, starting new round", 1)
 	b.spawnOffsprings()
+	b.CurrentRound.CreaturesAliveAtEnd = b.AliveCreatureObjects
 	b.writeSummaryOfRound()
 	b.Gamelog.writeGamelogToFile()
 
@@ -485,6 +488,14 @@ func (b *Board) writeSummaryOfRound() {
 	for _, msg := range summaryStrings {
 		addMessageToCurrentGamelog(msg, 1)
 	}
+
+	b.CurrentRound.CreaturesAliveAtEndSum = getSummary(b.CurrentRound.CreaturesAliveAtEnd)
+	summaryStrings = getSummariesAsString(b.CurrentRound.CreaturesAliveAtEndSum, "alive")
+
+	for _, msg := range summaryStrings {
+		addMessageToCurrentGamelog(msg, 1)
+	}
+
 }
 
 func getSummary(creatureList []CreatureObject) map[BoardObjectType]*creatureSummary {
