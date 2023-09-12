@@ -41,12 +41,12 @@ type Round struct {
 	CreaturesKilled        []CreatureObject                     `json:"creatures_killed"`
 	CreaturesAliveAtEnd    []CreatureObject                     `json:"creatures_alive_at_end"`
 	BoardLink              string                               `json:"board_link"`
-	CreaturesSpawnedSum    map[BoardObjectType]*creatureSummary `json:"creatures_spawned_sum"`
-	CreaturesKilledSum     map[BoardObjectType]*creatureSummary `json:"creatures_killed_sum"`
-	CreaturesAliveAtEndSum map[BoardObjectType]*creatureSummary `json:"creatures_alive_at_end_sum"`
+	CreaturesSpawnedSum    map[BoardObjectType]*CreatureSummary `json:"creatures_spawned_sum"`
+	CreaturesKilledSum     map[BoardObjectType]*CreatureSummary `json:"creatures_killed_sum"`
+	CreaturesAliveAtEndSum map[BoardObjectType]*CreatureSummary `json:"creatures_alive_at_end_sum"`
 }
 
-type creatureSummary struct {
+type CreatureSummary struct {
 	CreatureType      string  `json:"creature_type"`
 	TotalCreatures    int     `json:"total_creatures"`
 	TotalSpeed        float64 `json:"total_speed"`
@@ -498,8 +498,8 @@ func (b *Board) writeSummaryOfRound() {
 
 }
 
-func getSummary(creatureList []CreatureObject) map[BoardObjectType]*creatureSummary {
-	returnCreatureSummary := make(map[BoardObjectType]*creatureSummary)
+func getSummary(creatureList []CreatureObject) map[BoardObjectType]*CreatureSummary {
+	returnCreatureSummary := make(map[BoardObjectType]*CreatureSummary)
 
 	for _, creature := range creatureList {
 		creatureType := creature.getBoardObjectType()
@@ -510,7 +510,7 @@ func getSummary(creatureList []CreatureObject) map[BoardObjectType]*creatureSumm
 			obj.TotalScanChance += creature.getScanProcChance()
 
 		} else {
-			newCreatureSummary := creatureSummary{
+			newCreatureSummary := CreatureSummary{
 				CreatureType:    creature.getType(),
 				TotalCreatures:  1,
 				TotalSpeed:      creature.getSpeed(),
@@ -524,7 +524,7 @@ func getSummary(creatureList []CreatureObject) map[BoardObjectType]*creatureSumm
 	return returnCreatureSummary
 }
 
-func getSummariesAsString(summaries map[BoardObjectType]*creatureSummary, action string) []string {
+func getSummariesAsString(summaries map[BoardObjectType]*CreatureSummary, action string) []string {
 	returnString := []string{}
 
 	for _, cs := range summaries {
@@ -559,6 +559,7 @@ func (b *Board) findPosForAllCreatures() {
 func (b *Board) spawnOffsprings() {
 	addMessageToCurrentGamelog("Spawning offsprings from last round", 1)
 
+	// Refactor using enums
 	creatureQty := map[string]uint{
 		"creature1": 0,
 		"creature2": 0,
