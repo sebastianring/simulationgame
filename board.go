@@ -18,6 +18,7 @@ import (
 
 type Board struct {
 	Id                   string                  `json:"id"`
+	GameOn               bool                    `json:"game_on"`
 	Rows                 int                     `json:"rows"`
 	Cols                 int                     `json:"cols"`
 	Gamelog              *Gamelog                `json:"gamelog"`
@@ -114,6 +115,7 @@ func InitNewBoard(sc *SimulationConfig) *Board {
 
 	newBoard := Board{
 		Id:              currentBoardId,
+		GameOn:          true,
 		Rows:            sc.Rows,
 		Cols:            sc.Cols,
 		Gamelog:         InitGamelog(sc.Rows, 40),
@@ -394,7 +396,7 @@ func (b *Board) creatureUpdatesPerTick() {
 
 	if b.checkIfCreaturesAreInactive() {
 		if b.checkIfCreaturesAreDead() {
-			gameOn = false
+			b.GameOn = false
 			addMessageToCurrentGamelog("All creatures are dead, end the game", 1)
 		}
 
@@ -437,7 +439,7 @@ func (b *Board) newRound() {
 	b.Gamelog.writeGamelogToFile()
 
 	if len(b.Rounds) >= b.MaxRounds {
-		gameOn = false
+		b.GameOn = false
 
 		addMessageToCurrentGamelog("Max number of rounds reached, ending the game.", 1)
 		fmt.Println("Max number of rounds reached, ending the game.")
