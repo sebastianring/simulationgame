@@ -72,6 +72,17 @@ func RunSimulation(sc *SimulationConfig) (*Board, error) {
 	return board, nil
 }
 
+func GetStandardSimulationConfig() *SimulationConfig {
+	return &SimulationConfig{
+		Rows:      40,
+		Cols:      100,
+		Draw:      true,
+		Foods:     100,
+		Creature1: 15,
+		Creature2: 15,
+	}
+}
+
 func printResults(b *Board) {
 	fmt.Println("A simulation was completed and these are the results:")
 	fmt.Println("Total rounds: ", len(b.Rounds))

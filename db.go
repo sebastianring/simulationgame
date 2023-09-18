@@ -34,6 +34,8 @@ func openDbConnection() (*sql.DB, error) {
 		addMessageToCurrentGamelog("Database connection secured!", 1)
 	}
 
+	defer db.Close()
+
 	err = db.Ping()
 
 	if err != nil {

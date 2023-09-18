@@ -89,6 +89,7 @@ func (cm *ConflictManager) share(SourceCreature CreatureObject, TargetCreature C
 }
 
 func (cm *ConflictManager) attack1(SourceCreature CreatureObject, TargetCreature CreatureObject) {
+	// REBALANCE, it has to consume some energy whenever it attacks as well.
 	SourceCreature.heal(SourceCreature.getOriHP())
 	TargetCreature.kill()
 
