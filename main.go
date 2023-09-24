@@ -7,12 +7,6 @@ import (
 	"time"
 )
 
-// var gameOn bool
-//
-// func main() {
-// 	fmt.Println("..")
-// }
-
 type SimulationConfig struct {
 	Rows      int
 	Cols      int
@@ -43,13 +37,12 @@ func RunSimulation(sc *SimulationConfig) (*Board, error) {
 		return nil, errors.New("Too many creatures, need to less than half available spawn locations.")
 	}
 
-	// gameOn = true
-
 	board := InitNewBoard(sc)
 	rand.Seed(time.Now().UnixNano())
 
 	if sc.Draw {
-		drawer := InitDrawing(board)
+		drawer := NewDrawer(board)
+		drawer.DrawFrame(board)
 		ticker := time.NewTicker(50 * time.Millisecond)
 		defer ticker.Stop()
 

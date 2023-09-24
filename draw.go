@@ -17,7 +17,7 @@ type Drawer struct {
 	spaceSymbol byte
 }
 
-func InitDrawing(b *Board) *Drawer {
+func NewDrawer(b *Board) *Drawer {
 	newDrawer := Drawer{
 		totalHeight: b.Rows + 2 + 2,                      // rows + (edges + status bar) + (status bar line)
 		totalWidth:  b.Cols + b.Gamelog.cols + 2 + 1 + 2, // board cols + gamelog cols + board edges + line between board and gamelog + gamelog edges
@@ -68,6 +68,8 @@ func (d *Drawer) printDataLine(boardData []BoardObject, gl *Gamelog, messageRow 
 	line = append(line, d.spaceSymbol) // adding a " " symbol at the start
 
 	gamelogDataLine := gl.getMessageByRow(messageRow)
+	// addMessageToCurrentGamelog(string(gamelogDataLine), 1)
+
 	for _, val := range gamelogDataLine {
 		line = append(line, val)
 	}
