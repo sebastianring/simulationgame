@@ -13,7 +13,7 @@ var emptyMessage []byte
 type Gamelog struct {
 	cols              int
 	rows              int
-	messages          []message
+	messages          []*Message
 	idCtr             int
 	displayedMessages []string
 	createdAt         time.Time
@@ -21,18 +21,18 @@ type Gamelog struct {
 	prioThreshold     int
 }
 
-type message struct {
+type Message struct {
 	Id        int       `json:"id"`
 	Prio      int       `json:"priority"`
 	CreatedAt time.Time `json:"created_at"`
 	Texts     string    `json:"text"`
 }
 
-func InitGamelog(rows int, cols int) *Gamelog {
+func NewGamelog(rows int, cols int) *Gamelog {
 	gl := Gamelog{
 		cols:          cols,
 		rows:          rows,
-		messages:      []message{},
+		messages:      []*Message{},
 		idCtr:         1,
 		createdAt:     time.Now(),
 		fileString:    getFileString(),
@@ -100,7 +100,7 @@ func addMessageToCurrentGamelog(msg string, prio int) {
 	}
 
 	newMessage := newMessage(currentGamelog.idCtr, prio, msg)
-	currentGamelog.messages = append(currentGamelog.messages, *newMessage)
+	currentGamelog.messages = append(currentGamelog.messages, newMessage)
 
 	if prio <= currentGamelog.prioThreshold {
 		for _, val := range texts {
@@ -121,8 +121,8 @@ func addMessageToCurrentGamelog(msg string, prio int) {
 	currentGamelog.idCtr++
 }
 
-func newMessage(id int, prio int, msg string) *message {
-	m := message{
+func newMessage(id int, prio int, msg string) *Message {
+	m := Message{
 		Id:        id,
 		Prio:      prio,
 		CreatedAt: time.Now(),

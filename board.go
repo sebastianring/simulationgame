@@ -86,7 +86,7 @@ const (
 	EmptyPos      PosValidity = 3
 )
 
-func InitNewBoard(sc *SimulationConfig) *Board {
+func NewBoard(sc *SimulationConfig) *Board {
 	if sc.Rows < 5 || sc.Cols < 5 {
 		fmt.Printf("Too few rows or cols: %v, rows: %v \n", sc.Rows, sc.Cols)
 		os.Exit(1)
@@ -120,7 +120,7 @@ func InitNewBoard(sc *SimulationConfig) *Board {
 		GameOn:          true,
 		Rows:            sc.Rows,
 		Cols:            sc.Cols,
-		Gamelog:         InitGamelog(sc.Rows, 40),
+		Gamelog:         NewGamelog(sc.Rows, 40),
 		ObjectBoard:     *createEmptyObjectsArray(sc.Rows, sc.Cols),
 		Rounds:          []*Round{&newRound},
 		CurrentRound:    &newRound,
@@ -128,7 +128,7 @@ func InitNewBoard(sc *SimulationConfig) *Board {
 		MutationManager: mm,
 		InitialFoods:    sc.Foods,
 		ConflictManager: cm,
-		MaxRounds:       50,
+		MaxRounds:       2,
 	}
 
 	newBoard.initBoardObjects()
@@ -139,15 +139,6 @@ func InitNewBoard(sc *SimulationConfig) *Board {
 	newBoard.spawnCreature1OnBoard(initialCreature1)
 	newBoard.spawnCreature2OnBoard(initialCreature2)
 	newBoard.spawnFoodOnBoard(newBoard.InitialFoods)
-
-	// db, err := openDbConnection()
-	//
-	// if err != nil {
-	// 	fmt.Println(err.Error())
-	// 	addMessageToCurrentGamelog(err.Error(), 1)
-	// }
-	//
-	// writeBoardToDb(db, &newBoard)
 
 	addMessageToCurrentGamelog("Board added", 2)
 	addMessageToCurrentGamelog("Welcome to the simulation game where you can simulate creatures and how they evolve!", 1)

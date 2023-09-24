@@ -2,11 +2,12 @@ package simulationgame
 
 import (
 	"fmt"
+	"os"
 	"testing"
 )
 
 func TestRunSimulation(t *testing.T) {
-	t.Setenv("sim_game", "valmet865")
+	t.Setenv("SIM_GAME_DB_PW", os.Getenv("SIM_GAME_DB_PW"))
 
 	sc := GetStandardSimulationConfig()
 
