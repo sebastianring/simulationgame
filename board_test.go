@@ -21,8 +21,6 @@ func TestRunSimulation(t *testing.T) {
 }
 
 func TestStandardConfig(t *testing.T) {
-	t.Setenv("sim_game", "valmet865")
-
 	result := GetStandardSimulationConfig()
 
 	if result == nil {

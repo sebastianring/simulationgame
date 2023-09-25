@@ -1,6 +1,7 @@
 package simulationgame_test
 
 import (
+	"fmt"
 	"math/rand"
 	"os"
 	"testing"
@@ -31,10 +32,14 @@ func TestWriteMessageToDB(t *testing.T) {
 		t.Fatal("Failed to generate uuid: " + err.Error())
 	}
 
+	res := 0
+
 	query := "INSERT INTO simulation_game.messages (id, prio, text, board_link) VALUES ($1, $2, $3, $4) RETURNiNG id"
-	err = db.QueryRow(query, randint, 1, uuid, "HELLO THIS IS A TEST").Scan(randint)
+	err = db.QueryRow(query, randint, 1, "HELLO THIS IS A TEST", uuid).Scan(&res)
 
 	if err != nil {
 		t.Fatal("Failed writing to db: " + err.Error())
 	}
+
+	fmt.Print(res)
 }

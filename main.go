@@ -3,6 +3,7 @@ package simulationgame
 import (
 	"errors"
 	"fmt"
+	"log"
 	"math/rand"
 	"time"
 )
@@ -51,10 +52,26 @@ func RunSimulation(sc *SimulationConfig) (*Board, error) {
 			drawer.DrawFrame(board)
 
 			if board.GameOn == false {
-				writeBoardToDb(board)
-				writeMessagesToDb(board)
+				log.Println("Saving board to DB.")
 
-				drawer.DrawFrame(board)
+				err := writeBoardToDb(board)
+
+				if err != nil {
+					log.Println(err)
+				} else {
+					log.Println("Succesfully wrote board to DB.")
+				}
+
+				log.Println("Saving messages to DB.")
+
+				err = writeMessagesToDb(board)
+
+				if err != nil {
+					log.Println(err)
+				} else {
+					log.Println("Succesfully wrote messages to DB.")
+				}
+
 				break
 			}
 		}

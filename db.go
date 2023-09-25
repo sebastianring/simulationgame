@@ -3,8 +3,8 @@ package simulationgame
 import (
 	"database/sql"
 	"errors"
+	"log"
 	"os"
-	"strconv"
 	"sync"
 
 	_ "github.com/lib/pq"
@@ -27,22 +27,16 @@ func OpenDbConnection() (*sql.DB, error) {
 
 	if err != nil {
 		addMessageToCurrentGamelog(err.Error(), 1)
-
 		return nil, err
-
 	} else {
 		addMessageToCurrentGamelog("Database connection secured!", 1)
 	}
-
-	defer db.Close()
 
 	err = db.Ping()
 
 	if err != nil {
 		addMessageToCurrentGamelog(err.Error(), 1)
-
 		return nil, err
-
 	} else {
 		addMessageToCurrentGamelog("Database ping succesful!", 1)
 	}
@@ -69,42 +63,32 @@ func writeMessageToDb(b *Board, msg *Message) error {
 
 func writeMessagesToDb(b *Board) error {
 	wg := sync.WaitGroup{}
-	errchan := make(chan error)
+	db, err := OpenDbConnection()
+
+	if err != nil {
+		return errors.New("Error connecting to db: " + err.Error())
+	}
+
+	db.SetMaxOpenConns(50)
 
 	for _, msg := range b.Gamelog.messages {
 		wg.Add(1)
 
 		go func(msg *Message) {
-			db, err := OpenDbConnection()
-
-			if err != nil {
-				errchan <- errors.New("Error connecting to db: " + err.Error())
-				return
-			}
-
 			query := "INSERT INTO simulation_game.messages (id, prio, text, board_link) VALUES ($1, $2, $3, $4) RETURNiNG id"
-			err = db.QueryRow(query, msg.Id, msg.Prio, msg.Texts, b.Id).Scan(&msg.Id)
+			_, err := db.Exec(query, msg.Id, msg.Prio, msg.Texts, b.Id)
 
 			if err != nil {
-				errchan <- errors.New("Errors writing to db: " + err.Error())
+				log.Println("Error writing to db: " + err.Error())
 			}
 
 			wg.Done()
-
-			return
 		}(msg)
 	}
 
 	wg.Wait()
+	db.Close()
 
-	errs := len(errchan)
-
-	if errs > 0 {
-		addMessageToCurrentGamelog("There were "+strconv.Itoa(errs)+" errors when trying to write to db", 1)
-		return errors.New("There were " + strconv.Itoa(errs) + " errors when trying to write to db")
-	}
-
-	addMessageToCurrentGamelog("Succesfully added entries to database", 1)
 	return nil
 }
 

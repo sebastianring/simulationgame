@@ -128,7 +128,7 @@ func NewBoard(sc *SimulationConfig) *Board {
 		MutationManager: mm,
 		InitialFoods:    sc.Foods,
 		ConflictManager: cm,
-		MaxRounds:       2,
+		MaxRounds:       50,
 	}
 
 	newBoard.initBoardObjects()
