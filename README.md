@@ -27,7 +27,9 @@ If an aggressive creature faces a passive one with food, the aggresive one will 
 
 If an aggressive creature faces an aggressive one with food, it will attach and try to get the food. The creatures will fight, one of them will die and the other will take some damage.
 
-If a passive creaures faces another passive one with food, they will share the food with each other.
+If a passive creatures faces another passive one with food, they will share the food with each other.
+
+If a passive creature faces an aggressive one, it will avoid it.
 
 # How to run - quick run
 Import the module:
