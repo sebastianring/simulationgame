@@ -41,5 +41,10 @@ import (
 And run it using this code:
 
 ```
-simulationgame.RunSimulation(GetStandardSimulationConfig())
+sc := simulationgame.GetStandardSimulationConfig()
+	_, err := simulationgame.RunSimulation(sc)
+
+	if err != nil {
+		fmt.Println("Error... : " + err.Error())
+	}
 ```
