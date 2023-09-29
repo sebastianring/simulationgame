@@ -42,9 +42,9 @@ And run it using this code:
 
 ```
 sc := simulationgame.GetStandardSimulationConfig()
-	_, err := simulationgame.RunSimulation(sc)
+_, err := simulationgame.RunSimulation(sc)
 
-	if err != nil {
-		fmt.Println("Error... : " + err.Error())
-	}
+if err != nil {
+	fmt.Println("Error... : " + err.Error())
+}
 ```
