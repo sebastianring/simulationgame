@@ -13,11 +13,16 @@ import (
 func OpenDbConnection() (*sql.DB, error) {
 	prefix := "postgres://"
 	user := "sim_game"
-	password := os.Getenv("SIM_GAME_DB_PW")
 	adress := "5.150.233.156"
 	// adress := "192.168.0.130"
 	// adress := "localhost"
 	port := "5432"
+
+	password := os.Getenv("SIM_GAME_DB_PW")
+
+	if len(password) == 0 {
+		return nil, errors.New("Missing password, will not connect to db.")
+	}
 
 	database_url := prefix + user + ":" +
 		password + "@" + adress + ":" +

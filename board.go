@@ -430,7 +430,7 @@ func (b *Board) newRound() {
 	b.spawnOffsprings()
 	b.CurrentRound.CreaturesAliveAtEnd = b.AliveCreatureObjects
 	b.writeSummaryOfRound()
-	b.Gamelog.writeGamelogToFile()
+	// b.Gamelog.writeGamelogToFile()
 
 	if len(b.Rounds) >= b.MaxRounds {
 		b.GameOn = false

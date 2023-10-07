@@ -108,16 +108,6 @@ func addMessageToCurrentGamelog(msg string, prio int) {
 		}
 	}
 
-	// if prio == 1 {
-	// 	db, err := openDbConnection()
-	//
-	// 	if err != nil {
-	// 		os.Exit(1)
-	// 	}
-	//
-	// 	writeMessageToDb(db, newMessage)
-	// }
-
 	currentGamelog.idCtr++
 }
 
@@ -151,9 +141,11 @@ func (gl *Gamelog) getMessageByRow(row int) []byte {
 	} else {
 		spaces := gl.cols - len(gl.displayedMessages[messageOffset])
 		var spaceString string
+
 		for i := 0; i < spaces; i++ {
 			spaceString += " "
 		}
+
 		return []byte(gl.displayedMessages[messageOffset] + spaceString)
 	}
 }
