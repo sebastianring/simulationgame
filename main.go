@@ -2,7 +2,9 @@ package simulationgame
 
 import (
 	"errors"
+	"flag"
 	"fmt"
+	"github.com/sebastianring/simulationgame/cli"
 	"log"
 	"math/rand"
 	"time"
@@ -15,6 +17,11 @@ type SimulationConfig struct {
 	Foods     int
 	Creature1 uint
 	Creature2 uint
+}
+
+func main() {
+	flag.Parse()
+	RunSimulation(&flagConfig)
 }
 
 func RunSimulation(sc *SimulationConfig) (*Board, error) {
