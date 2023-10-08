@@ -113,6 +113,7 @@ func NewBoard(sc *SimulationConfig) *Board {
 
 	if err != nil {
 		fmt.Println("Error creating mutation manager, please debug.")
+		os.Exit(1)
 	}
 
 	newBoard := Board{
@@ -120,7 +121,7 @@ func NewBoard(sc *SimulationConfig) *Board {
 		GameOn:          true,
 		Rows:            sc.Rows,
 		Cols:            sc.Cols,
-		Gamelog:         NewGamelog(sc.Rows, 40),
+		Gamelog:         NewGamelog(sc.Rows, 30),
 		ObjectBoard:     *createEmptyObjectsArray(sc.Rows, sc.Cols),
 		Rounds:          []*Round{&newRound},
 		CurrentRound:    &newRound,
@@ -133,11 +134,13 @@ func NewBoard(sc *SimulationConfig) *Board {
 
 	newBoard.initBoardObjects()
 
-	initialCreature1 := sc.Creature1
-	initialCreature2 := sc.Creature2
+	// initialCreature1 := sc.Creature1
+	// initialCreature2 := sc.Creature2
 
-	newBoard.spawnCreature1OnBoard(initialCreature1)
-	newBoard.spawnCreature2OnBoard(initialCreature2)
+	// newBoard.spawnCreature1OnBoard(initialCreature1)
+	// newBoard.spawnCreature2OnBoard(initialCreature2)
+	newBoard.spawnCreatureOnBoard(creature1, sc.Creature1)
+	newBoard.spawnCreatureOnBoard(creature2, sc.Creature2)
 	newBoard.spawnFoodOnBoard(newBoard.InitialFoods)
 
 	addMessageToCurrentGamelog("Board added", 2)
@@ -164,6 +167,30 @@ func createEmptyObjectsArray(rows int, cols int) *[][]BoardObject {
 // BOARD FUNCTIONS ---------------------------------- //
 // -------------------------------------------------- //
 // -------------------------------------------------- //
+
+func (b *Board) spawnCreatureOnBoard(creatureType CreatureObjectType, qty uint) {
+	spawns := make([]Pos, 0)
+	for uint(len(spawns)) < qty {
+		newPos := b.randomPosAtEdgeOfMap()
+		if !checkIfPosExistsInSlice(newPos, spawns) {
+			spawns = append(spawns, newPos)
+		}
+	}
+
+	for _, pos := range spawns {
+		creature, err := b.newCreatureObject(creatureType)
+
+		if err != nil {
+			fmt.Println("Error creating a new " + creature.getType() + " object: " + err.Error())
+			b.GameOn = false
+		}
+
+		creature.setPos(pos)
+
+		b.ObjectBoard[pos.y][pos.x] = creature
+		b.AliveCreatureObjects = append(b.AliveCreatureObjects, creature)
+	}
+}
 
 func (b *Board) spawnCreature1OnBoard(qty uint) {
 	spawns := make([]Pos, 0)
@@ -552,37 +579,23 @@ func (b *Board) findPosForAllCreatures() {
 func (b *Board) spawnOffsprings() {
 	addMessageToCurrentGamelog("Spawning offsprings from last round", 1)
 
-	// Refactor using enums
-	creatureQty := map[string]uint{
-		"creature1": 0,
-		"creature2": 0,
+	creatureQty := map[CreatureObjectType]uint{
+		creature1: 0,
+		creature2: 0,
 	}
 
 	tempAliveCreatureObjects := b.AliveCreatureObjects
 
 	for _, obj := range tempAliveCreatureObjects {
-
 		if obj.ifOffspring() {
-			var offspring CreatureObject
-			var err error
+			offspring, err := b.newCreatureObject(obj.getCreatureObjectType(), obj)
 
-			if obj2, ok := obj.(*Creature1); ok {
-				offspring, err = b.newCreature1Object(true, obj2)
-
-				if err != nil {
-					fmt.Println("Error creating offspring: " + err.Error())
-				}
-
-				creatureQty["creature1"]++
-
-			} else if obj2, ok := obj.(*Creature2); ok {
-				offspring, err = b.newCreature2Object(true, obj2)
-				if err != nil {
-					fmt.Println("Error creating offspring: " + err.Error())
-				}
-
-				creatureQty["creature2"]++
+			if err != nil {
+				b.GameOn = false
+				fmt.Println("Error creating offspring: " + err.Error())
 			}
+
+			creatureQty[offspring.getCreatureObjectType()]++
 
 			b.CurrentRound.CreaturesSpawned = append(b.CurrentRound.CreaturesSpawned, offspring)
 			b.AliveCreatureObjects = append(b.AliveCreatureObjects, offspring)
@@ -595,11 +608,41 @@ func (b *Board) spawnOffsprings() {
 
 			b.moveCreature(offspring, newPos, false)
 		}
+		//
+		// if obj.ifOffspring() {
+		// 	var offspring CreatureObject
+		// 	var err error
+		//
+		// 	if obj2, ok := obj.(*Creature1); ok {
+		// 		offspring, err = b.newCreature1Object(true, obj2)
+		//
+		// 		if err != nil {
+		// 			fmt.Println("Error creating offspring: " + err.Error())
+		// 		}
+		//
+		// 		creatureQty["creature1"]++
+		//
+		// 	} else if obj2, ok := obj.(*Creature2); ok {
+		// 		offspring, err = b.newCreature2Object(true, obj2)
+		// 		if err != nil {
+		// 			fmt.Println("Error creating offspring: " + err.Error())
+		// 		}
+		//
+		// 		creatureQty["creature2"]++
+		// 	}
 	}
 
 	for key, val := range creatureQty {
+		var creatureString string
+		switch key {
+		case creature1:
+			creatureString = "creature1"
+		case creature2:
+			creatureString = "creature2"
+		}
+
 		if val > 0 {
-			addMessageToCurrentGamelog(strconv.Itoa(int(val))+" Creatures of type "+key+" spawned", 1)
+			addMessageToCurrentGamelog(strconv.Itoa(int(val))+" Creatures of type "+creatureString+" spawned", 1)
 		}
 	}
 

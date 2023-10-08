@@ -11,28 +11,6 @@ type BoardObject interface {
 	getBoardObjectType() BoardObjectType
 }
 
-type CreatureObject interface {
-	getSymbol() []byte
-	updateTick() TickStatus
-	ifOffspring() bool
-	getHP() int
-	getId() int
-	resetValues()
-	heal(int)
-	isMoving() bool
-	isDead() bool
-	getType() string
-	kill()
-	getOriHP() int
-	getIdAsString() string
-	getSpeed() float64
-	getPos() Pos
-	setPos(Pos)
-	getBoardObjectType() BoardObjectType
-	getScanProcChance() float64
-	scan()
-}
-
 func getObjectSymbolWColor(ObjectType BoardObjectType) []byte {
 	resetColor := []byte("\033[0m")
 

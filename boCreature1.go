@@ -8,17 +8,18 @@ import (
 // Potentially create a CREATURE FACTORY?
 
 type Creature1 struct {
-	Id              int             `json:"id"`
-	Symbol          []byte          `json:"symbol"`
-	Pos             Pos             `json:"pos"`
-	Hp              int             `json:"hp"`
-	OriHP           int             `json:"ori_hp"`
-	Speed           float64         `json:"speed"`
-	OriSpeed        float64         `json:"ori_speed"`
-	ProcScanChance  float64         `json:"proc_scan_chance"`
-	TypeDesc        string          `json:"type_desc"`
-	BoardObjectType BoardObjectType `json:"board_object_type"`
-	Moving          bool            `json:"moving"`
+	Id                 int                `json:"id"`
+	Symbol             []byte             `json:"symbol"`
+	Pos                Pos                `json:"pos"`
+	Hp                 int                `json:"hp"`
+	OriHP              int                `json:"ori_hp"`
+	Speed              float64            `json:"speed"`
+	OriSpeed           float64            `json:"ori_speed"`
+	ProcScanChance     float64            `json:"proc_scan_chance"`
+	TypeDesc           string             `json:"type_desc"`
+	BoardObjectType    BoardObjectType    `json:"board_object_type"`
+	CreatureObjectType CreatureObjectType `json:"creature_object_type"`
+	Moving             bool               `json:"moving"`
 }
 
 func (b *Board) newCreature1Object(mutate bool, parent ...*Creature1) (*Creature1, error) {
@@ -179,6 +180,9 @@ func (c *Creature1) getBoardObjectType() BoardObjectType {
 	return c.BoardObjectType
 }
 
+func (c *Creature1) getCreatureObjectType() CreatureObjectType {
+	return c.CreatureObjectType
+}
 func (c *Creature1) getScanProcChance() float64 {
 	return c.ProcScanChance
 }
