@@ -25,6 +25,7 @@ func (b *Board) newCreature2Object(mutate bool, parent ...*Creature2) (*Creature
 
 	if len(parent) == 0 {
 		speed = 5
+		procScanChance = 50
 	} else if len(parent) == 1 {
 		if mutate {
 			tempspeed, err := b.MutationManager.getVariableValue(speedVariable, parent[0])

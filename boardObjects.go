@@ -48,7 +48,7 @@ func getObjectSymbolWColor(ObjectType BoardObjectType) []byte {
 	}
 
 	drawingSymbols := map[BoardObjectType]byte{
-		EmptyType:     46, // .....
+		EmptyType:     46, // SPACE
 		FoodType:      64, // @@@@@
 		Creature1Type: 79, // OOOOO
 		Creature2Type: 87, // WWWWW

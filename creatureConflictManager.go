@@ -4,7 +4,10 @@ import (
 	"math/rand"
 )
 
-// Action translation could use functions instead? Unnecessary abstraction maybe?
+// Action translation could use functions instead?
+// Currently unnecessary abstraction?
+// Has to travel through a switch translator
+
 type ConflictManager struct {
 	ConflictMapping     [][]Conflict
 	CreatureTranslation map[string]int

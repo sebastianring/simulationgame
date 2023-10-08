@@ -5,6 +5,8 @@ import (
 	"strconv"
 )
 
+// Potentially create a CREATURE FACTORY?
+
 type Creature1 struct {
 	Id              int             `json:"id"`
 	Symbol          []byte          `json:"symbol"`
@@ -45,7 +47,6 @@ func (b *Board) newCreature1Object(mutate bool, parent ...*Creature1) (*Creature
 			}
 
 			procScanChance = tempProcChance
-
 		}
 
 	} else {
