@@ -5,12 +5,12 @@ import (
 	"strconv"
 )
 
-type CreatureObjectType byte
-
-const (
-	creature1 CreatureObjectType = 0
-	creature2 CreatureObjectType = 1
-)
+// type CreatureObjectType byte
+//
+// const (
+// 	creature1 CreatureObjectType = 0
+// 	creature2 CreatureObjectType = 1
+// )
 
 type CreatureObject interface {
 	getSymbol() []byte
@@ -30,12 +30,12 @@ type CreatureObject interface {
 	getPos() Pos
 	setPos(Pos)
 	getBoardObjectType() BoardObjectType
-	getCreatureObjectType() CreatureObjectType
+	// getCreatureObjectType() CreatureObjectType
 	getScanProcChance() float64
 	scan()
 }
 
-func (b *Board) newCreatureObject(objectType CreatureObjectType, parent ...CreatureObject) (CreatureObject, error) {
+func (b *Board) newCreatureObject(objectType BoardObjectType, parent ...CreatureObject) (CreatureObject, error) {
 	var creature CreatureObject
 
 	var speed float64
@@ -68,36 +68,34 @@ func (b *Board) newCreatureObject(objectType CreatureObjectType, parent ...Creat
 	}
 
 	switch objectType {
-	case creature1:
+	case Creature1Type:
 		creature = &Creature1{
-			Id:                 b.CreatureIdCtr[Creature1Type],
-			Symbol:             getObjectSymbolWColor(Creature1Type),
-			OriHP:              500,
-			Hp:                 500,
-			Speed:              speed,
-			OriSpeed:           speed,
-			ProcScanChance:     procScanChance,
-			TypeDesc:           "Creature1",
-			BoardObjectType:    Creature1Type,
-			CreatureObjectType: creature1,
-			Moving:             true,
+			Id:              b.CreatureIdCtr[Creature1Type],
+			Symbol:          getObjectSymbolWColor(Creature1Type),
+			OriHP:           500,
+			Hp:              500,
+			Speed:           speed,
+			OriSpeed:        speed,
+			ProcScanChance:  procScanChance,
+			TypeDesc:        "Creature1",
+			BoardObjectType: Creature1Type,
+			Moving:          true,
 		}
 
 		b.CreatureIdCtr[Creature1Type] += 1
 
-	case creature2:
+	case Creature2Type:
 		creature = &Creature2{
-			Id:                 b.CreatureIdCtr[Creature2Type],
-			Symbol:             getObjectSymbolWColor(Creature2Type),
-			OriHP:              500,
-			Hp:                 500,
-			Speed:              speed,
-			OriSpeed:           speed,
-			ProcScanChance:     procScanChance,
-			TypeDesc:           "Creature2",
-			BoardObjectType:    Creature2Type,
-			CreatureObjectType: creature2,
-			Moving:             true,
+			Id:              b.CreatureIdCtr[Creature2Type],
+			Symbol:          getObjectSymbolWColor(Creature2Type),
+			OriHP:           500,
+			Hp:              500,
+			Speed:           speed,
+			OriSpeed:        speed,
+			ProcScanChance:  procScanChance,
+			TypeDesc:        "Creature2",
+			BoardObjectType: Creature2Type,
+			Moving:          true,
 		}
 
 		b.CreatureIdCtr[Creature2Type] += 1

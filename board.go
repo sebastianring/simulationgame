@@ -134,13 +134,8 @@ func NewBoard(sc *SimulationConfig) *Board {
 
 	newBoard.initBoardObjects()
 
-	// initialCreature1 := sc.Creature1
-	// initialCreature2 := sc.Creature2
-
-	// newBoard.spawnCreature1OnBoard(initialCreature1)
-	// newBoard.spawnCreature2OnBoard(initialCreature2)
-	newBoard.spawnCreatureOnBoard(creature1, sc.Creature1)
-	newBoard.spawnCreatureOnBoard(creature2, sc.Creature2)
+	newBoard.spawnCreatureOnBoard(Creature1Type, sc.Creature1)
+	newBoard.spawnCreatureOnBoard(Creature2Type, sc.Creature2)
 	newBoard.spawnFoodOnBoard(newBoard.InitialFoods)
 
 	addMessageToCurrentGamelog("Board added", 2)
@@ -168,7 +163,7 @@ func createEmptyObjectsArray(rows int, cols int) *[][]BoardObject {
 // -------------------------------------------------- //
 // -------------------------------------------------- //
 
-func (b *Board) spawnCreatureOnBoard(creatureType CreatureObjectType, qty uint) {
+func (b *Board) spawnCreatureOnBoard(creatureType BoardObjectType, qty uint) {
 	spawns := make([]Pos, 0)
 	for uint(len(spawns)) < qty {
 		newPos := b.randomPosAtEdgeOfMap()
@@ -579,23 +574,23 @@ func (b *Board) findPosForAllCreatures() {
 func (b *Board) spawnOffsprings() {
 	addMessageToCurrentGamelog("Spawning offsprings from last round", 1)
 
-	creatureQty := map[CreatureObjectType]uint{
-		creature1: 0,
-		creature2: 0,
+	creatureQty := map[BoardObjectType]uint{
+		Creature1Type: 0,
+		Creature2Type: 0,
 	}
 
 	tempAliveCreatureObjects := b.AliveCreatureObjects
 
 	for _, obj := range tempAliveCreatureObjects {
 		if obj.ifOffspring() {
-			offspring, err := b.newCreatureObject(obj.getCreatureObjectType(), obj)
+			offspring, err := b.newCreatureObject(obj.getBoardObjectType(), obj)
 
 			if err != nil {
 				b.GameOn = false
 				fmt.Println("Error creating offspring: " + err.Error())
 			}
 
-			creatureQty[offspring.getCreatureObjectType()]++
+			creatureQty[offspring.getBoardObjectType()]++
 
 			b.CurrentRound.CreaturesSpawned = append(b.CurrentRound.CreaturesSpawned, offspring)
 			b.AliveCreatureObjects = append(b.AliveCreatureObjects, offspring)
@@ -608,36 +603,14 @@ func (b *Board) spawnOffsprings() {
 
 			b.moveCreature(offspring, newPos, false)
 		}
-		//
-		// if obj.ifOffspring() {
-		// 	var offspring CreatureObject
-		// 	var err error
-		//
-		// 	if obj2, ok := obj.(*Creature1); ok {
-		// 		offspring, err = b.newCreature1Object(true, obj2)
-		//
-		// 		if err != nil {
-		// 			fmt.Println("Error creating offspring: " + err.Error())
-		// 		}
-		//
-		// 		creatureQty["creature1"]++
-		//
-		// 	} else if obj2, ok := obj.(*Creature2); ok {
-		// 		offspring, err = b.newCreature2Object(true, obj2)
-		// 		if err != nil {
-		// 			fmt.Println("Error creating offspring: " + err.Error())
-		// 		}
-		//
-		// 		creatureQty["creature2"]++
-		// 	}
 	}
 
 	for key, val := range creatureQty {
 		var creatureString string
 		switch key {
-		case creature1:
+		case Creature1Type:
 			creatureString = "creature1"
-		case creature2:
+		case Creature2Type:
 			creatureString = "creature2"
 		}
 

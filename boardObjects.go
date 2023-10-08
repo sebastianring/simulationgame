@@ -11,7 +11,7 @@ type BoardObject interface {
 	getBoardObjectType() BoardObjectType
 }
 
-func getObjectSymbolWColor(ObjectType BoardObjectType) []byte {
+func getObjectSymbolWColor(objectType BoardObjectType) []byte {
 	resetColor := []byte("\033[0m")
 
 	colors := map[string][]byte{
@@ -39,9 +39,9 @@ func getObjectSymbolWColor(ObjectType BoardObjectType) []byte {
 		Creature2Type: "red",
 	}
 
-	objectColor := drawingColors[ObjectType]
+	objectColor := drawingColors[objectType]
 	returnByte := colors[objectColor]
-	returnByte = append(returnByte, drawingSymbols[ObjectType])
+	returnByte = append(returnByte, drawingSymbols[objectType])
 	returnByte = append(returnByte, resetColor...)
 
 	return returnByte

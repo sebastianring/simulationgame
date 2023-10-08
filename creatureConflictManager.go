@@ -10,7 +10,7 @@ import (
 
 type ConflictManager struct {
 	ConflictMapping     [][]Conflict
-	CreatureTranslation map[CreatureObjectType]int
+	CreatureTranslation map[BoardObjectType]int
 	ActionTranslation   map[Conflict]bool
 }
 
@@ -46,9 +46,9 @@ func newConflictManager() (*ConflictManager, error) {
 			{Attack1, Attack2},
 		},
 
-		CreatureTranslation: map[CreatureObjectType]int{
-			creature1: 0,
-			creature2: 1,
+		CreatureTranslation: map[BoardObjectType]int{
+			Creature1Type: 0,
+			Creature2Type: 1,
 		},
 
 		ActionTranslation: map[Conflict]bool{
@@ -64,8 +64,8 @@ func newConflictManager() (*ConflictManager, error) {
 
 func (cm *ConflictManager) getConflict(SourceCreature CreatureObject, TargetCreature CreatureObject) (bool, *ConflictInfo) {
 	// addMessageToCurrentGamelog("Conflict between two creatures checked", 1)
-	row := cm.CreatureTranslation[SourceCreature.getCreatureObjectType()]
-	col := cm.CreatureTranslation[TargetCreature.getCreatureObjectType()]
+	row := cm.CreatureTranslation[SourceCreature.getBoardObjectType()]
+	col := cm.CreatureTranslation[TargetCreature.getBoardObjectType()]
 
 	conflictType := cm.ConflictMapping[row][col]
 
