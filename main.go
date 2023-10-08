@@ -52,6 +52,7 @@ func RunSimulation(sc *SimulationConfig) (*Board, error) {
 			drawer.DrawFrame(board)
 
 			if board.GameOn == false {
+				board.Gamelog.writeGamelogToFile()
 				log.Println("Saving board to DB.")
 
 				err := writeBoardToDb(board)

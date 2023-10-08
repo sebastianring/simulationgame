@@ -2,8 +2,8 @@ package simulationgame
 
 import (
 	"encoding/json"
+	"errors"
 	"os"
-	// "strconv"
 	"time"
 )
 
@@ -51,19 +51,18 @@ func NewGamelog(rows int, cols int) *Gamelog {
 func getFileString() string {
 	logsFolder := "logs"
 
-	dir, err := os.Open(logsFolder)
-	defer dir.Close()
+	_, err := os.Stat(logsFolder)
 
-	if err != nil {
-		if os.IsNotExist(err) {
-			err = os.Mkdir(logsFolder, 0755)
+	if os.IsNotExist(err) {
+		err = os.Mkdir(logsFolder, 0755)
 
-			if err != nil {
-				panic(err)
-			}
-			addMessageToCurrentGamelog("New folder created", 2)
+		if err != nil {
+			panic(err)
 		}
+	} else if err != nil {
+		panic(err)
 	}
+
 	logsFolder = logsFolder + "/"
 
 	logNamePrefix := "simulation_gamelog_"
@@ -150,11 +149,11 @@ func (gl *Gamelog) getMessageByRow(row int) []byte {
 	}
 }
 
-func (gl *Gamelog) writeGamelogToFile() {
+func (gl *Gamelog) writeGamelogToFile() error {
 	file, err := os.OpenFile(gl.fileString, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 
 	if err != nil {
-		panic(err)
+		return errors.New("Error opening file: " + err.Error())
 	}
 
 	defer file.Close()
@@ -163,16 +162,23 @@ func (gl *Gamelog) writeGamelogToFile() {
 		jsonData, err := json.Marshal(message)
 
 		if err != nil {
-			panic(err)
+			return errors.New("Error marshaling message")
 		}
 
 		_, err = file.Write([]byte(jsonData))
+
+		if err != nil {
+			return errors.New("Error writing to file: " + err.Error())
+		}
+
 		_, err = file.Write([]byte("\n"))
+
+		if err != nil {
+			return errors.New("Error writing to file: " + err.Error())
+		}
 	}
 
-	if err != nil {
-		panic(err)
-	}
+	return nil
 }
 
 func min(a int, b int) int {
