@@ -16,8 +16,7 @@ type Creature2 struct {
 	ProcScanChance  float64         `json:"proc_scan_chance"`
 	TypeDesc        string          `json:"type_desc"`
 	BoardObjectType BoardObjectType `json:"board_object_type"`
-	// CreatureObjectType CreatureObjectType `json:"creature_object_type"`
-	Moving bool `json:"moving"`
+	Moving          bool            `json:"moving"`
 }
 
 func (b *Board) newCreature2Object(mutate bool, parent ...*Creature2) (*Creature2, error) {

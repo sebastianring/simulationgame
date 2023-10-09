@@ -17,7 +17,6 @@ type Gamelog struct {
 	idCtr             int
 	displayedMessages []string
 	createdAt         time.Time
-	fileString        string
 	prioThreshold     int
 }
 
@@ -35,7 +34,6 @@ func NewGamelog(rows int, cols int) *Gamelog {
 		messages:      []*Message{},
 		idCtr:         1,
 		createdAt:     time.Now(),
-		fileString:    getFileString(),
 		prioThreshold: 1,
 	}
 
@@ -48,7 +46,7 @@ func NewGamelog(rows int, cols int) *Gamelog {
 	return &gl
 }
 
-func getFileString() string {
+func getFileString() (string, error) {
 	logsFolder := "logs"
 
 	_, err := os.Stat(logsFolder)
@@ -57,10 +55,10 @@ func getFileString() string {
 		err = os.Mkdir(logsFolder, 0755)
 
 		if err != nil {
-			panic(err)
+			return "", errors.New("Issue creating folder: " + err.Error())
 		}
 	} else if err != nil {
-		panic(err)
+		return "", errors.New("Issue accessing folder: " + err.Error())
 	}
 
 	logsFolder = logsFolder + "/"
@@ -71,43 +69,36 @@ func getFileString() string {
 
 	fullLogName := logsFolder + logNamePrefix + logNameSuffix
 
-	return fullLogName
+	return fullLogName, nil
 }
 
 // Need to adapt log to be able to receive any type of values and convert them to string automatically
 func addMessageToCurrentGamelog(msg string, prio int) {
-	endSlice := 0
-	msgLen := len(msg)
-
-	var texts []string
-
-	for i := 0; i <= msgLen; i = endSlice {
-		endSlice = min(currentGamelog.rows+i, msgLen)
-		// do we need to split the message?
-		if endSlice < msgLen {
-			for j := endSlice; j > i; j-- {
-				// find the first space, backwards, and break there!
-				if msg[j] == byte(32) {
-					endSlice = j
-					break
-				}
-			}
-		}
-
-		texts = append(texts, msg[i:endSlice])
-		endSlice++
-	}
-
 	newMessage := newMessage(currentGamelog.idCtr, prio, msg)
 	currentGamelog.messages = append(currentGamelog.messages, newMessage)
+	currentGamelog.idCtr++
 
 	if prio <= currentGamelog.prioThreshold {
-		for _, val := range texts {
-			currentGamelog.displayedMessages = append(currentGamelog.displayedMessages, val)
+		endSlice := 0
+		msgLen := len(msg)
+
+		for i := 0; i <= msgLen; i = endSlice {
+			endSlice = min(currentGamelog.cols+i, msgLen)
+			// do we need to split the message?
+			if endSlice < msgLen {
+				for j := endSlice; j > i; j-- {
+					// find the first space, backwards, and break there!
+					if msg[j] == byte(32) {
+						endSlice = j
+						break
+					}
+				}
+			}
+
+			currentGamelog.displayedMessages = append(currentGamelog.displayedMessages, msg[i:endSlice])
+			endSlice++
 		}
 	}
-
-	currentGamelog.idCtr++
 }
 
 func newMessage(id int, prio int, msg string) *Message {
@@ -150,7 +141,13 @@ func (gl *Gamelog) getMessageByRow(row int) []byte {
 }
 
 func (gl *Gamelog) writeGamelogToFile() error {
-	file, err := os.OpenFile(gl.fileString, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
+	folder, err := getFileString()
+
+	if err != nil {
+		return err
+	}
+
+	file, err := os.OpenFile(folder, os.O_WRONLY|os.O_APPEND|os.O_CREATE, 0644)
 
 	if err != nil {
 		return errors.New("Error opening file: " + err.Error())
