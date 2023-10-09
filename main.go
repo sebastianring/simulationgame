@@ -89,10 +89,10 @@ func RunSimulation(sc *SimulationConfig) (*Board, error) {
 
 func GetStandardSimulationConfig() *SimulationConfig {
 	return &SimulationConfig{
-		Rows:      30,
+		Rows:      35,
 		Cols:      100,
 		Draw:      true,
-		Foods:     100,
+		Foods:     70,
 		Creature1: 15,
 		Creature2: 15,
 	}

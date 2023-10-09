@@ -121,7 +121,7 @@ func NewBoard(sc *SimulationConfig) *Board {
 		GameOn:          true,
 		Rows:            sc.Rows,
 		Cols:            sc.Cols,
-		Gamelog:         NewGamelog(sc.Rows, 30),
+		Gamelog:         NewGamelog(sc.Rows, 40),
 		ObjectBoard:     *createEmptyObjectsArray(sc.Rows, sc.Cols),
 		Rounds:          []*Round{&newRound},
 		CurrentRound:    &newRound,
@@ -411,6 +411,12 @@ func (b *Board) newRound() {
 		addMessageToCurrentGamelog("Max number of rounds reached, ending the game.", 1)
 		fmt.Println("Max number of rounds reached, ending the game.")
 
+	} else if len(b.AliveCreatureObjects) >= (b.Cols*2)+(b.Rows*2)-4 {
+		b.GameOn = false
+
+		addMessageToCurrentGamelog("Max creatures spawned, ending the game.", 1)
+		fmt.Println("Max number of creautes reached, ending the game.")
+
 	} else {
 		b.findPosForAllCreatures()
 		b.deleteAndSpawnFood()
@@ -699,6 +705,8 @@ func (b *Board) newPosAndMove(creature CreatureObject) (Pos, MoveType) {
 			newPos.y = y
 			return newPos, moveType
 		}
+
+		counter++
 	}
 
 	return newPos, moveType
