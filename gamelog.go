@@ -82,7 +82,7 @@ func addMessageToCurrentGamelog(msg string, prio int) {
 	var texts []string
 
 	for i := 0; i <= msgLen; i = endSlice {
-		endSlice = min(currentGamelog.rows+i, msgLen)
+		endSlice = min(currentGamelog.cols+i, msgLen)
 		// do we need to split the message?
 		if endSlice < msgLen {
 			for j := endSlice; j > i; j-- {

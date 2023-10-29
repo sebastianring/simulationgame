@@ -88,15 +88,17 @@ func (cm *ConflictManager) share(SourceCreature CreatureObject, TargetCreature C
 	SourceCreature.heal(SourceCreature.getOriHP() / 2)
 	TargetCreature.heal((TargetCreature.getOriHP() / 2) * -1)
 
-	addMessageToCurrentGamelog(SourceCreature.getIdAsString()+" shared the food of "+TargetCreature.getIdAsString(), 1)
+	addMessageToCurrentGamelog(SourceCreature.getIdAsString()+
+		" shared the food of "+TargetCreature.getIdAsString(), 1)
 }
 
 func (cm *ConflictManager) attack1(SourceCreature CreatureObject, TargetCreature CreatureObject) {
 	// REBALANCE, it has to consume some energy whenever it attacks as well.
-	SourceCreature.heal(SourceCreature.getOriHP())
+	SourceCreature.heal(SourceCreature.getOriHP() / 2)
 	TargetCreature.kill()
 
-	addMessageToCurrentGamelog(SourceCreature.getIdAsString()+" killed "+TargetCreature.getIdAsString()+" using attack1", 1)
+	addMessageToCurrentGamelog(SourceCreature.getIdAsString()+
+		" killed "+TargetCreature.getIdAsString()+" using attack1", 1)
 }
 
 func (cm *ConflictManager) attack2(SourceCreature CreatureObject, TargetCreature CreatureObject) bool {
@@ -106,7 +108,8 @@ func (cm *ConflictManager) attack2(SourceCreature CreatureObject, TargetCreature
 		SourceCreature.heal((SourceCreature.getOriHP() / 2) * -1)
 		TargetCreature.kill()
 
-		addMessageToCurrentGamelog(SourceCreature.getIdAsString()+" killed "+TargetCreature.getIdAsString()+" using attack2", 1)
+		addMessageToCurrentGamelog(SourceCreature.getIdAsString()+
+			" killed "+TargetCreature.getIdAsString()+" using attack2", 1)
 
 		return true
 

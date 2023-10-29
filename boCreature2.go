@@ -106,7 +106,6 @@ func (c *Creature2) updateTick() TickStatus {
 
 func (c *Creature2) heal(val int) {
 	prio := 2
-
 	if val < 0 {
 		prio = 1
 	}
@@ -114,8 +113,9 @@ func (c *Creature2) heal(val int) {
 	addMessageToCurrentGamelog("Creature 2 with id "+
 		strconv.Itoa(c.Id)+" healed for: "+
 		strconv.Itoa(c.OriHP), prio)
+
 	c.Hp += val
-	c.Moving = false
+	c.isFull()
 }
 
 func (c *Creature2) isDead() bool {
@@ -194,4 +194,10 @@ func (c *Creature2) getScanProcChance() float64 {
 
 func (c *Creature2) scan() {
 	c.Hp -= 5 + int(c.Speed)
+}
+
+func (c *Creature2) isFull() {
+	if c.Hp > c.OriHP+c.OriHP/2 {
+		c.Moving = false
+	}
 }
