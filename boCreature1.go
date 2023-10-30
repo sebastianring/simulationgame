@@ -5,8 +5,6 @@ import (
 	"strconv"
 )
 
-// Potentially create a CREATURE FACTORY?
-
 type Creature1 struct {
 	Id              int             `json:"id"`
 	Symbol          []byte          `json:"symbol"`
@@ -18,8 +16,7 @@ type Creature1 struct {
 	ProcScanChance  float64         `json:"proc_scan_chance"`
 	TypeDesc        string          `json:"type_desc"`
 	BoardObjectType BoardObjectType `json:"board_object_type"`
-	// CreatureObjectType CreatureObjectType `json:"creature_object_type"`
-	Moving bool `json:"moving"`
+	Moving          bool            `json:"moving"`
 }
 
 func (b *Board) newCreature1Object(mutate bool, parent ...*Creature1) (*Creature1, error) {

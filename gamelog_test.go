@@ -7,7 +7,11 @@ import (
 )
 
 func TestGetFileString(t *testing.T) {
-	str := getFileString()
+	str, err := getFileString()
+
+	if err != nil {
+		t.Errorf(err.Error())
+	}
 
 	expected := "logs/"
 
