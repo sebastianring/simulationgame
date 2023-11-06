@@ -56,7 +56,7 @@ func RunSimulation(sc *SimulationConfig) (*Board, error) {
 	if sc.Draw {
 		drawer := NewDrawer(board)
 		drawer.DrawFrame(board)
-		ticker := time.NewTicker(5 * time.Millisecond)
+		ticker := time.NewTicker(25 * time.Millisecond)
 		defer ticker.Stop()
 
 		for range ticker.C {
@@ -64,28 +64,6 @@ func RunSimulation(sc *SimulationConfig) (*Board, error) {
 			drawer.DrawFrame(board)
 
 			if board.GameOn == false {
-				board.Gamelog.writeGamelogToFile()
-
-				log.Println("Saving board to DB.")
-
-				err := writeBoardToDb(board)
-
-				if err != nil {
-					log.Println(err)
-				} else {
-					log.Println("Succesfully wrote board to DB.")
-				}
-
-				log.Println("Saving messages to DB.")
-
-				err = writeMessagesToDb(board)
-
-				if err != nil {
-					log.Println(err)
-				} else {
-					log.Println("Succesfully wrote messages to DB.")
-				}
-
 				break
 			}
 		}
@@ -93,6 +71,28 @@ func RunSimulation(sc *SimulationConfig) (*Board, error) {
 		for board.GameOn {
 			board.TickFrame()
 		}
+	}
+
+	board.Gamelog.writeGamelogToFile()
+
+	log.Println("Saving board to DB.")
+
+	err := writeBoardToDb(board)
+
+	if err != nil {
+		log.Println(err)
+	} else {
+		log.Println("Succesfully wrote board to DB.")
+	}
+
+	log.Println("Saving messages to DB.")
+
+	err = writeMessagesToDb(board)
+
+	if err != nil {
+		log.Println(err)
+	} else {
+		log.Println("Succesfully wrote messages to DB.")
 	}
 
 	printResults(board)
