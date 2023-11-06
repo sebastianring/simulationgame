@@ -22,6 +22,14 @@ func TestGetFileString(t *testing.T) {
 	}
 }
 
+func TestLongGamelog(t *testing.T) {
+	sc := GetStandardSimulationConfig()
+	sc.Draw = true
+	sc.GamelogSize = 70
+
+	RunSimulation(sc)
+}
+
 func TestWriteGamelogToFile(t *testing.T) {
 	t.Setenv("SIM_GAME_DB_PW", os.Getenv("SIM_GAME_DB_PW"))
 

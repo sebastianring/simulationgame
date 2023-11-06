@@ -121,11 +121,7 @@ func NewBoard(sc *SimulationConfig) *Board {
 		GameOn:          true,
 		Rows:            sc.Rows,
 		Cols:            sc.Cols,
-<<<<<<< HEAD
-		Gamelog:         NewGamelog(sc.Rows, 50),
-=======
 		Gamelog:         NewGamelog(sc.Rows, sc.GamelogSize),
->>>>>>> ab92c6c64c640c6d0ea61914f6f53e9c07be038a
 		ObjectBoard:     *createEmptyObjectsArray(sc.Rows, sc.Cols),
 		Rounds:          []*Round{&newRound},
 		CurrentRound:    &newRound,

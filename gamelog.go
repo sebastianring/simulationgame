@@ -74,31 +74,6 @@ func getFileString() (string, error) {
 
 // Need to adapt log to be able to receive any type of values and convert them to string automatically
 func addMessageToCurrentGamelog(msg string, prio int) {
-<<<<<<< HEAD
-	endSlice := 0
-	msgLen := len(msg)
-
-	var texts []string
-
-	for i := 0; i <= msgLen; i = endSlice {
-		endSlice = min(currentGamelog.cols+i, msgLen)
-		// do we need to split the message?
-		if endSlice < msgLen {
-			for j := endSlice; j > i; j-- {
-				// find the first space, backwards, and break there!
-				if msg[j] == byte(32) {
-					endSlice = j
-					break
-				}
-			}
-		}
-
-		texts = append(texts, msg[i:endSlice])
-		endSlice++
-	}
-
-=======
->>>>>>> ab92c6c64c640c6d0ea61914f6f53e9c07be038a
 	newMessage := newMessage(currentGamelog.idCtr, prio, msg)
 	currentGamelog.messages = append(currentGamelog.messages, newMessage)
 	currentGamelog.idCtr++
