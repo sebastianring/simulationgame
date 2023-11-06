@@ -13,7 +13,8 @@ import (
 func OpenDbConnection() (*sql.DB, error) {
 	prefix := "postgres://"
 	user := "sim_game"
-	adress := "5.150.233.156"
+	adress := "5.150.233.186"
+	// adress := "5.150.233.156"
 	// adress := "192.168.0.130"
 	// adress := "localhost"
 	port := "5432"

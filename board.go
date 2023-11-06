@@ -364,9 +364,14 @@ func (b *Board) creatureUpdatesPerTick() {
 	if b.checkIfCreaturesAreInactive() {
 		if b.checkIfCreaturesAreDead() {
 			b.GameOn = false
-			addMessageToCurrentGamelog("All creatures are dead, end the game", 1)
+			addMessageToCurrentGamelog("All creatures are dead, end the game.", 1)
 		}
 
+		b.newRound()
+	}
+
+	if b.CurrentRound.Time > 2000 {
+		addMessageToCurrentGamelog("Too long time for the the current round, starting new round.", 1)
 		b.newRound()
 	}
 }

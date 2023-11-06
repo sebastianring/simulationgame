@@ -56,7 +56,7 @@ func RunSimulation(sc *SimulationConfig) (*Board, error) {
 	if sc.Draw {
 		drawer := NewDrawer(board)
 		drawer.DrawFrame(board)
-		ticker := time.NewTicker(50 * time.Millisecond)
+		ticker := time.NewTicker(5 * time.Millisecond)
 		defer ticker.Stop()
 
 		for range ticker.C {

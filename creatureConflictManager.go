@@ -93,8 +93,7 @@ func (cm *ConflictManager) share(SourceCreature CreatureObject, TargetCreature C
 }
 
 func (cm *ConflictManager) attack1(SourceCreature CreatureObject, TargetCreature CreatureObject) {
-	// REBALANCE, it has to consume some energy whenever it attacks as well.
-	SourceCreature.heal(SourceCreature.getOriHP() / 2)
+	SourceCreature.heal(SourceCreature.getOriHP() / 4)
 	TargetCreature.kill()
 
 	addMessageToCurrentGamelog(SourceCreature.getIdAsString()+
@@ -105,7 +104,7 @@ func (cm *ConflictManager) attack2(SourceCreature CreatureObject, TargetCreature
 	// function returns true if target is killed, if source is killed, it returns false
 	rng := rand.Intn(2)
 	if rng == 1 {
-		SourceCreature.heal((SourceCreature.getOriHP() / 2) * -1)
+		SourceCreature.heal((SourceCreature.getOriHP() / 4) * -1)
 		TargetCreature.kill()
 
 		addMessageToCurrentGamelog(SourceCreature.getIdAsString()+
@@ -115,9 +114,10 @@ func (cm *ConflictManager) attack2(SourceCreature CreatureObject, TargetCreature
 
 	} else {
 		SourceCreature.kill()
-		TargetCreature.heal((TargetCreature.getOriHP() / 2) * -1)
+		TargetCreature.heal((TargetCreature.getOriHP() / 4) * -1)
 
-		addMessageToCurrentGamelog(TargetCreature.getIdAsString()+" killed "+SourceCreature.getIdAsString()+" using attack2", 1)
+		addMessageToCurrentGamelog(TargetCreature.getIdAsString()+
+			" killed "+SourceCreature.getIdAsString()+" using attack2", 1)
 
 		return false
 	}
@@ -144,7 +144,7 @@ func (ci *ConflictInfo) share(b *Board) {
 }
 
 func (ci *ConflictInfo) attack1(b *Board) {
-	ci.SourceCreature.heal(ci.SourceCreature.getOriHP())
+	ci.SourceCreature.heal(ci.SourceCreature.getOriHP() / 4)
 
 	b.killCreature(ci.TargetCreature, false)
 	b.moveCreature(ci.SourceCreature, ci.TargetCreature.getPos(), true)
@@ -155,7 +155,7 @@ func (ci *ConflictInfo) attack1(b *Board) {
 func (ci *ConflictInfo) attack2(b *Board) {
 	rng := rand.Intn(2)
 	if rng == 1 {
-		ci.SourceCreature.heal((ci.SourceCreature.getOriHP() / 2) * -1)
+		ci.SourceCreature.heal((ci.SourceCreature.getOriHP() / 4) * -1)
 
 		b.killCreature(ci.TargetCreature, false)
 		b.moveCreature(ci.SourceCreature, ci.TargetCreature.getPos(), true)
@@ -163,7 +163,7 @@ func (ci *ConflictInfo) attack2(b *Board) {
 		addMessageToCurrentGamelog(ci.SourceCreature.getIdAsString()+" killed "+ci.TargetCreature.getIdAsString()+" using attack2", 1)
 
 	} else {
-		ci.TargetCreature.heal((ci.TargetCreature.getOriHP() / 2) * -1)
+		ci.TargetCreature.heal((ci.TargetCreature.getOriHP() / 4) * -1)
 
 		b.killCreature(ci.SourceCreature, false)
 		b.moveCreature(ci.TargetCreature, ci.SourceCreature.getPos(), true)
