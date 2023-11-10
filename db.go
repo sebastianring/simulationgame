@@ -3,6 +3,7 @@ package simulationgame
 import (
 	"database/sql"
 	"errors"
+	"fmt"
 	"log"
 	"os"
 	"sync"
@@ -13,41 +14,83 @@ import (
 func OpenDbConnection() (*sql.DB, error) {
 	prefix := "postgres://"
 	user := "sim_game"
-	adress := "5.150.233.186"
-	// adress := "5.150.233.156"
-	// adress := "192.168.0.130"
-	// adress := "localhost"
-	port := "5432"
-
 	password := os.Getenv("SIM_GAME_DB_PW")
+	fmt.Println("Password:", password)
+	adress, hit := os.LookupEnv("SIM_GAME_DB_IP")
 
-	if len(password) == 0 {
-		return nil, errors.New("Missing password, will not connect to db.")
+	if !hit {
+		fmt.Println("No environment variable set:", adress)
+		adress = "5.150.233.156"
 	}
+
+	port := "5432"
 
 	database_url := prefix + user + ":" +
 		password + "@" + adress + ":" +
 		port + "/postgres"
 
+	fmt.Println("Trying to connect to DB: ", database_url)
+
 	db, err := sql.Open("postgres", database_url)
 
 	if err != nil {
-		addMessageToCurrentGamelog(err.Error(), 1)
+		fmt.Println(err.Error())
+
 		return nil, err
+
 	} else {
-		addMessageToCurrentGamelog("Database connection secured!", 1)
+		fmt.Println("Database connection secured")
 	}
 
+	fmt.Println("Pinging database")
 	err = db.Ping()
 
 	if err != nil {
-		addMessageToCurrentGamelog(err.Error(), 1)
+		fmt.Println(err.Error())
 		return nil, err
-	} else {
-		addMessageToCurrentGamelog("Database ping succesful!", 1)
 	}
 
+	fmt.Println("Database pinged!")
+
 	return db, nil
+
+	// prefix := "postgres://"
+	// user := "sim_game"
+	// adress := "5.150.233.186"
+	// // adress := "5.150.233.156"
+	// // adress := "192.168.0.130"
+	// // adress := "localhost"
+	// port := "5432"
+	//
+	// password := os.Getenv("SIM_GAME_DB_PW")
+	//
+	// if len(password) == 0 {
+	// 	return nil, errors.New("Missing password, will not connect to db.")
+	// }
+	//
+	// database_url := prefix + user + ":" +
+	// 	password + "@" + adress + ":" +
+	// 	port + "/postgres"
+	//
+	// db, err := sql.Open("postgres", database_url)
+	//
+	// if err != nil {
+	// 	addMessageToCurrentGamelog(err.Error(), 1)
+	// 	return nil, err
+	// } else {
+	// 	addMessageToCurrentGamelog("Database connection secured!", 1)
+	// }
+	//
+	// err = db.Ping()
+	//
+	// if err != nil {
+	// 	addMessageToCurrentGamelog(err.Error(), 1)
+	// 	return nil, err
+	// } else {
+	// 	addMessageToCurrentGamelog("Database ping succesful!", 1)
+	// }
+	//
+	// return db, nil
 }
 
 func writeMessageToDb(b *Board, msg *Message) error {
